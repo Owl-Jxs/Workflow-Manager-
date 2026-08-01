@@ -1,0 +1,52 @@
+# ===== Carpetas de compilación / CMake =====
+build/
+out/
+bin/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+*.cmake
+!CMakeLists.txt
+
+# ===== Visual Studio =====
+.vs/
+*.vcxproj*
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sdf
+*.opensdf
+CMakeSettings.json
+
+# ===== CLion / JetBrains =====
+.idea/
+
+# ===== VSCode =====
+.vscode/
+!.vscode/settings.json
+!.vscode/c_cpp_properties.json
+
+# ===== Archivos compilados / binarios =====
+*.o
+*.obj
+*.exe
+*.out
+*.ilk
+*.pdb
+*.exp
+*.lib
+*.dll
+
+# ===== Sistema operativo =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Datos generados en tiempo de ejecución =====
+# (los .csv de ejemplo que sí quieran versionar, se pueden
+#  forzar con "git add -f" si hace falta)
+data/*.csv
