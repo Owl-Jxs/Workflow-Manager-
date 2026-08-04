@@ -1,10 +1,10 @@
 #include "Tarea.h"
 ///constructors and destructors
-Tarea::Tarea (int id, std::string descripcion, bool isUrgente) {
+Tarea::Tarea (int id, std::string descripcion, std::string estado) {
     this->idTarea = id;
     this->descripcionTarea = descripcion;
     this->completada = false;
-    this->urgente = isUrgente;
+    this->estado = estado;
     this->subTarea = nullptr;
     this->siguienteSubTarea = nullptr;
     this-> cantidadSubTareas = 0;
@@ -41,12 +41,12 @@ bool Tarea::isCompletada () const {
     return this->completada;
 }
 
-void Tarea::setUrgente (bool urgente) {
-    this->urgente = urgente;
+void Tarea::setSTate (std::string state) {
+    this->estado = state;
 }
 
-bool Tarea::isUrgente () const {
-    return this->urgente;
+std::string Tarea::getState () const {
+    return this->estado;
 }
 
 void Tarea::agregarSubTarea (Tarea* _subTarea) {

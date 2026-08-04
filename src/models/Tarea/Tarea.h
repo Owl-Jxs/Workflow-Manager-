@@ -2,19 +2,27 @@
 #define TAREA_H
 
 #include <iostream>
+static const std::string STATE [3] = {
+    "POR HACER",
+    "EN PROGRESO",
+    "COMPLETADA"
+};
 
 class Tarea {
 private:
     int idTarea;
     std::string descripcionTarea;
+    //ListaUsuarios* Encargados; <- Lista con los encargados de la tarea (Se ancla una lista de usuarios?)
     bool completada;
-    bool urgente;
+    std::string estado;
     Tarea* subTarea;
     Tarea* siguienteSubTarea;
     int cantidadSubTareas;
+
+
 public:
 //constructors and destructors
-    Tarea(int id, std::string descripcion, bool urgente);
+    Tarea(int id, std::string descripcion, std::string estado);
     ~Tarea();
 //getters and setters
     void setIdTarea(int id);
@@ -26,14 +34,14 @@ public:
     void setCompletada(bool completada);
     bool isCompletada() const;
     
-    void setUrgente(bool urgente);
-    bool isUrgente() const;
+    void setSTate (std::string state);
+    std::string getState() const;
     
     void agregarSubTarea(Tarea* subTarea);
     Tarea* getSubTarea() const;
     
-    void setSiguienteSubTarea(Tarea* siguienteSubTarea);
-    Tarea* getSiguienteSubTarea() const;
+    void setSiguienteSubTarea (Tarea* siguienteSubTarea);
+    Tarea* getSiguienteSubTarea () const;
 };//end class
 
 
