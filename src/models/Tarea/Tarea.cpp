@@ -3,7 +3,6 @@
 Tarea::Tarea (int id, std::string descripcion, std::string estado) {
     this->idTarea = id;
     this->descripcionTarea = descripcion;
-    this->completada = false;
     this->estado = estado;
     this->subTarea = nullptr;
     this->siguienteSubTarea = nullptr;
@@ -31,14 +30,6 @@ void Tarea::setDescripcionTarea (std::string descripcion) {
 
 std::string Tarea::getDescripcionTarea () const {
     return this->descripcionTarea;
-}
-
-void Tarea::setCompletada (bool completada) {
-    this->completada = completada;
-}
-
-bool Tarea::isCompletada () const {
-    return this->completada;
 }
 
 void Tarea::setSTate (std::string state) {

@@ -13,7 +13,6 @@ private:
     int idTarea;
     std::string descripcionTarea;
     //ListaUsuarios* Encargados; <- Lista con los encargados de la tarea (Se ancla una lista de usuarios?)
-    bool completada;
     std::string estado;
     Tarea* subTarea;
     Tarea* siguienteSubTarea;
@@ -30,10 +29,7 @@ public:
 
     void setDescripcionTarea(std::string descripcion);
     std::string getDescripcionTarea() const;
-    
-    void setCompletada(bool completada);
-    bool isCompletada() const;
-    
+
     void setSTate (std::string state);
     std::string getState() const;
     
