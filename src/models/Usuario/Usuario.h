@@ -3,37 +3,31 @@
 
 #include <string>
 
-static const std::string ROLES [2] = {
-    "ADMIN",
-    "USER"
-};
-
 class Usuario {
 private:
     int idUsuario;
     std::string nombreUsuario;
-    std::string rolUsuario; // "ADMIN", "USER"
+    std::string rolUsuario;
 
 public:
-	//constructores y destructores
+    // Constantes de rol integradas
+    static inline const std::string ROL_ADMIN = "ADMIN";
+    static inline const std::string ROL_USER = "USER";
+
+    // Constructores y destructor
     Usuario();
-    Usuario(int id, std::string nombre, std::string rol);
+    Usuario(int id, const std::string& nombre, const std::string& rol);
     ~Usuario();
-//getters and setters
+
+    // Getters y Setters
     void setId(int id);
     int getId() const;
 
-    void setNombre(std::string nombre);
+    void setNombre(const std::string& nombre);
     std::string getNombre() const;
 
-    void setRol(std::string rol);
+    void setRol(const std::string& rol);
     std::string getRol() const;
-
-//conexion con el archivo CSV
-    std::string toCSV() const;
-    static Usuario fromCSV(const std::string& linea);
 };
-
-
 
 #endif
