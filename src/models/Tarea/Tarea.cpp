@@ -32,14 +32,6 @@ void Tarea::validarEstado (std::string estado) {
     }
     if (!estadoValido) throw std::invalid_argument ("Estado inválido: debe ser 'POR HACER', 'EN PROCESO' o 'COMPLETADA'.");
 }
-/*
-bool Tarea::esDescendiente (const Tarea* buscado) const {
-    if (this == buscado) return true;
-    if (this->primerSubTarea != nullptr && this->primerSubTarea->esDescendiente(buscado)) return true;
-    if (this->siguienteSubTarea != nullptr && this->siguienteSubTarea->esDescendiente(buscado)) return true;
-    return false;
-}
-*/
 
 ///constructores y destructores
 Tarea::Tarea (int id, std::string descripcion, bool prioridad, std::string estado) {
