@@ -1,73 +1,60 @@
 #ifndef TAREA_H
 #define TAREA_H
-
 #include <string>
-
-static const std::string PRIORIDAD [2] = {
-    "ALTA",
-    "NORMAL"
-};
-
-static const std::string ESTADO [2] = {
-    "PENDIENTE",
+#include <stdexcept>
+static const std::string ESTADO [3] = {
+    "POR HACER",
+    "EN PROCESO",
     "COMPLETADA"
 };
-
-// [Actualizado]
-//  - prioridad (ALTA/NORMAL) y estado (PENDIENTE/COMPLETADA)
-//  - idUsuarioResponsable (usuario asignado por id)
-//  - padre + primerSubTarea + siguienteSubTarea (arbol general de subtareas)
-//  - toCSV()/fromCSV() para la conexion con los archivos .csv
-
+static const int sinPadre = -1;
 class Tarea {
 private:
     int idTarea;
     std::string descripcionTarea;
-    //ListaUsuarios* Encargados; <- Lista con los encargados de la tarea (Se ancla una lista de usuarios?)
-    std::string prioridadTarea; // "ALTA", "NORMAL"
-    std::string estadoTarea;    // "PENDIENTE", "COMPLETADA"
-    int idUsuarioResponsable;   // conexion con Usuario
-    int idPadre;                // id de la tarea padre (0 si es raiz)
-    Tarea* padre;               // nullptr si es raiz
+    //ListaUsuarios* EquipoDesarrollo; <- Lista con los encargados de la tarea (Se ancla una lista de usuarios?)
+    bool prioridadTarea;      // true = ALTA, false = NORMAL
+    std::string estadoTarea;    // "POR HACER", "EN PROCESO", "COMPLETADA"
+//atributos relacionados con las subtareas
+    int idTareaPadre;             // id del padre
     Tarea* primerSubTarea;      // primer hijo
     Tarea* siguienteSubTarea;   // hermano siguiente
     int cantidadSubTareas;
+    Tarea* TareaPadre; // puntero al padre
 
+//funciones privadas de validar parametros
+    void validarId (int id);
+    void validarDescripcion (std::string descripcion);
+    void validarEstado (std::string estado);
+   void esAncestro (const Tarea* buscado) const; // Verifica si 'buscado' es un ancestro de 'this'
 public:
 //constructores y destructores
-    Tarea(int id, std::string descripcion, std::string prioridad, std::string estado, int idResponsable, int padreId = 0);
-    ~Tarea();
+    Tarea (int id, std::string descripcion, bool prioridad, std::string estado);
+    ~Tarea ();
 //getters and setters
-    void setIdTarea(int id);
-    int getIdTarea() const;
+    void setIdTarea (int id);
+    int getIdTarea () const;
 
-    void setDescripcionTarea(std::string descripcion);
-    std::string getDescripcionTarea() const;
+    void setDescripcionTarea (std::string descripcion);
+    std::string getDescripcionTarea () const;
 
-    void setPrioridad(std::string prioridad);
-    std::string getPrioridad() const;
+    void setPrioridad (bool prioridad);
+    bool getPrioridad () const;
 
-    void setEstado(std::string estado);
-    std::string getEstado() const;
+    void setEstado (std::string estado);
+    std::string getEstado () const;
 
-    void setIdUsuarioResponsable(int idResponsable);
-    int getIdUsuarioResponsable() const;
+    int getPadreId () const;
 
-    void setPadre(Tarea* padreTarea);
-    Tarea* getPadre() const;
-    int getPadreId() const;
+    void agregarSubTarea (Tarea* subTarea);
+    Tarea* getPrimerSubTarea () const;
 
-    void agregarSubTarea(Tarea* subTarea);
-    Tarea* getPrimerSubTarea() const;
+    void setSiguienteSubTarea (Tarea* siguiente);
+    Tarea* getSiguienteSubTarea () const;
 
-    void setSiguienteSubTarea(Tarea* siguiente);
-    Tarea* getSiguienteSubTarea() const;
-
-    int getCantidadSubTareas() const;
-
-//conexion con el archivo CSV
-    std::string toCSV() const;
-    static Tarea fromCSV(const std::string& linea);
+    void setTareaPadre (Tarea* padre);
+    Tarea* getTareaPadre () const;
+    int getCantidadSubTareas () const;
 };
 
 
