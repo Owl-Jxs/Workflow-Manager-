@@ -1,0 +1,3 @@
+id,descripcion,prioridad,estado,idResponsable,idPadre
+1,"Respaldar Base de Datos",ALTA,PENDIENTE,105,0
+2,"Comprimir archivos",NORMAL,PENDIENTE,105,1
