@@ -4,19 +4,21 @@
 #include <string>
 
 class Usuario {
+public:
+    enum class Rol {
+        ADMINISTRADOR,
+        USUARIO_NORMAL
+    };
+
 private:
     int idUsuario;
     std::string nombreUsuario;
-    std::string rolUsuario;
+    Rol rolUsuario;
 
 public:
-    // Constantes de rol integradas
-    static inline const std::string ROL_ADMIN = "ADMIN";
-    static inline const std::string ROL_USER = "USER";
-
     // Constructores y destructor
     Usuario();
-    Usuario(int id, const std::string& nombre, const std::string& rol);
+    Usuario(int id, const std::string& nombre, Rol rol = Rol::USUARIO_NORMAL);
     ~Usuario();
 
     // Getters y Setters
@@ -26,8 +28,8 @@ public:
     void setNombre(const std::string& nombre);
     std::string getNombre() const;
 
-    void setRol(const std::string& rol);
-    std::string getRol() const;
+    void setRol(Rol rol);
+    Rol getRol() const;
 };
 
 #endif

@@ -1,19 +1,16 @@
 #include "Usuario.h"
 
-/// Constructores y destructores
 Usuario::Usuario()
-    : idUsuario(0), nombreUsuario(""), rolUsuario(ROL_USER) {
+    : idUsuario(0), nombreUsuario(""), rolUsuario(Rol::USUARIO_NORMAL) {
 }
 
-Usuario::Usuario(int id, const std::string& nombre, const std::string& rol)
+Usuario::Usuario(int id, const std::string& nombre, Rol rol)
     : idUsuario(id), nombreUsuario(nombre), rolUsuario(rol) {
 }
 
 Usuario::~Usuario() {
-    // Sin punteros que liberar
 }
 
-/// Getters y setters
 void Usuario::setId(int id) {
     this->idUsuario = id;
 }
@@ -30,10 +27,10 @@ std::string Usuario::getNombre() const {
     return this->nombreUsuario;
 }
 
-void Usuario::setRol(const std::string& rol) {
+void Usuario::setRol(Rol rol) {
     this->rolUsuario = rol;
 }
 
-std::string Usuario::getRol() const {
+Usuario::Rol Usuario::getRol() const {
     return this->rolUsuario;
 }
