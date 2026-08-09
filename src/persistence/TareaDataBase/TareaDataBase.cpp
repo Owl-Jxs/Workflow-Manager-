@@ -1,5 +1,4 @@
 #include "TareaDataBase.h"
-
 const std::string TareaDataBase::FILENAME_TAREAS_REGULARES = "tareas_regulares.csv";
 const std::string TareaDataBase::FILENAME_TAREAS_URGENTES = "tareas_urgentes.csv";
 //Formato de guardado --> id, descripcion,estado, idPadre,cantidadSubTareas
@@ -116,13 +115,13 @@ Tarea* TareaDataBase::buscarSubTarea (Tarea* TareaActual, int idBuscado) { //bus
     } 
     return nullptr;
 }
+
                                             //=== === === metodos  public === === === 
 
 void TareaDataBase::guardarBaseDeDatos () { //guardar la base de datos en ambas listas
         guardarLista (listaTareasRegulares, FILENAME_TAREAS_REGULARES); //Guardamos la lista regular
         guardarLista (listaTareasUrgentes, FILENAME_TAREAS_URGENTES); //guardamos la lista de urgentes
 }
-
 
 void TareaDataBase::cargarBaseDeDatos () {
     if (listaTareasRegulares != nullptr) delete listaTareasRegulares;
@@ -131,10 +130,7 @@ void TareaDataBase::cargarBaseDeDatos () {
         this->listaTareasUrgentes= cargarLista(FILENAME_TAREAS_URGENTES, true);          
 }
 
-
-
-
-void TareaDataBase::agregarTarea (Tarea* tarea) { //agrega una nueva tarea al sistema y a los archivos
+void TareaDataBase::agregarTarea(Tarea* tarea) { //agrega una nueva tarea al sistema y a los archivos
     if (tarea == nullptr) throw std::invalid_argument ("No se puede agregar una tarea nula");
     std::string nombreLista = ""; //variable para el nombre del archivo de la lista
 //la ingresamos a la lista que le corresponde

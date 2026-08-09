@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map> // para cargar las listas de tareas mucho mas rapido
-#include <vector> 
+#include <vector> //para guardar temporalmente los datos cargados 
 class TareaDataBase {
 private:
     ColaFIFO* listaTareasRegulares; // Lista de tareas regulares
