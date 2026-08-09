@@ -1,4 +1,12 @@
 #include "Tarea.h"
+//atributos static
+ const std::string Tarea::ESTADO [3] = {
+    "POR HACER",
+    "EN PROCESO",
+    "COMPLETADA"
+};
+const int Tarea::sinPadre = -1;
+
 //private functions
 void Tarea::esAncestro (const Tarea* buscado) const {
     const Tarea* actual = this->TareaPadre;
@@ -144,6 +152,13 @@ void Tarea::setSiguienteSubTarea (Tarea* siguiente) {
 
 Tarea* Tarea::getSiguienteSubTarea () const {
     return this->siguienteSubTarea;
+}
+void Tarea::setIdPadre (int id) {
+    validarId (id);
+    this ->idTareaPadre = id;
+}
+int Tarea::getIdPadre () const {
+    return this->idTareaPadre;
 }
 
 void Tarea::setTareaPadre (Tarea* padre) {

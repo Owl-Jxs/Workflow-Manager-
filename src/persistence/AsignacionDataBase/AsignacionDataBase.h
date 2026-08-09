@@ -1,0 +1,24 @@
+#ifndef ASIGNACIONDATABASE_H
+#define ASIGNACIONDATABASE_H
+
+#include "../../structures/Asignacion/ListaAsignaciones/ListaAsignaciones.h"
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+
+class AsignacionDataBase {
+private:
+    ListaAsignaciones* listaAsignaciones;
+    static const std::string FILENAME_ASIGNACIONES; // Nombre del archivo para almacenar las asignaciones
+public:
+    AsignacionDataBase();
+    ~AsignacionDataBase();
+    void guardarAsignacionesEnArchivo();
+    void cargarAsignacionesDesdeArchivo();
+    void agregarAsignacion(int idTarea, int idUsuario);
+    void eliminarAsignacion(int idTarea, int idUsuario);
+    bool buscarAsignacion(int idTarea, int idUsuario);
+};
+// Contenido de la clase AsignacionDataBase
+
+#endif // ASIGNACIONDATABASE_H

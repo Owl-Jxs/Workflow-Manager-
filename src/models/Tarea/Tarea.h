@@ -2,17 +2,11 @@
 #define TAREA_H
 #include <string>
 #include <stdexcept>
-static const std::string ESTADO [3] = {
-    "POR HACER",
-    "EN PROCESO",
-    "COMPLETADA"
-};
-static const int sinPadre = -1;
+
 class Tarea {
 private:
     int idTarea;
     std::string descripcionTarea;
-    //ListaUsuarios* EquipoDesarrollo; <- Lista con los encargados de la tarea (Se ancla una lista de usuarios?)
     bool prioridadTarea;      // true = ALTA, false = NORMAL
     std::string estadoTarea;    // "POR HACER", "EN PROCESO", "COMPLETADA"
 //atributos relacionados con las subtareas
@@ -21,7 +15,6 @@ private:
     Tarea* siguienteSubTarea;   // hermano siguiente
     int cantidadSubTareas;
     Tarea* TareaPadre; // puntero al padre
-
 //funciones privadas de validar parametros
     void validarId (int id);
     void validarDescripcion (std::string descripcion);
@@ -31,6 +24,9 @@ public:
 //constructores y destructores
     Tarea (int id, std::string descripcion, bool prioridad, std::string estado);
     ~Tarea ();
+//variables static
+    static const std::string ESTADO [3];
+    static const int sinPadre;
 //getters and setters
     void setIdTarea (int id);
     int getIdTarea () const;
@@ -51,7 +47,10 @@ public:
 
     void setSiguienteSubTarea (Tarea* siguiente);
     Tarea* getSiguienteSubTarea () const;
-
+    
+    void setIdPadre (int id);
+    int getIdPadre () const;
+    
     void setTareaPadre (Tarea* padre);
     Tarea* getTareaPadre () const;
     int getCantidadSubTareas () const;
