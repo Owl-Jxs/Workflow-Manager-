@@ -2,20 +2,17 @@
 const std::string AsignacionDataBase::FILENAME_ASIGNACIONES = "asignaciones.csv"; // Nombre del archivo para almacenar las asignaciones
 // Formato de guardado ----> idTarea, idUsuario
 
-AsignacionDataBase::AsignacionDataBase() { //constructor
-    listaAsignaciones = new ListaAsignaciones();
-}
+AsignacionDataBase::AsignacionDataBase() { }
 
-AsignacionDataBase::~AsignacionDataBase() { //destructor
-    delete listaAsignaciones;
-}
+AsignacionDataBase::~AsignacionDataBase() { }
 
-void AsignacionDataBase::guardarAsignacionesEnArchivo() { //guarda todas las asignaciones de la lista en el archivo
+void AsignacionDataBase::guardarAsignacionesEnArchivo(ListaAsignaciones* lista) { //guarda todas las asignaciones de la lista en el archivo
+    
     std::ofstream archivoTemporalAsignaciones("temporal.csv");
     if (!archivoTemporalAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo temporal de asignaciones.");
 
 // Guardar todas las asignaciones de la lista en el archivo temporal
-    NodoAsignacion* actual = listaAsignaciones->getCabeza(); //primer nodo de la lista
+    NodoAsignacion* actual = lista->getCabeza(); //primer nodo de la lista
     while (actual != nullptr) {
         archivoTemporalAsignaciones << actual->idTarea << "," << actual->idUsuario << std::endl;
         actual = actual->siguiente;
@@ -27,8 +24,8 @@ void AsignacionDataBase::guardarAsignacionesEnArchivo() { //guarda todas las asi
     if (std::rename ("temporal.csv", FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal de asignaciones.");   
 }
 
-void AsignacionDataBase::cargarAsignacionesDesdeArchivo() {
-// Cargar las asignaciones desde el archivo al iniciar el programa
+ListaAsignaciones* AsignacionDataBase::cargarAsignacionesDesdeArchivo () {
+// Cargar las asignaciones desde el archivo
     std::ifstream archivoAsignaciones(FILENAME_ASIGNACIONES);
     if (!archivoAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo de asignaciones.");
 
@@ -50,20 +47,10 @@ void AsignacionDataBase::cargarAsignacionesDesdeArchivo() {
 
         nuevaLista->agregarAsignacion(idTarea, idUsuario); // Agregar la asignación a la nueva lista
     }
-    
-//reemplazar lista vieja
-    if (listaAsignaciones != nullptr) {
-        delete listaAsignaciones;
-    }
-    listaAsignaciones = nuevaLista;
+    return nuevaLista;
 }
 
 void AsignacionDataBase::agregarAsignacion(int idTarea, int idUsuario) { //agrega una asignación a la lista y al archivo
-    if (idTarea <= 0 || idUsuario <= 0) throw std::invalid_argument("Error: Los IDs deben ser mayores que cero.");
-    if (buscarAsignacion(idTarea, idUsuario)) throw std::invalid_argument("Error: La asignación ya existe.");
-
-//guardar la asignación en la lista
-    listaAsignaciones->agregarAsignacion(idTarea, idUsuario);
 
 // Guardar la asignación en el archivo
     std::ofstream archivoAsignaciones(FILENAME_ASIGNACIONES, std::ios::app);
@@ -73,13 +60,7 @@ void AsignacionDataBase::agregarAsignacion(int idTarea, int idUsuario) { //agreg
 } 
 
 void AsignacionDataBase::eliminarAsignacion(int idTarea, int idUsuario) { //elimina una asignación de la lista y del archivo
-    if (idTarea <= 0 || idUsuario <= 0) throw std::invalid_argument("Error: Los IDs deben ser mayores que cero.");
-    if (!buscarAsignacion(idTarea, idUsuario)) throw std::invalid_argument("Error: La asignación no existe.");
-
-// Eliminar la asignación de la lista
-    listaAsignaciones->eliminarAsignacion(idTarea, idUsuario);
-
-// Eliminar la asignación del archivo
+    
     std::ifstream archivoAsignaciones(FILENAME_ASIGNACIONES); //archivo para leer las asignaciones hasta encontrar la que se desea eliminar
     if (!archivoAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo de asignaciones.");
 
@@ -103,9 +84,4 @@ void AsignacionDataBase::eliminarAsignacion(int idTarea, int idUsuario) { //elim
 // Reemplazar el archivo original con el temporal
     if (std::remove(FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al eliminar el archivo original.");
     if (std::rename("temp.csv", FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal.");
-}
-
-bool AsignacionDataBase::buscarAsignacion(int idTarea, int idUsuario) { //busca una asignación en la lista
-    if (idTarea <= 0 || idUsuario <= 0) throw std::invalid_argument("Error: Los IDs deben ser mayores que cero.");
-    return listaAsignaciones->buscarAsignacion(idTarea, idUsuario);
 }

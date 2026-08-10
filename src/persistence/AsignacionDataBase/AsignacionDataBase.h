@@ -8,13 +8,12 @@
 
 class AsignacionDataBase {
 private:
-    ListaAsignaciones* listaAsignaciones;
     static const std::string FILENAME_ASIGNACIONES; // Nombre del archivo para almacenar las asignaciones
 public:
     AsignacionDataBase();
     ~AsignacionDataBase();
-    void guardarAsignacionesEnArchivo();
-    void cargarAsignacionesDesdeArchivo();
+    void guardarAsignacionesEnArchivo(ListaAsignaciones* lista);
+    ListaAsignaciones* cargarAsignacionesDesdeArchivo();
     void agregarAsignacion(int idTarea, int idUsuario);
     void eliminarAsignacion(int idTarea, int idUsuario);
     bool buscarAsignacion(int idTarea, int idUsuario);
