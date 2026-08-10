@@ -9,6 +9,7 @@ private:
     std::string descripcionTarea;
     bool prioridadTarea;      // true = ALTA, false = NORMAL
     std::string estadoTarea;    // "POR HACER", "EN PROCESO", "COMPLETADA"
+
 //atributos relacionados con las subtareas
     int idTareaPadre;             // id del padre
     Tarea* primerSubTarea;      // primer hijo
@@ -24,9 +25,11 @@ public:
 //constructores y destructores
     Tarea (int id, std::string descripcion, bool prioridad, std::string estado);
     ~Tarea ();
+
 //variables static
     static const std::string ESTADO [3];
     static const int sinPadre;
+
 //getters and setters
     void setIdTarea (int id);
     int getIdTarea () const;
@@ -54,6 +57,9 @@ public:
     void setTareaPadre (Tarea* padre);
     Tarea* getTareaPadre () const;
     int getCantidadSubTareas () const;
+
+// busca una subTarea
+    Tarea* buscarSubTarea (int idTarea);
 };
 
 

@@ -179,3 +179,22 @@ Tarea* Tarea::getTareaPadre () const {
 int Tarea::getCantidadSubTareas () const {
     return this->cantidadSubTareas;
 }
+
+Tarea* Tarea::buscarSubTarea (int idTarea) {
+    if (this->getIdTarea () == idTarea) return this; //si esta tarea es la buscada
+    if (primerSubTarea == nullptr) return  nullptr; //si no tiene mas subtareas para buscar
+
+    Tarea* subTareaActual = getPrimerSubTarea(); ///buscamos en las subTareas
+    
+    while (subTareaActual != nullptr) {
+        Tarea* encontrada = subTareaActual->buscarSubTarea(idTarea); //buscamos en sus subTareas
+        
+        if (encontrada != nullptr) {
+            return encontrada; // Si se encontro en esta tarea, la retornamos de inmediato
+        }
+    
+        subTareaActual = subTareaActual->getSiguienteSubTarea(); // buscamos en las siguientes ramas
+    }
+
+    return nullptr; //si no se encontro
+}
