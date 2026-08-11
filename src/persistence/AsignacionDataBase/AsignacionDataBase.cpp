@@ -1,5 +1,5 @@
 #include "AsignacionDataBase.h"
-const std::string AsignacionDataBase::FILENAME_ASIGNACIONES = "asignaciones.csv"; // Nombre del archivo para almacenar las asignaciones
+const std::string AsignacionDataBase::FILENAME_ASIGNACIONES = "data/asignaciones.csv"; // Nombre del archivo para almacenar las asignaciones
 // Formato de guardado ----> idTarea, idUsuario
 
 AsignacionDataBase::AsignacionDataBase() { }
@@ -8,7 +8,7 @@ AsignacionDataBase::~AsignacionDataBase() { }
 
 void AsignacionDataBase::guardarAsignacionesEnArchivo(ListaAsignaciones* lista) { //guarda todas las asignaciones de la lista en el archivo
     
-    std::ofstream archivoTemporalAsignaciones("temporal.csv");
+    std::ofstream archivoTemporalAsignaciones("data/temporal.csv");
     if (!archivoTemporalAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo temporal de asignaciones.");
 
 // Guardar todas las asignaciones de la lista en el archivo temporal
@@ -21,7 +21,7 @@ void AsignacionDataBase::guardarAsignacionesEnArchivo(ListaAsignaciones* lista) 
 
 // Reemplazar el archivo original con el temporal
     if (std::remove (FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al eliminar el archivo original de asignaciones.");
-    if (std::rename ("temporal.csv", FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal de asignaciones.");   
+    if (std::rename ("data/temporal.csv", FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal de asignaciones.");   
 }
 
 ListaAsignaciones* AsignacionDataBase::cargarAsignacionesDesdeArchivo () {
@@ -64,7 +64,7 @@ void AsignacionDataBase::eliminarAsignacion(int idTarea, int idUsuario) { //elim
     std::ifstream archivoAsignaciones(FILENAME_ASIGNACIONES); //archivo para leer las asignaciones hasta encontrar la que se desea eliminar
     if (!archivoAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo de asignaciones.");
 
-    std::ofstream archivoTemporal("temp.csv");
+    std::ofstream archivoTemporal("data/temp.csv");
     if (!archivoTemporal.is_open()) throw std::runtime_error("Error al crear el archivo temporal.");
 
     std::string linea; //linea para leer el archivo y escribir en el archivo temporal las asignaciones excepto la que se desea eliminar
@@ -83,5 +83,5 @@ void AsignacionDataBase::eliminarAsignacion(int idTarea, int idUsuario) { //elim
     archivoTemporal.close();
 // Reemplazar el archivo original con el temporal
     if (std::remove(FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al eliminar el archivo original.");
-    if (std::rename("temp.csv", FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal.");
+    if (std::rename("data/temp.csv", FILENAME_ASIGNACIONES.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal.");
 }

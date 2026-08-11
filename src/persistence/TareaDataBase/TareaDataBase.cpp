@@ -1,7 +1,7 @@
 #include "TareaDataBase.h"
 //guias para archivos
-const std::string TareaDataBase::FILENAME_TAREAS_REGULARES = "tareas_regulares.csv";
-const std::string TareaDataBase::FILENAME_TAREAS_URGENTES = "tareas_urgentes.csv";
+const std::string TareaDataBase::FILENAME_TAREAS_REGULARES = "data/tareas_regulares.csv";
+const std::string TareaDataBase::FILENAME_TAREAS_URGENTES = "data/tareas_urgentes.csv";
 const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular"}; 
 
 //Formato de guardado --> id, descripcion, prioridad, estado, idPadre,cantidadSubTareas
@@ -31,7 +31,7 @@ void TareaDataBase::guardarArbol (Tarea* arbolTarea, std::ofstream& archivo) { /
 void TareaDataBase::guardarLista (ColaFIFO* lista, std::string nombreArchivo) { //guardar una lista dada
     if (lista == nullptr) throw std::invalid_argument ("La lista del archivo: " + nombreArchivo + "Esta vacia");
 //Crear archivo de  temporal 
-    std::string nombreTemp = "Temp.csv";
+    std::string nombreTemp = "data/Temp.csv";
     std::ofstream archivoTemp (nombreTemp);
     if (!archivoTemp.is_open () ) throw std::runtime_error("Error al abrir el archivo temporal.");
 
