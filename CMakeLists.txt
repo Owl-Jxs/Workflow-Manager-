@@ -16,7 +16,7 @@ file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
 )
 
 # --- Definición del ejecutable ---
-add_executable(WorkflowManager ${PROJECT_SOURCES} "src/structures/ListaDoble/nodoUsuario.h")
+add_executable(WorkflowManager ${PROJECT_SOURCES})
 
 # --- Permite usar #include "structures/ListaDoble.h" desde cualquier
 #     archivo dentro de src/, sin importar en qué subcarpeta esté ---

@@ -1,67 +1,68 @@
 #include "ListaDoble.h"
 #include "nodoUsuario.h"
-#include "Usuario.h"
+#include "models/Usuario/Usuario.h"
 
 using namespace std;
 
 //lista doble
 ListaDoble::ListaDoble()
 {
-    cabeza = nullptr;
-    cola = nullptr;
-    cantidad = 0;
+	cabeza = nullptr;
+	cola = nullptr;
+	cantidad = 0;
 }
 
 
 
 ListaDoble::~ListaDoble()
 {
-    nodoUsuario* actual = cabeza;
+	nodoUsuario* actual = cabeza;
 
-    while (actual != nullptr)
-    {
-        nodoUsuario* siguiente = actual->siguiente;
+	while (actual != nullptr)
+	{
+		nodoUsuario* siguiente = actual->siguiente;
 
-        delete actual;
+		delete actual->datos;
+		delete actual;
 
-        actual = siguiente;
-    }
+		actual = siguiente;
+	}
 
-    cabeza = nullptr;
-    cola = nullptr;
-    cantidad = 0;
+	cabeza = nullptr;
+	cola = nullptr;
+	cantidad = 0;
 }
 
 
 
 void ListaDoble::agregarUsuario(Usuario* usuario)
 {
-    if (usuario == nullptr)
-    {
-        return;
-    }
+	if (usuario == nullptr)
+	{
+		return;
+	}
 
-    nodoUsuario* nuevo = new nodoUsuario(usuario);
+	nodoUsuario* nuevo = new nodoUsuario(usuario);
 
-    // Caso 1: la lista está vacía
-    if (cabeza == nullptr)
-    {
-        cabeza = nuevo;
-        cola = nuevo;
-    }
-    else
-    {
-        // El nuevo nodo apunta hacia atrás a la cola
-        nuevo->anterior = cola;
+	// Caso 1: la lista está vacía
+	if (cabeza == nullptr)
+	{
+		cabeza = nuevo;
+		cola = nuevo;
+	}
+	else
+	{
+		// El nuevo nodo apunta hacia atrás a la cola
+		nuevo->anterior = cola;
 
-        // La antigua cola apunta al nuevo nodo
-        cola->siguiente = nuevo;
+		// La antigua cola apunta al nuevo nodo
+		cola->siguiente = nuevo;
 
-        // La nueva cola es el nuevo nodo
-        cola = nuevo;
-    }
+		// La nueva cola es el nuevo nodo
+		cola = nuevo;
+	}
 
-    cantidad++;
+	cantidad++;
 }
 
 
@@ -71,19 +72,19 @@ void ListaDoble::agregarUsuario(Usuario* usuario)
 
 Usuario* ListaDoble::buscarPorId(int id)
 {
-    nodoUsuario* actual = cabeza;
+	nodoUsuario* actual = cabeza;
 
-    while (actual != nullptr)
-    {
-        if (actual->datos->getId() == id)
-        {
-            return actual->datos;
-        }
+	while (actual != nullptr)
+	{
+		if (actual->datos->getId() == id)
+		{
+			return actual->datos;
+		}
 
-        actual = actual->siguiente;
-    }
+		actual = actual->siguiente;
+	}
 
-    return nullptr;
+	return nullptr;
 }
 
 
@@ -93,26 +94,27 @@ Usuario* ListaDoble::buscarPorId(int id)
 
 bool ListaDoble::actualizarUsuario(int id, Usuario* usuario)
 {
-    if (usuario == nullptr)
-    {
-        return false;
-    }
+	if (usuario == nullptr)
+	{
+		return false;
+	}
 
-    nodoUsuario* actual = cabeza;
+	nodoUsuario* actual = cabeza;
 
-    while (actual != nullptr)
-    {
-        if (actual->datos->getId() == id)
-        {
-            actual->datos = usuario;
+	while (actual != nullptr)
+	{
+		if (actual->datos->getId() == id)
+		{
+			delete actual->datos;
+			actual->datos = usuario;
 
-            return true;
-        }
+			return true;
+		}
 
-        actual = actual->siguiente;
-    }
+		actual = actual->siguiente;
+	}
 
-    return false;
+	return false;
 }
 
 
@@ -122,59 +124,60 @@ bool ListaDoble::actualizarUsuario(int id, Usuario* usuario)
 
 bool ListaDoble::eliminarUsuario(int id)
 {
-    nodoUsuario* actual = cabeza;
+	nodoUsuario* actual = cabeza;
 
-    while (actual != nullptr)
-    {
-        if (actual->datos->getId() == id)
-        {
-            // ----------------------------------
-            // Actualizar cabeza
-            // ----------------------------------
+	while (actual != nullptr)
+	{
+		if (actual->datos->getId() == id)
+		{
+			// ----------------------------------
+			// Actualizar cabeza
+			// ----------------------------------
 
-            if (actual == cabeza)
-            {
-                cabeza = actual->siguiente;
-            }
+			if (actual == cabeza)
+			{
+				cabeza = actual->siguiente;
+			}
 
-            // ----------------------------------
-            // Actualizar cola
-            // ----------------------------------
+			// ----------------------------------
+			// Actualizar cola
+			// ----------------------------------
 
-            if (actual == cola)
-            {
-                cola = actual->anterior;
-            }
+			if (actual == cola)
+			{
+				cola = actual->anterior;
+			}
 
-            // ----------------------------------
-            // Conectar nodo anterior
-            // ----------------------------------
+			// ----------------------------------
+			// Conectar nodo anterior
+			// ----------------------------------
 
-            if (actual->anterior != nullptr)
-            {
-                actual->anterior->siguiente = actual->siguiente;
-            }
+			if (actual->anterior != nullptr)
+			{
+				actual->anterior->siguiente = actual->siguiente;
+			}
 
-            // ----------------------------------
-            // Conectar nodo siguiente
-            // ----------------------------------
+			// ----------------------------------
+			// Conectar nodo siguiente
+			// ----------------------------------
 
-            if (actual->siguiente != nullptr)
-            {
-                actual->siguiente->anterior = actual->anterior;
-            }
+			if (actual->siguiente != nullptr)
+			{
+				actual->siguiente->anterior = actual->anterior;
+			}
 
-            delete actual;
+			delete actual->datos;
+			delete actual;
 
-            cantidad--;
+			cantidad--;
 
-            return true;
-        }
+			return true;
+		}
 
-        actual = actual->siguiente;
-    }
+		actual = actual->siguiente;
+	}
 
-    return false;
+	return false;
 }
 
 
@@ -184,16 +187,16 @@ bool ListaDoble::eliminarUsuario(int id)
 
 vector<Usuario*> ListaDoble::listarUsuarios()
 {
-    vector<Usuario*> usuarios;
+	vector<Usuario*> usuarios;
 
-    nodoUsuario* actual = cabeza;
+	nodoUsuario* actual = cabeza;
 
-    while (actual != nullptr)
-    {
-        usuarios.push_back(actual->datos);
+	while (actual != nullptr)
+	{
+		usuarios.push_back(actual->datos);
 
-        actual = actual->siguiente;
-    }
+		actual = actual->siguiente;
+	}
 
-    return usuarios;
+	return usuarios;
 }
