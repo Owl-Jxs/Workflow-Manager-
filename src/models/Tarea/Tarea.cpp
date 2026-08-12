@@ -108,9 +108,6 @@ std::string Tarea::getEstado () const {
 }
 
 
-int Tarea::getPadreId () const {
-    return this->idTareaPadre;
-}
 
 void Tarea::agregarSubTarea (Tarea* subTarea) {
     if (subTarea == nullptr || subTarea == this)    throw std::invalid_argument ("Subtarea inválida: no puede ser nula ni la misma tarea.");
@@ -154,7 +151,8 @@ Tarea* Tarea::getSiguienteSubTarea () const {
     return this->siguienteSubTarea;
 }
 void Tarea::setIdPadre (int id) {
-    validarId (id);
+
+    if (id !=sinPadre) validarId (id);
     this ->idTareaPadre = id;
 }
 int Tarea::getIdPadre () const {
