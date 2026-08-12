@@ -48,14 +48,17 @@ Tarea* ColaFIFO::desencolar() {
     Tarea* tarea = aux->datos;
     frente = frente->siguiente;
 //
+
     if (frente == nullptr) {
         final = nullptr;
     }
 
     cantidad--;
+    aux->datos = nullptr;
     delete aux;
     return tarea;
 }
+
 NodoTarea* ColaFIFO::getFrente () {
     return frente;
 }
@@ -71,7 +74,7 @@ bool ColaFIFO::estaVacia() const {
 bool ColaFIFO::tareaRepetida (Tarea* tarea) const {
     NodoTarea* actual = frente;
     
-    while (actual == nullptr) {
+    while (actual != nullptr) {
         Tarea* tareaActual = actual->datos;
         if (tareaActual->getIdTarea () == tarea->getIdTarea () || tareaActual->getDescripcionTarea () == tarea->getDescripcionTarea () ) {
             return true;

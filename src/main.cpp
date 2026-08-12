@@ -1,6 +1,7 @@
 #include <iostream>
+#include "tests/PruebasTarea/PruebasTarea.h"
 
-int main (int argc, char* argv[]) {
-
+int main () {
+    PruebasTarea::ejecutarTodas();
     return 0;
 }     

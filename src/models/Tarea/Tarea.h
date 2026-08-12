@@ -43,8 +43,6 @@ public:
     void setEstado (std::string estado);
     std::string getEstado () const;
 
-    int getPadreId () const;
-
     void agregarSubTarea (Tarea* subTarea);
     Tarea* getPrimerSubTarea () const;
 

@@ -13,7 +13,7 @@ std::string TareaDataBase::formularLinea (Tarea* tarea) { // formula la linea
     std::string perteneceListaUrgente = ((tarea->getPrioridad ()) ?ENUM_PRIORIDAD_TAREA[0] : ENUM_PRIORIDAD_TAREA[1]); 
 //definimos la linea con el formato que estara en el archivo
     linea << tarea->getIdTarea () << ",\"" << tarea->getDescripcionTarea () << "\"," << perteneceListaUrgente << ","
-    << tarea->getEstado () << ',' << tarea->getPadreId () << ',' << tarea->getCantidadSubTareas ();
+    << tarea->getEstado () << ',' << tarea->getIdPadre () << ',' << tarea->getCantidadSubTareas ();
      
     return linea.str ();
 }
@@ -62,9 +62,10 @@ void TareaDataBase::guardarNuevaTarea (Tarea* tarea, std::string nombreArchivo) 
 ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una lista de los archivos
 //abrimos el archivo de la lista
     std::ifstream lista (nombreArchivo);
-    if (!lista.is_open () ) throw std::runtime_error ("Error al abrir el arvchivo con la lista");
+    if (!lista.is_open () ) return new ColaFIFO ();
 
     std::unordered_map <int, Tarea*> indiceTareas; //donde se almacenaran las tareas hasta encontrar sus arboles completos
+    std::unordered_map <int, int> padresPorId; //guarda el id del padre mientras se reconstruye el arbol
     std::vector <Tarea*> tareasEnlistadas; //donde guardaremos las tareas hasta encontrar sus padres
     std::string linea; // recorre cada linea del archivo
 
@@ -76,6 +77,10 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
         if (std::getline (lineaActual, idTareaTXT, ',') && std::getline (lineaActual, descripcionTXT, ',') 
         && std::getline (lineaActual, prioridadTXT, ',')&& std::getline (lineaActual, estadoTXT, ',') 
         && std::getline (lineaActual, idPadreTXT, ',') && std::getline (lineaActual, idTareaTXT) ) {
+
+              if (descripcionTXT.size () >= 2 && descripcionTXT.front () == '"' && descripcionTXT.back () == '"') {
+                descripcionTXT = descripcionTXT.substr (1, descripcionTXT.size () - 2);
+            }
 
         //creamos la nueva tarea
             int idTarea = std::stoi (idTareaTXT), idPadre = std::stoi (idPadreTXT);
@@ -93,11 +98,11 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
     ColaFIFO* nuevaLista = new ColaFIFO ();
 //buscamos los hijoss de cada tarea y la ingresamos a la cola
     for (Tarea* tarea: tareasEnlistadas) {
+        int idPadre = padresPorId [tarea->getIdTarea ()];
 
-        if (tarea->getIdPadre () == Tarea::sinPadre) { //si es una tarea raiz 
+        if (idPadre == Tarea::sinPadre) { //si es una tarea raiz 
             nuevaLista->encolar (tarea);
         } else{ //si es una subTarea
-            int idPadre = tarea->getIdPadre ();
             if (indiceTareas.find (idPadre) != indiceTareas.end () ) { //buscamos la tarea padre
                 indiceTareas [idPadre]->agregarSubTarea(tarea);
             }
@@ -108,6 +113,7 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
 }
 
 Tarea* TareaDataBase::buscarSubTarea (Tarea* TareaActual, int idBuscado) { //buscar una subtarea en el arbol
+    if (TareaActual == nullptr) return nullptr;
     if (TareaActual->getIdTarea () == idBuscado) {
         return TareaActual;
     } else {
