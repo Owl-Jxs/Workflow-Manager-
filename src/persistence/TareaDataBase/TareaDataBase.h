@@ -34,7 +34,7 @@ public:
 
 //funciones para manipular tareas
     void guardarNuevaTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente);
-    void guardarguardarNuevaSubTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente);
+    void guardarNuevaSubTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente);
     //void completarTarea (bool listaUrgente); <--- Preguntar al profe si esas tareas se eliminan
     // void descompletarTarea (int idTarea); <--- Preguntar al profe sobre su gestion
     //void completarSubtarea 

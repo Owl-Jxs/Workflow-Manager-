@@ -27,9 +27,9 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
     try {
         nuevaListaRegular = archivosTareas->cargarListaDelArchivo (false);
         nuevaListaUrgente = archivosTareas->cargarListaDelArchivo (true);
-    } catch (std::exception& e) {
+    } catch (std::exception&) {
         delete  nuevaListaRegular; delete nuevaListaUrgente; 
-        throw e; //lo lanzamos de nuevo
+        throw; //lo lanzamos de nuevo sin cortar su tipo
     }
 //si habian datos anteriores los borramos
     if (listaTareasRegulares != nullptr) delete listaTareasRegulares;
@@ -50,22 +50,30 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
  }
 
 void TareaController::agregarSubTarea (Tarea* nuevaSubTarea, int idTareaPadre, bool perteneceListaUrgente) {
-    bool padreEncontrado = false;
-    NodoTarea* nodoActual = ((perteneceListaUrgente) ? listaTareasUrgentes->getFrente () : listaTareasRegulares->getFrente ());
+    (void) perteneceListaUrgente; // la lista destino se determina donde se encuentre el padre
 
-    while (nodoActual != nullptr && !padreEncontrado) { //buscamos la tarea padre 
-        Tarea* tareaActual = nodoActual->datos;
-        Tarea* encontrada = tareaActual->buscarSubTarea (idTareaPadre);
-        if (encontrada != nullptr) {
-            encontrada->agregarSubTarea (nuevaSubTarea);
-            padreEncontrado = true;
-       } else {
-        nodoActual = nodoActual->siguiente;
-       }
+    ColaFIFO* listas[2] = { listaTareasRegulares, listaTareasUrgentes };
+    ColaFIFO* listaPadre = nullptr;
+    Tarea* padre = nullptr;
+
+    for (ColaFIFO* lista : listas) { //buscamos la tarea padre en ambas listas
+        NodoTarea* nodoActual = lista->getFrente ();
+        while (nodoActual != nullptr) {
+            Tarea* encontrada = nodoActual->datos->buscarSubTarea (idTareaPadre);
+            if (encontrada != nullptr) {
+                padre = encontrada;
+                listaPadre = lista;
+                break;
+            }
+            nodoActual = nodoActual->siguiente;
+        }
+        if (padre != nullptr) break;
     }
 
 //si no se encuentra la tarea padre
-    if (!padreEncontrado) throw std::invalid_argument ("No existe ninguna tarea con el id pproporcionado"); 
+    if (padre == nullptr) throw std::invalid_argument ("No existe ninguna tarea con el id proporcionado");
 
-    archivosTareas->guardarguardarNuevaSubTareaEnArchivo (nuevaSubTarea, perteneceListaUrgente);
+    padre->agregarSubTarea (nuevaSubTarea);
+    bool padreEsUrgente = (listaPadre == listaTareasUrgentes);
+    archivosTareas->guardarNuevaSubTareaEnArchivo (nuevaSubTarea, padreEsUrgente);
 }

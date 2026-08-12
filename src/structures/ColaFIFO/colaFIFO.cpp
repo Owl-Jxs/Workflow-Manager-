@@ -76,7 +76,7 @@ bool ColaFIFO::tareaRepetida (Tarea* tarea) const {
     
     while (actual != nullptr) {
         Tarea* tareaActual = actual->datos;
-        if (tareaActual->getIdTarea () == tarea->getIdTarea () || tareaActual->getDescripcionTarea () == tarea->getDescripcionTarea () ) {
+        if (tareaActual->getIdTarea () == tarea->getIdTarea ()) {
             return true;
         }
         actual = actual->siguiente;

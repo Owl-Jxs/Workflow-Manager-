@@ -1,6 +1,6 @@
 #ifndef COLAFIFO_H
 #define COLAFIFO_H
-#include "NodoTarea/nodoTarea.h"
+#include "NodoTarea/NodoTarea.h"
 
 class ColaFIFO {
 private:

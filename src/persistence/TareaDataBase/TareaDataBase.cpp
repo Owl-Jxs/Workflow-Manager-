@@ -7,12 +7,56 @@ const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular
 //Formato de guardado --> id, descripcion, prioridad, estado, idPadre,cantidadSubTareas
 
 //                                  === === ===     FUNCIONES PRIVATE AUXILIARES    === === ===
+
+namespace {
+    // Escapa las comillas dentro de un texto para poder guardarlo como campo CSV.
+    std::string escaparCSV (const std::string& texto) {
+        std::string resultado;
+        for (char c : texto) {
+            if (c == '"') {
+                resultado += "\"\"";
+            } else {
+                resultado += c;
+            }
+        }
+        return resultado;
+    }
+
+    // Divide una linea CSV en campos, respetando comillas dobles que envuelven
+    // los campos. Una comilla doble dentro de un campo se escribe como "".
+    std::vector<std::string> dividirCamposCSV (const std::string& linea) {
+        std::vector<std::string> campos;
+        std::string actual;
+        bool dentroDeComillas = false;
+
+        for (size_t i = 0; i < linea.size (); ++i) {
+            char c = linea[i];
+            if (c == '"') {
+                if (dentroDeComillas && i + 1 < linea.size () && linea[i + 1] == '"') {
+                    actual += '"';
+                    ++i;
+                } else {
+                    dentroDeComillas = !dentroDeComillas;
+                }
+            } else if (c == ',' && !dentroDeComillas) {
+                campos.push_back (actual);
+                actual.clear ();
+            } else {
+                actual += c;
+            }
+        }
+
+        campos.push_back (actual);
+        return campos;
+    }
+}
+
 std::string TareaDataBase::formularLinea (Tarea* tarea) { // formula la linea 
     std::stringstream linea;
 //escribimos la prioridad de la tarea
     std::string perteneceListaUrgente = ((tarea->getPrioridad ()) ?ENUM_PRIORIDAD_TAREA[0] : ENUM_PRIORIDAD_TAREA[1]); 
 //definimos la linea con el formato que estara en el archivo
-    linea << tarea->getIdTarea () << ",\"" << tarea->getDescripcionTarea () << "\"," << perteneceListaUrgente << ","
+    linea << tarea->getIdTarea () << ",\"" << escaparCSV (tarea->getDescripcionTarea ()) << "\"," << perteneceListaUrgente << ","
     << tarea->getEstado () << ',' << tarea->getIdPadre () << ',' << tarea->getCantidadSubTareas ();
      
     return linea.str ();
@@ -31,7 +75,7 @@ void TareaDataBase::guardarArbol (Tarea* arbolTarea, std::ofstream& archivo) { /
 void TareaDataBase::guardarLista (ColaFIFO* lista, std::string nombreArchivo) { //guardar una lista dada
     if (lista == nullptr) throw std::invalid_argument ("La lista del archivo: " + nombreArchivo + "Esta vacia");
 //Crear archivo de  temporal 
-    std::string nombreTemp = "data/Temp.csv";
+    std::string nombreTemp = "data/tareas_temporal.csv";
     std::ofstream archivoTemp (nombreTemp);
     if (!archivoTemp.is_open () ) throw std::runtime_error("Error al abrir el archivo temporal.");
 
@@ -48,7 +92,7 @@ void TareaDataBase::guardarLista (ColaFIFO* lista, std::string nombreArchivo) { 
     archivoTemp.close (); //cerramos el archivo
 
 //cambiamos el archivo de persistencia
-    std::remove (nombreArchivo.c_str());
+    std::remove (nombreArchivo.c_str ()); // si el archivo no existia, no es un error
     if (std::rename (nombreTemp.c_str () , nombreArchivo.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal de tareas.");   
 }
 
@@ -65,49 +109,61 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
     if (!lista.is_open () ) return new ColaFIFO ();
 
     std::unordered_map <int, Tarea*> indiceTareas; //donde se almacenaran las tareas hasta encontrar sus arboles completos
-    std::unordered_map <int, int> padresPorId; //guarda el id del padre mientras se reconstruye el arbol
+    std::unordered_map <int, int> padresPorId; //guarda el id del padre de cada tarea para reconstruir el arbol
     std::vector <Tarea*> tareasEnlistadas; //donde guardaremos las tareas hasta encontrar sus padres
     std::string linea; // recorre cada linea del archivo
 
 //leemos el archivo
-    while (std::getline (lista, linea)) { 
-        std::stringstream lineaActual (linea);
-        std::string idTareaTXT, idPadreTXT, cantidadSubTareasTXT, descripcionTXT, estadoTXT, prioridadTXT;
-    //leemos la linea
-        if (std::getline (lineaActual, idTareaTXT, ',') && std::getline (lineaActual, descripcionTXT, ',') 
-        && std::getline (lineaActual, prioridadTXT, ',')&& std::getline (lineaActual, estadoTXT, ',') 
-        && std::getline (lineaActual, idPadreTXT, ',') && std::getline (lineaActual, idTareaTXT) ) {
+    while (std::getline (lista, linea)) {
+        if (linea.empty ()) continue;
 
-              if (descripcionTXT.size () >= 2 && descripcionTXT.front () == '"' && descripcionTXT.back () == '"') {
-                descripcionTXT = descripcionTXT.substr (1, descripcionTXT.size () - 2);
-            }
+        try {
+            std::vector<std::string> campos = dividirCamposCSV (linea);
+            if (campos.size () < 6) throw std::invalid_argument ("linea incompleta");
 
-        //creamos la nueva tarea
-            int idTarea = std::stoi (idTareaTXT), idPadre = std::stoi (idPadreTXT);
-            bool urgente= ( (prioridadTXT == ENUM_PRIORIDAD_TAREA [0]) ? true : false);
+            int idTarea = std::stoi (campos[0]);
+            int idPadre = std::stoi (campos[4]);
+            bool urgente = (campos[2] == ENUM_PRIORIDAD_TAREA[0]);
+            // campos[5] = cantidadSubTareas: se recalcula al reconstruir el arbol
 
-            Tarea* nuevaTarea = new Tarea (idTarea,descripcionTXT, urgente, estadoTXT);
-            nuevaTarea->setIdPadre (idPadre);
+            Tarea* nuevaTarea = new Tarea (idTarea, campos[1], urgente, campos[3]);
             indiceTareas [idTarea] = nuevaTarea; //la ingresamos al "indice rapido"
+            padresPorId [idTarea] = idPadre; //guardamos su relacion para adjuntarla despues
             tareasEnlistadas.push_back (nuevaTarea);
+        } catch (const std::exception& e) {
+            std::cerr << "Advertencia: linea invalida en " << nombreArchivo << ": " << linea
+                      << " -> " << e.what () << std::endl;
         }
     }
     lista.close (); //cerramos el archivo de la lista
 
 //creamos la cola
     ColaFIFO* nuevaLista = new ColaFIFO ();
-//buscamos los hijoss de cada tarea y la ingresamos a la cola
+//buscamos los hijos de cada tarea y la ingresamos a la cola
     for (Tarea* tarea: tareasEnlistadas) {
         int idPadre = padresPorId [tarea->getIdTarea ()];
 
-        if (idPadre == Tarea::sinPadre) { //si es una tarea raiz 
-            nuevaLista->encolar (tarea);
-        } else{ //si es una subTarea
-            if (indiceTareas.find (idPadre) != indiceTareas.end () ) { //buscamos la tarea padre
-                indiceTareas [idPadre]->agregarSubTarea(tarea);
+        if (idPadre == Tarea::sinPadre) { //si es una tarea raiz
+            try {
+                nuevaLista->encolar (tarea);
+            } catch (const std::exception& e) {
+                std::cerr << "Advertencia: tarea repetida (" << tarea->getIdTarea ()
+                          << "); se ignora: " << e.what () << std::endl;
+                delete tarea;
             }
+        } else if (indiceTareas.find (idPadre) != indiceTareas.end ()) { //buscamos la tarea padre
+            try {
+                indiceTareas [idPadre]->agregarSubTarea (tarea);
+            } catch (const std::exception& e) {
+                std::cerr << "Advertencia: no se pudo adjuntar la tarea " << tarea->getIdTarea ()
+                          << " a su padre " << idPadre << ": " << e.what () << std::endl;
+                delete tarea;
+            }
+        } else { //el padre no existe en el archivo
+            std::cerr << "Advertencia: la tarea " << tarea->getIdTarea ()
+                      << " tiene un padre inexistente (" << idPadre << "); se ignora." << std::endl;
+            delete tarea;
         }
-        
     }
     return nuevaLista;
 }
@@ -145,14 +201,16 @@ ColaFIFO* TareaDataBase:: cargarListaDelArchivo (bool perteneceListaUrgente) {
 void TareaDataBase::guardarNuevaTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente) { //agrega una nueva tarea al sistema y a los archivos
     if (tarea == nullptr) throw std::invalid_argument ("No se puede agregar una tarea nula");
     std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES);
-    guardarNuevaTarea (tarea, nombreArchivo); //la guaardamos en el archivo
+    guardarNuevaTarea (tarea, nombreArchivo); //la guardamos en el archivo
 }
 
-void TareaDataBase::guardarguardarNuevaSubTareaEnArchivo (Tarea* subTarea, bool perteneceListaUrgente) {
+void TareaDataBase::guardarNuevaSubTareaEnArchivo (Tarea* subTarea, bool perteneceListaUrgente) {
     if (subTarea == nullptr) throw std::invalid_argument ("No se puede agregar una sub tarea nula");
     std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES); //el nombre del archivo
 
 //guardamos en el archivo
-    std::ofstream listaDestinoSobreLectura (nombreArchivo, std::ios::app);
-    listaDestinoSobreLectura << formularLinea (subTarea) << std::endl;
+    std::ofstream listaDestino (nombreArchivo, std::ios::app);
+    if (!listaDestino.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
+    listaDestino << formularLinea (subTarea) << std::endl;
+    listaDestino.close ();
 }

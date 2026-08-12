@@ -105,8 +105,11 @@ bool ListaDoble::actualizarUsuario(int id, Usuario* usuario)
 	{
 		if (actual->datos->getId() == id)
 		{
-			delete actual->datos;
-			actual->datos = usuario;
+			if (actual->datos != usuario) // evita borrar y reasignar el mismo objeto (use-after-free)
+			{
+				delete actual->datos;
+				actual->datos = usuario;
+			}
 
 			return true;
 		}
