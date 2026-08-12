@@ -19,7 +19,8 @@ bool ListaAsignaciones::estaVacia() {
 }
 
 void ListaAsignaciones::agregarAsignacion (int idTarea, int idUsuario) {
-    if (idTarea <= 0 || idUsuario <= 0)    throw std::invalid_argument ("Error: Los IDs deben ser mayores que cero.");
+    if (idTarea < 0 || idUsuario < 0)    throw std::invalid_argument ("Error: Los IDs no pueden ser negativos.");
+    if (buscarAsignacion (idTarea, idUsuario))    throw std::invalid_argument ("Error: La asignacion ya existe en la lista.");
 
     NodoAsignacion* nuevoNodo = new NodoAsignacion(idTarea, idUsuario);
     if (estaVacia()) {
@@ -34,7 +35,7 @@ void ListaAsignaciones::agregarAsignacion (int idTarea, int idUsuario) {
 
 void ListaAsignaciones::eliminarAsignacion(int idTarea, int idUsuario) {
     if (estaVacia())   throw std::runtime_error("Error: La lista está vacía. No se puede eliminar la asignación.");
-    if (idTarea <= 0 || idUsuario <= 0)    throw std::invalid_argument("Error: Los IDs deben ser mayores que cero.");
+    if (idTarea < 0 || idUsuario < 0)    throw std::invalid_argument("Error: Los IDs no pueden ser negativos.");
 
     NodoAsignacion* actual = cabeza;
     while (actual != nullptr) {
@@ -61,7 +62,7 @@ void ListaAsignaciones::eliminarAsignacion(int idTarea, int idUsuario) {
 }
 
 bool ListaAsignaciones::buscarAsignacion(int idTarea, int idUsuario) {
-    if (idTarea <= 0 || idUsuario <= 0)    throw std::invalid_argument("Error: Los IDs deben ser mayores que cero.");
+    if (idTarea < 0 || idUsuario < 0)    throw std::invalid_argument("Error: Los IDs no pueden ser negativos.");
     NodoAsignacion* actual = cabeza;
     while (actual != nullptr) {
         if (actual->idTarea == idTarea && actual->idUsuario == idUsuario) {

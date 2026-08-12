@@ -22,8 +22,8 @@ void AsignacionController::cargarAsignaciones () {
 
     try { //intentamos cargar la lista
         listaCargada = archivosAsignaciones->cargarAsignacionesDesdeArchivo ();
-    } catch (std::exception& e) {
-        delete listaCargada; throw e;
+    } catch (std::exception&) {
+        delete listaCargada; throw; //re-lanzamos sin cortar el tipo de la excepcion
     }
     if (listaAsignaciones != nullptr) delete listaAsignaciones; //se borra una posible lista anterior si la hay
     listaAsignaciones = listaCargada;
@@ -47,4 +47,7 @@ void AsignacionController::eliminarAsignacion(int idTarea, int idUsuario) {
     listaAsignaciones->eliminarAsignacion (idTarea, idUsuario);
     archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
 }
-bool buscarAsignacion(int idTarea, int idUsuario);
+
+bool AsignacionController::buscarAsignacion(int idTarea, int idUsuario) {
+    return listaAsignaciones->buscarAsignacion (idTarea, idUsuario);
+}

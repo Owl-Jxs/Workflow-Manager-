@@ -14,6 +14,49 @@ UsuarioDataBase::~UsuarioDataBase() {}
 
 //                                  === === ===     FUNCIONES PRIVATE AUXILIARES    === === ===
 
+namespace {
+    // Escapa las comillas dentro de un texto para poder guardarlo como campo CSV.
+    std::string escaparCSV(const std::string& texto) {
+        std::string resultado;
+        for (char c : texto) {
+            if (c == '"') {
+                resultado += "\"\"";
+            } else {
+                resultado += c;
+            }
+        }
+        return resultado;
+    }
+
+    // Divide una linea CSV en campos, respetando comillas dobles que envuelven
+    // los campos. Una comilla doble dentro de un campo se escribe como "".
+    std::vector<std::string> dividirCamposCSV(const std::string& linea) {
+        std::vector<std::string> campos;
+        std::string actual;
+        bool dentroDeComillas = false;
+
+        for (size_t i = 0; i < linea.size(); ++i) {
+            char c = linea[i];
+            if (c == '"') {
+                if (dentroDeComillas && i + 1 < linea.size() && linea[i + 1] == '"') {
+                    actual += '"';
+                    ++i;
+                } else {
+                    dentroDeComillas = !dentroDeComillas;
+                }
+            } else if (c == ',' && !dentroDeComillas) {
+                campos.push_back(actual);
+                actual.clear();
+            } else {
+                actual += c;
+            }
+        }
+
+        campos.push_back(actual);
+        return campos;
+    }
+}
+
 std::string UsuarioDataBase::rolATexto(Usuario::Rol rol) { // convierte el enum Rol a texto para el csv
     return (rol == Usuario::Rol::ADMINISTRADOR) ? "ADMINISTRADOR" : "USUARIO_NORMAL";
 }
@@ -42,7 +85,7 @@ bool UsuarioDataBase::existeUsuarioConId(int id) { // verifica si un id ya exist
 
 std::string UsuarioDataBase::formularLinea(Usuario* usuario) { // formula la linea que se guardara en el archivo
     std::stringstream linea;
-    linea << usuario->getId() << ",\"" << usuario->getNombre() << "\"," << rolATexto(usuario->getRol());
+    linea << usuario->getId() << ",\"" << escaparCSV(usuario->getNombre()) << "\"," << rolATexto(usuario->getRol());
     return linea.str();
 }
 
@@ -62,7 +105,7 @@ void UsuarioDataBase::guardarUsuariosEnArchivo(ListaDoble* lista) { // guarda to
     archivoTemporal.close();
 
     // Reemplazamos el archivo original con el temporal
-    std::remove(FILENAME_USUARIOS.c_str());
+    std::remove(FILENAME_USUARIOS.c_str()); // si el archivo no existia, no es un error
     if (std::rename("data/temporalUsuarios.csv", FILENAME_USUARIOS.c_str()) != 0)
         throw std::runtime_error("Error al renombrar el archivo temporal de usuarios.");
 }
@@ -76,26 +119,17 @@ ListaDoble* UsuarioDataBase::cargarUsuariosDesdeArchivo() { // carga los usuario
 
     while (std::getline(archivoUsuarios, linea)) {
         try {
-            std::stringstream lineaActual(linea);
-            std::string idTXT, nombreTXT, rolTXT;
-
-            if (std::getline(lineaActual, idTXT, ',') && std::getline(lineaActual, nombreTXT, ',')
-                && std::getline(lineaActual, rolTXT)) {
-
-                // Quitamos las comillas que rodean al nombre
-                if (nombreTXT.size() >= 2 && nombreTXT.front() == '"' && nombreTXT.back() == '"') {
-                    nombreTXT = nombreTXT.substr(1, nombreTXT.size() - 2);
-                }
-
-                int id = std::stoi(idTXT);
-                Usuario::Rol rol = textoARol(rolTXT);
-
-                Usuario* nuevoUsuario = new Usuario(id, nombreTXT, rol);
-                nuevaLista->agregarUsuario(nuevoUsuario); // se agrega directo, no hay dependencia de orden
-            }
-            else {
+            std::vector<std::string> campos = dividirCamposCSV(linea);
+            if (campos.size() < 3) {
                 std::cerr << "Advertencia: linea con formato invalido en usuarios.csv: " << linea << std::endl;
+                continue;
             }
+
+            int id = std::stoi(campos[0]);
+            Usuario::Rol rol = textoARol(campos[2]);
+
+            Usuario* nuevoUsuario = new Usuario(id, campos[1], rol);
+            nuevaLista->agregarUsuario(nuevoUsuario); // se agrega directo, no hay dependencia de orden
         }
         catch (const std::exception& e) {
             std::cerr << "Advertencia: error al procesar linea de usuarios.csv: " << e.what() << std::endl;
@@ -123,6 +157,7 @@ void UsuarioDataBase::eliminarUsuario(int idUsuario) { // elimina un usuario del
     if (!archivoTemporal.is_open()) throw std::runtime_error("Error al crear el archivo temporal.");
 
     std::string linea;
+    bool encontrado = false;
     while (std::getline(archivoUsuarios, linea)) {
         std::stringstream lineaActual(linea);
         std::string idTXT;
@@ -130,12 +165,19 @@ void UsuarioDataBase::eliminarUsuario(int idUsuario) { // elimina un usuario del
 
         if (idTXT != std::to_string(idUsuario)) {
             archivoTemporal << linea << std::endl;
+        } else {
+            encontrado = true;
         }
     }
     archivoUsuarios.close();
     archivoTemporal.close();
 
-    std::remove(FILENAME_USUARIOS.c_str());
+    if (!encontrado) {
+        std::remove("data/temporalUsuarios.csv");
+        throw std::invalid_argument("No existe un usuario con el id proporcionado.");
+    }
+
+    std::remove(FILENAME_USUARIOS.c_str()); // si el archivo no existia, no es un error
     if (std::rename("data/temporalUsuarios.csv", FILENAME_USUARIOS.c_str()) != 0)
         throw std::runtime_error("Error al renombrar el archivo temporal de usuarios.");
 }

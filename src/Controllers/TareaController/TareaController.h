@@ -2,7 +2,7 @@
 #define TAREACONTROLLER_H
 
 #include "../../persistence/TareaDataBase/TareaDataBase.h"
-#include "../../structures/ColaFIFO/ColaFIFO.h"
+#include "../../structures/ColaFIFO/colaFIFO.h"
 
 class TareaController {
 private:

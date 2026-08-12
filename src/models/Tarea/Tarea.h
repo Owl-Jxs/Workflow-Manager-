@@ -57,7 +57,7 @@ public:
     int getCantidadSubTareas () const;
 
 // busca una subTarea
-    Tarea* buscarSubTarea (int idTarea);
+    Tarea* buscarSubTarea (int idBuscada);
 };
 
 
