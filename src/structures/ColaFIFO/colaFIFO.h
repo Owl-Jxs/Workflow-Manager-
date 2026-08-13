@@ -1,13 +1,11 @@
 #ifndef COLAFIFO_H
 #define COLAFIFO_H
-
-class Tarea;
-class nodoTarea;
+#include "NodoTarea/NodoTarea.h"
 
 class ColaFIFO {
 private:
-    nodoTarea* frente;
-    nodoTarea* final;
+    NodoTarea* frente;
+    NodoTarea* final;
     int cantidad;
 
 public:
@@ -15,7 +13,10 @@ public:
     ~ColaFIFO();
     void encolar(Tarea* tarea);
     Tarea* desencolar();
+    NodoTarea* getFrente ();
+    NodoTarea* getCola ();
     bool estaVacia() const;
+    bool tareaRepetida (Tarea* tarea) const;
 };
 
 #endif

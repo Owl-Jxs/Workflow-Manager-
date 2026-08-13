@@ -1,4 +1,12 @@
 #include "Tarea.h"
+//atributos static
+ const std::string Tarea::ESTADO [3] = {
+    "POR HACER",
+    "EN PROCESO",
+    "COMPLETADA"
+};
+const int Tarea::sinPadre = -1;
+
 //private functions
 void Tarea::esAncestro (const Tarea* buscado) const {
     const Tarea* actual = this->TareaPadre;
@@ -100,9 +108,6 @@ std::string Tarea::getEstado () const {
 }
 
 
-int Tarea::getPadreId () const {
-    return this->idTareaPadre;
-}
 
 void Tarea::agregarSubTarea (Tarea* subTarea) {
     if (subTarea == nullptr || subTarea == this)    throw std::invalid_argument ("Subtarea inválida: no puede ser nula ni la misma tarea.");
@@ -133,22 +138,35 @@ Tarea* Tarea::getPrimerSubTarea () const {
 
 void Tarea::setSiguienteSubTarea (Tarea* siguiente) {
     if (siguiente == nullptr || siguiente == this)  throw std::invalid_argument ("Subtarea inválida: no puede ser nula ni la misma tarea.");
+    if (this->TareaPadre == nullptr) throw std::invalid_argument ("Operación inválida: no se puede asignar un hermano a una tarea sin padre.");
+    if (this->siguienteSubTarea != nullptr) throw std::invalid_argument ("Operación inválida: la tarea ya tiene un hermano siguiente.");
     if (siguiente->idTareaPadre != sinPadre) throw std::invalid_argument ("Subtarea inválida: ya tiene un padre asignado.");
     if (siguiente->siguienteSubTarea != nullptr) throw std::invalid_argument ("Subtarea inválida: ya tiene un hermano siguiente asignado.");
-    esAncestro(siguiente); // Verifica si 'siguiente' es un ancestro de 'this'
+    // evita ciclos en la jerarquia en ambos sentidos
+    siguiente->esAncestro (this);
+    this->esAncestro (siguiente);
 
     siguiente->idTareaPadre = this->idTareaPadre; // hereda el padre del hermano
     siguiente->TareaPadre = this->TareaPadre; // hereda el puntero al padre
     this->siguienteSubTarea = siguiente;
+    this->TareaPadre->cantidadSubTareas++; // el nuevo hermano es un hijo mas del padre
 }
 
 Tarea* Tarea::getSiguienteSubTarea () const {
     return this->siguienteSubTarea;
 }
+void Tarea::setIdPadre (int id) {
+
+    if (id !=sinPadre) validarId (id);
+    this ->idTareaPadre = id;
+}
+int Tarea::getIdPadre () const {
+    return this->idTareaPadre;
+}
 
 void Tarea::setTareaPadre (Tarea* padre) {
-    if (padre == this)  throw std::invalid_argument ("Padre inválido: no puede ser nulo ni la misma tarea.");
-   esAncestro(padre); // Verifica si 'padre' es un ancestro de 'this'
+    if (padre == this)  throw std::invalid_argument ("Padre inválido: no puede ser la misma tarea.");
+    if (padre != nullptr) padre->esAncestro (this); // lanza si 'this' es ancestro de 'padre' (crearia un ciclo)
     this->TareaPadre = padre;
     if (padre != nullptr) {
         this->idTareaPadre = padre->getIdTarea(); 
@@ -163,4 +181,23 @@ Tarea* Tarea::getTareaPadre () const {
 
 int Tarea::getCantidadSubTareas () const {
     return this->cantidadSubTareas;
+}
+
+Tarea* Tarea::buscarSubTarea (int idBuscada) {
+    if (this->getIdTarea () == idBuscada) return this; //si esta tarea es la buscada
+    if (primerSubTarea == nullptr) return  nullptr; //si no tiene mas subtareas para buscar
+
+    Tarea* subTareaActual = getPrimerSubTarea(); ///buscamos en las subTareas
+    
+    while (subTareaActual != nullptr) {
+        Tarea* encontrada = subTareaActual->buscarSubTarea(idBuscada); //buscamos en sus subTareas
+        
+        if (encontrada != nullptr) {
+            return encontrada; // Si se encontro en esta tarea, la retornamos de inmediato
+        }
+    
+        subTareaActual = subTareaActual->getSiguienteSubTarea(); // buscamos en las siguientes ramas
+    }
+
+    return nullptr; //si no se encontro
 }
