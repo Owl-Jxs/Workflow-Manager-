@@ -2,6 +2,7 @@
 #define USUARIO_H
 
 #include <string>
+#include <functional>
 
 class Usuario {
 public:
@@ -14,6 +15,7 @@ private:
     int idUsuario;
     std::string nombreUsuario;
     Rol rolUsuario;
+	size_t hashContrasena; // Almacena el hash de la contraseña
 
 public:
     // Constructores y destructor
@@ -30,6 +32,10 @@ public:
 
     void setRol(Rol rol);
     Rol getRol() const;
+    
+	void setHashContrasena(const std::string& contrasena);
+	void setHashDirecto(size_t hash); // Permite establecer el hash directamente (para cargar desde archivo)
+	size_t getHashContrasena() const;
 };
 
 #endif
