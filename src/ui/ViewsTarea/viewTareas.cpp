@@ -18,27 +18,27 @@ Tarea* ViewTareas::buscarTarea(int idTarea) {
     ColaFIFO* listaRegular = tc->getListaTareasRegulares();
 
     if (listaRegular != nullptr) {
-        nodoTarea* actual = listaRegular->getFrente();
+        NodoTarea* actual = listaRegular->getFrente();
         while (actual != nullptr) {
-            Tarea* tarea = actual->getDatos();
+            Tarea* tarea = actual->datos;
             if (tarea != nullptr && tarea->getIdTarea() == idTarea) {
                 return tarea;
             }
-            actual = actual->getSiguiente();
+            actual = actual->siguiente;
         }
     }
 
     ColaFIFO* listaUrgente = tc->getListaTareasUrgentes();
 
     if (listaUrgente != nullptr) {
-        nodoTarea* actual = listaUrgente->getFrente();
+        NodoTarea* actual = listaUrgente->getFrente();
 
         while (actual != nullptr) {
-            Tarea* tarea = actual->getDatos();
+            Tarea* tarea = actual->datos;
             if (tarea != nullptr && tarea->getIdTarea() == idTarea) {
                 return tarea;
             }
-            actual = actual->getSiguiente();
+            actual = actual->siguiente;
         }
     }
 
@@ -277,26 +277,26 @@ void ViewTareas::mostrarTableroKanban() {
 
     bool hayTareas = false;
 
-    nodoTarea* actual = listaRegular->getFrente();
+    NodoTarea* actual = listaRegular->getFrente();
 
     while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
+        Tarea* tarea = actual->datos;
         if (tarea != nullptr && tarea->getEstado() == "POR HACER") {
             mostrarTarea(tarea);
             hayTareas = true;
         }
-        actual = actual->getSiguiente();
+        actual = actual->siguiente;
     }
 
     actual = listaUrgente->getFrente();
 
     while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
+        Tarea* tarea = actual->datos;
         if (tarea != nullptr && tarea->getEstado() == "POR HACER") {
             mostrarTarea(tarea);
             hayTareas = true;
         }
-        actual = actual->getSiguiente();
+        actual = actual->siguiente;
     }
 
     if (!hayTareas) {
@@ -311,23 +311,23 @@ void ViewTareas::mostrarTableroKanban() {
     actual = listaRegular->getFrente();
 
     while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
+        Tarea* tarea = actual->datos;
         if (tarea != nullptr && tarea->getEstado() == "EN PROCESO") {
             mostrarTarea(tarea);
             hayTareas = true;
         }
-        actual = actual->getSiguiente();
+        actual = actual->siguiente;
     }
 
     actual = listaUrgente->getFrente();
 
     while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
+        Tarea* tarea = actual->datos;
         if (tarea != nullptr && tarea->getEstado() == "EN PROCESO") {
             mostrarTarea(tarea);
             hayTareas = true;
         }
-        actual = actual->getSiguiente();
+        actual = actual->siguiente;
     }
 
     if (!hayTareas) {
@@ -342,23 +342,23 @@ void ViewTareas::mostrarTableroKanban() {
     actual = listaRegular->getFrente();
 
     while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
+        Tarea* tarea = actual->datos;
         if (tarea != nullptr && tarea->getEstado() == "COMPLETADA") {
             mostrarTarea(tarea);
             hayTareas = true;
         }
-        actual = actual->getSiguiente();
+        actual = actual->siguiente;
     }
 
     actual = listaUrgente->getFrente();
 
     while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
+        Tarea* tarea = actual->datos;
         if (tarea != nullptr && tarea->getEstado() == "COMPLETADA") {
             mostrarTarea(tarea);
             hayTareas = true;
         }
-        actual = actual->getSiguiente();
+        actual = actual->siguiente;
     }
 
     if (!hayTareas) {

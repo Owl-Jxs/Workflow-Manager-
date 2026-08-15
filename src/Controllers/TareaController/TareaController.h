@@ -19,6 +19,8 @@ public:
 //funciones para manipular las tareas de la lista
     void agregarTarea(Tarea* tarea, bool perteneceListaUrgente);
     void agregarSubTarea (Tarea* tarea, int idTareaPadre, bool perteneceListaUrgente);
+    ColaFIFO* getListaTareasRegulares();
+    ColaFIFO* getListaTareasUrgentes();
     //void completarTarea (bool listaUrgente); <--- Preguntar al profe si esas tareas se eliminan
     // void descompletarTarea (int idTarea); <--- Preguntar al profe sobre su gestion
     //void completarSubtarea 

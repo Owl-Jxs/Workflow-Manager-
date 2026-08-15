@@ -39,7 +39,15 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
     listaTareasUrgentes = nuevaListaUrgente;
 }
 
- void TareaController::agregarTarea (Tarea* tarea, bool perteneceListaUrgente) {
+ ColaFIFO* TareaController::getListaTareasRegulares () {
+    return this->listaTareasRegulares;
+}
+
+ColaFIFO* TareaController::getListaTareasUrgentes () {
+    return this->listaTareasUrgentes;
+}
+
+void TareaController::agregarTarea (Tarea* tarea, bool perteneceListaUrgente) {
     if (perteneceListaUrgente) {
         listaTareasUrgentes->encolar (tarea);
     } else {
