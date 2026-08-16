@@ -14,7 +14,7 @@ class UsuarioDataBase {
 
 private:
 	static const std::string FILENAME_USUARIOS; // Nombre del archivo para almacenar los usuarios
-	// Formato de guardado ----> idUsuario,"nombreUsuario",rolUsuario
+	// Formato de guardado ----> idUsuario,"nombreUsuario",rolUsuario,hashContrasena
 
 	// === Funciones privadas auxiliares ===
 	std::string formularLinea(Usuario* usuario);                    // arma la linea de texto para un usuario

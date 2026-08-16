@@ -1,25 +1,19 @@
 #ifndef VIEWTAREAS_H
 #define VIEWTAREAS_H
-//#include "Tarea.h"
-//#include "ColaFIFO.h"
-//#include "nodoTarea.h"
-#include "../../models/Tarea/Tarea.h"
-#include "../../structures/ColaFIFO/colaFIFO.h"
-#include "../../structures/ColaFIFO/NodoTarea/NodoTarea.h"
-#include "../../Controllers/TareaController/TareaController.h"
+#include <vector>
+#include "Tarea.h"
+#include "ColaFIFO.h"
 
 class ViewTareas {
+
 private:
-    TareaController* tc;
-    Tarea* buscarTarea(int idTarea);//busca una tarea por ID en las dos colas
-    void mostrarSubTareas(Tarea* tarea, int nivel);
+    void mostrarTarea(Tarea* tarea);
+    void mostrarSubTareas(Tarea* tarea);
 
 public:
-    ViewTareas(TareaController* tc);
-    void mostrarTableroKanban();
-    void crearTarea();
-    void crearSubTarea();
-    void mostrarTarea(Tarea* tarea);
+    ViewTareas();
+    void mostrarTableroKanban(ColaFIFO* listaUrgente, ColaFIFO* listaRegular);
+
 };
 
 #endif
