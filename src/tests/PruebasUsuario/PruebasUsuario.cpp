@@ -104,6 +104,7 @@ namespace PruebasUsuario {
         verificar(porDefecto.getId() == 0, "id por defecto");
         verificar(porDefecto.getNombre() == "", "nombre por defecto");
         verificar(porDefecto.getRol() == Usuario::Rol::USUARIO_NORMAL, "rol por defecto");
+        verificar(porDefecto.getHashContrasena() == 0, "hash por defecto en 0");
 
         // --- constructor con parametros ---
         Usuario admin(5, "Ana", Usuario::Rol::ADMINISTRADOR);
@@ -124,6 +125,16 @@ namespace PruebasUsuario {
         verificar(admin.getRol() == Usuario::Rol::USUARIO_NORMAL, "setRol a normal");
         admin.setRol(Usuario::Rol::ADMINISTRADOR);
         verificar(admin.getRol() == Usuario::Rol::ADMINISTRADOR, "setRol a administrador");
+
+        // --- hash de contrasena ---
+        verificar(admin.getHashContrasena() == 0, "hash inicial en 0 tras constructor");
+        admin.setHashContrasena("miClaveSecreta");
+        verificar(admin.getHashContrasena() != 0, "setHashContrasena genera un hash distinto de 0");
+        Usuario igual(0, "x");
+        igual.setHashContrasena("miClaveSecreta");
+        verificar(admin.getHashContrasena() == igual.getHashContrasena(), "misma clave genera el mismo hash");
+        admin.setHashDirecto(12345);
+        verificar(admin.getHashContrasena() == 12345, "setHashDirecto asigna el valor exacto");
     }
 
     void probarListaDoble() {
@@ -193,10 +204,12 @@ namespace PruebasUsuario {
         verificar(cargada->listarUsuarios().empty(), "cargar con archivo vacio devuelve lista vacia");
         delete cargada;
 
-        // round-trip guardar -> cargar (roles incluidos)
+        // round-trip guardar -> cargar (roles y hash incluidos)
         {
             ListaDoble lista;
-            lista.agregarUsuario(new Usuario(1, "Ana", Usuario::Rol::ADMINISTRADOR));
+            Usuario* ana = new Usuario(1, "Ana", Usuario::Rol::ADMINISTRADOR);
+            ana->setHashContrasena("claveDeAna");
+            lista.agregarUsuario(ana);
             lista.agregarUsuario(new Usuario(2, "Beto"));
             db.guardarUsuariosEnArchivo(&lista);
         }
@@ -207,9 +220,15 @@ namespace PruebasUsuario {
         verificar(usuarios[0]->getId() == 1 && usuarios[0]->getNombre() == "Ana"
                       && usuarios[0]->getRol() == Usuario::Rol::ADMINISTRADOR,
                   "usuario 1 correcto tras round-trip");
+        Usuario anaEsperada(0, "x");
+        anaEsperada.setHashContrasena("claveDeAna");
+        verificar(usuarios[0]->getHashContrasena() == anaEsperada.getHashContrasena(),
+                  "hash del usuario 1 se conserva tras round-trip");
         verificar(usuarios[1]->getId() == 2 && usuarios[1]->getNombre() == "Beto"
                       && usuarios[1]->getRol() == Usuario::Rol::USUARIO_NORMAL,
                   "usuario 2 correcto tras round-trip");
+        verificar(usuarios[1]->getHashContrasena() == 0,
+                  "usuario sin clave conserva hash en 0 tras round-trip");
         delete cargada;
 
         // agregarUsuario (append) y recargar
