@@ -3,7 +3,7 @@
 #include <string>
 
 using namespace std;
-
+/*
 ViewTareas::ViewTareas(TareaController* tc) {
     this->tc = tc;
 }
@@ -11,7 +11,7 @@ ViewTareas::ViewTareas(TareaController* tc) {
 //BUSCAR TAREA POR ID
 
 // == ============ ================ =============== ELIMINAR::Ya esta en el controlador esta funcionalidad =========== =========== ====== = = == =
-/*
+
 Tarea* ViewTareas::buscarTarea(int idTarea) {
     if (tc == nullptr) {
         return nullptr;
@@ -46,7 +46,7 @@ Tarea* ViewTareas::buscarTarea(int idTarea) {
 
     return nullptr;
 }
-*/
+
 void ViewTareas::mostrarTarea(Tarea* tarea) {
     if (tarea == nullptr) {
         return;
@@ -370,3 +370,4 @@ void ViewTareas::mostrarTableroKanban() {
     cout << "\n";
     cout << "====================================================\n";
 }
+*/

@@ -1,10 +1,8 @@
 #ifndef LISTADOBLE_H
 #define LISTADOBLE_H
-
 #include <vector>
-
-class Usuario;
-class nodoUsuario;
+#include "../../models/Usuario/Usuario.h"
+#include "nodoUsuario.h"
 
 class ListaDoble {
 

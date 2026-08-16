@@ -1,9 +1,12 @@
 #ifndef VIEWTAREAS_H
 #define VIEWTAREAS_H
-#include "TareaController.h"
-#include "Tarea.h"
-#include "ColaFIFO.h"
-#include "nodoTarea.h"
+//#include "Tarea.h"
+//#include "ColaFIFO.h"
+//#include "nodoTarea.h"
+#include "../../models/Tarea/Tarea.h"
+#include "../../structures/ColaFIFO/colaFIFO.h"
+#include "../../structures/ColaFIFO/NodoTarea/NodoTarea.h"
+#include "../../Controllers/TareaController/TareaController.h"
 
 class ViewTareas {
 private:

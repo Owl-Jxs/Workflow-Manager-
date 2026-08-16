@@ -133,27 +133,21 @@ std::string ValidarEntrada::validarNombreCompleto () {
 
 std::string ValidarEntrada::validarContrasena (const std::string& mensaje, char mascara) {
     std::string entrada = "";
-    bool contrasenaValida = false;
-
-    while (!contrasenaValida) {
-        std::cout << mensaje << std::endl; 
-        bool seguirEscribiendo = true;
-
-        while (seguirEscribiendo) {
-            char c = _getch ();
-
-            if (c == '\r') {
-                seguirEscribiendo = true; //tecla enter
-            } else if (c == '\b' || c == 127) { //si el usuario borra un caracter
-                if (!entrada.empty () ) {
-                    entrada.pop_back ();    std::cout << "\b \b";
-                }
-            } else {
-                entrada.push_back (c);
-                std::cout << mascara;
-            }   
-        }
-         contrasenaValida = true;
+    std::cout << mensaje << std::endl;
+    while (true) { //miientras se quiera escribir un caracter 
+        char c = _getch ();
+        if (c == '\r') {
+            break;
+        } else if (c == '\b' || c == 127) {
+            if (!entrada.empty ()) {
+                entrada.pop_back ();
+                std::cout << "\b \b";
+            }
+        } else {
+            entrada.push_back (c);
+            std::cout << mascara;
+        }   
     }
+    std::cout << "\n";
     return entrada;
 }
