@@ -10,6 +10,8 @@ ViewTareas::ViewTareas(TareaController* tc) {
 
 //BUSCAR TAREA POR ID
 
+// == ============ ================ =============== ELIMINAR::Ya esta en el controlador esta funcionalidad =========== =========== ====== = = == =
+/*
 Tarea* ViewTareas::buscarTarea(int idTarea) {
     if (tc == nullptr) {
         return nullptr;
@@ -18,7 +20,7 @@ Tarea* ViewTareas::buscarTarea(int idTarea) {
     ColaFIFO* listaRegular = tc->getListaTareasRegulares();
 
     if (listaRegular != nullptr) {
-        nodoTarea* actual = listaRegular->getFrente();
+        NodoTarea* actual = listaRegular->getFrente();
         while (actual != nullptr) {
             Tarea* tarea = actual->getDatos();
             if (tarea != nullptr && tarea->getIdTarea() == idTarea) {
@@ -44,7 +46,7 @@ Tarea* ViewTareas::buscarTarea(int idTarea) {
 
     return nullptr;
 }
-
+*/
 void ViewTareas::mostrarTarea(Tarea* tarea) {
     if (tarea == nullptr) {
         return;
