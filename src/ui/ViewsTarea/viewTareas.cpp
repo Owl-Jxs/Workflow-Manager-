@@ -1,50 +1,13 @@
 #include "ViewTareas.h"
 #include <iostream>
-#include <string>
+#include <vector>
 
 using namespace std;
 
-ViewTareas::ViewTareas(TareaController* tc) {
-    this->tc = tc;
+ViewTareas::ViewTareas() {
 }
 
-//BUSCAR TAREA POR ID
-
-Tarea* ViewTareas::buscarTarea(int idTarea) {
-    if (tc == nullptr) {
-        return nullptr;
-    }
-
-    ColaFIFO* listaRegular = tc->getListaTareasRegulares();
-
-    if (listaRegular != nullptr) {
-        nodoTarea* actual = listaRegular->getFrente();
-        while (actual != nullptr) {
-            Tarea* tarea = actual->getDatos();
-            if (tarea != nullptr && tarea->getIdTarea() == idTarea) {
-                return tarea;
-            }
-            actual = actual->getSiguiente();
-        }
-    }
-
-    ColaFIFO* listaUrgente = tc->getListaTareasUrgentes();
-
-    if (listaUrgente != nullptr) {
-        nodoTarea* actual = listaUrgente->getFrente();
-
-        while (actual != nullptr) {
-            Tarea* tarea = actual->getDatos();
-            if (tarea != nullptr && tarea->getIdTarea() == idTarea) {
-                return tarea;
-            }
-            actual = actual->getSiguiente();
-        }
-    }
-
-    return nullptr;
-}
-
+//MOSTRAR INFORMACIÓN DE UNA TAREA
 void ViewTareas::mostrarTarea(Tarea* tarea) {
     if (tarea == nullptr) {
         return;
@@ -61,8 +24,7 @@ void ViewTareas::mostrarTarea(Tarea* tarea) {
 
     if (tarea->getPrioridad()) {
         cout << "URGENTE";
-    }
-    else {
+    } else {
         cout << "NORMAL";
     }
 
@@ -73,34 +35,137 @@ void ViewTareas::mostrarTarea(Tarea* tarea) {
     cout << "Cantidad de subtareas: " << tarea->getCantidadSubTareas() << endl;
 
     cout << "---------------------------------------------\n";
-
-    if (tarea->getPrimerSubTarea() != nullptr) {
-        cout << "Subtareas:\n";
-        mostrarSubTareas(tarea, 1);
-    }
 }
 
-void ViewTareas::mostrarSubTareas(Tarea* tarea, int nivel) {
+//MOSTRAR SUBTAREAS
+void ViewTareas::mostrarSubTareas(Tarea* tarea) {
     if (tarea == nullptr) {
         return;
     }
 
     Tarea* subTarea = tarea->getPrimerSubTarea();
 
+    if (subTarea == nullptr) {
+        cout << "\nEsta tarea no tiene subtareas.\n";
+        return;
+    }
+
+    cout << "\n";
+    cout << "============== SUBTAREAS ==============\n";
+
     while (subTarea != nullptr) {
-        for (int i = 0; i < nivel; i++) {
-            cout << "    ";
+        cout << "\n";
+        cout << "ID: " << subTarea->getIdTarea() << endl;
+
+        cout << "Descripcion: " << subTarea->getDescripcionTarea() << endl;
+
+        cout << "Prioridad: ";
+
+        if (subTarea->getPrioridad()) {
+            cout << "URGENTE";
+        } else {
+            cout << "NORMAL";
         }
 
-        cout << "- ID: " << subTarea->getIdTarea() << " | Descripcion: " << subTarea->getDescripcionTarea() << " | Estado: " << subTarea->getEstado() << endl;
+        cout << endl;
 
-        if (subTarea->getPrimerSubTarea() != nullptr) {
-            mostrarSubTareas(subTarea, nivel + 1);
-        }
+        cout << "Estado: " << subTarea->getEstado() << endl;
+
+        cout << "Cantidad de subtareas: " << subTarea->getCantidadSubTareas() << endl;
+
         subTarea = subTarea->getSiguienteSubTarea();
     }
+
+    cout << "\n========================================\n";
 }
 
+//MOSTRAR TABLERO KANBAN
+void ViewTareas::mostrarTableroKanban(ColaFIFO* listaUrgente, ColaFIFO* listaRegular) {
+
+    //VECTORES PARA CLASIFICAR LAS TAREAS
+    vector<Tarea*> porHacer;
+    vector<Tarea*> enProceso;
+    vector<Tarea*> completadas;
+
+    //RECORRER LISTA URGENTE
+    NodoTarea* actual = listaUrgente->getFrente();
+
+    while (actual != nullptr) {
+        Tarea* tarea = actual->datos;
+
+        if (tarea->getEstado() == "POR HACER") {
+            porHacer.push_back(tarea);
+        } else if (tarea->getEstado() == "EN PROCESO") {
+            enProceso.push_back(tarea);
+        } else if (tarea->getEstado() == "COMPLETADA") {
+            completadas.push_back(tarea);
+        }
+
+        actual = actual->siguiente;
+    }
+
+    //RECORRER LISTA REGULAR
+    actual = listaRegular->getFrente();
+
+    while (actual != nullptr) {
+        Tarea* tarea = actual->datos;
+
+        if (tarea->getEstado() == "POR HACER") {
+            porHacer.push_back(tarea);
+        } else if (tarea->getEstado() == "EN PROCESO") {
+            enProceso.push_back(tarea);
+        } else if (tarea->getEstado() == "COMPLETADA") {
+            completadas.push_back(tarea);
+        }
+
+        actual = actual->siguiente;
+    }
+
+    cout << "\n";
+    cout << "====================================================\n";
+    cout << "                  TABLERO KANBAN\n";
+    cout << "====================================================\n";
+
+    cout << "\n";
+    cout << "=================== POR HACER ======================\n";
+
+    if (porHacer.empty()) {
+        cout << "\nNo hay tareas por hacer.\n";
+
+    } else {
+        for (Tarea* tarea : porHacer) {
+            mostrarTarea(tarea);
+        }
+    }
+
+    cout << "\n";
+    cout << "=================== EN PROCESO ====================\n";
+
+    if (enProceso.empty()) {
+        cout << "\nNo hay tareas en proceso.\n";
+    } else {
+        for (Tarea* tarea : enProceso) {
+            mostrarTarea(tarea);
+        }
+    }
+
+    cout << "\n";
+    cout << "=================== COMPLETADAS ===================\n";
+
+    if (completadas.empty()) {
+        cout << "\nNo hay tareas completadas.\n";
+    } else {
+        for (Tarea* tarea : completadas) {
+            mostrarTarea(tarea);
+        }
+    }
+
+    cout << "\n";
+    cout << "====================================================\n";
+}
+
+/*
+SE PUEDEN UTILIZAR PARA MENU
 void ViewTareas::crearTarea(){
     if (tc == nullptr) {
         cout << "Error: el TareaController no esta disponible.\n";
@@ -251,120 +316,4 @@ void ViewTareas::crearSubTarea() {
         cout << "\nError al crear la subtarea: " << e.what() << endl;
     }
 }
-
-void ViewTareas::mostrarTableroKanban() {
-    if (tc == nullptr) {
-        cout << "Error: el TareaController no esta disponible.\n";
-        return;
-    }
-
-    ColaFIFO* listaRegular = tc->getListaTareasRegulares();
-
-    ColaFIFO* listaUrgente = tc->getListaTareasUrgentes();
-
-    if (listaRegular == nullptr || listaUrgente == nullptr) {
-        cout << "Error: no se pudieron obtener las listas de tareas.\n";
-        return;
-    }
-
-    cout << "\n";
-    cout << "====================================================\n";
-    cout << "                 TABLERO KANBAN\n";
-    cout << "====================================================\n";
-
-    cout << "\n";
-    cout << "=================== POR HACER =====================\n";
-
-    bool hayTareas = false;
-
-    nodoTarea* actual = listaRegular->getFrente();
-
-    while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
-        if (tarea != nullptr && tarea->getEstado() == "POR HACER") {
-            mostrarTarea(tarea);
-            hayTareas = true;
-        }
-        actual = actual->getSiguiente();
-    }
-
-    actual = listaUrgente->getFrente();
-
-    while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
-        if (tarea != nullptr && tarea->getEstado() == "POR HACER") {
-            mostrarTarea(tarea);
-            hayTareas = true;
-        }
-        actual = actual->getSiguiente();
-    }
-
-    if (!hayTareas) {
-        cout << "No hay tareas por hacer.\n";
-    }
-
-    cout << "\n";
-    cout << "=================== EN PROCESO ====================\n";
-
-    hayTareas = false;
-
-    actual = listaRegular->getFrente();
-
-    while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
-        if (tarea != nullptr && tarea->getEstado() == "EN PROCESO") {
-            mostrarTarea(tarea);
-            hayTareas = true;
-        }
-        actual = actual->getSiguiente();
-    }
-
-    actual = listaUrgente->getFrente();
-
-    while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
-        if (tarea != nullptr && tarea->getEstado() == "EN PROCESO") {
-            mostrarTarea(tarea);
-            hayTareas = true;
-        }
-        actual = actual->getSiguiente();
-    }
-
-    if (!hayTareas) {
-        cout << "No hay tareas en proceso.\n";
-    }
-
-    cout << "\n";
-    cout << "=================== COMPLETADAS ===================\n";
-
-    hayTareas = false;
-
-    actual = listaRegular->getFrente();
-
-    while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
-        if (tarea != nullptr && tarea->getEstado() == "COMPLETADA") {
-            mostrarTarea(tarea);
-            hayTareas = true;
-        }
-        actual = actual->getSiguiente();
-    }
-
-    actual = listaUrgente->getFrente();
-
-    while (actual != nullptr) {
-        Tarea* tarea = actual->getDatos();
-        if (tarea != nullptr && tarea->getEstado() == "COMPLETADA") {
-            mostrarTarea(tarea);
-            hayTareas = true;
-        }
-        actual = actual->getSiguiente();
-    }
-
-    if (!hayTareas) {
-        cout << "No hay tareas completadas.\n";
-    }
-
-    cout << "\n";
-    cout << "====================================================\n";
-}
+*/
