@@ -1,7 +1,4 @@
 #include "ListaDoble.h"
-#include "nodoUsuario.h"
-#include "models/Usuario/Usuario.h"
-
 using namespace std;
 
 //lista doble
