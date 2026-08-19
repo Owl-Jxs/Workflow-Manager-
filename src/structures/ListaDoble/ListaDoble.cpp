@@ -1,4 +1,5 @@
 #include "ListaDoble.h"
+#include <stdexcept>
 using namespace std;
 
 //lista doble
@@ -36,7 +37,12 @@ void ListaDoble::agregarUsuario(Usuario* usuario)
 {
 	if (usuario == nullptr)
 	{
-		return;
+		throw std::invalid_argument("Error: No se puede agregar un usuario nulo.");
+	}
+
+	if (buscarPorId(usuario->getId()) != nullptr)
+	{
+		throw std::invalid_argument("Error: Ya existe un usuario con el id proporcionado.");
 	}
 
 	nodoUsuario* nuevo = new nodoUsuario(usuario);
@@ -69,6 +75,8 @@ void ListaDoble::agregarUsuario(Usuario* usuario)
 
 Usuario* ListaDoble::buscarPorId(int id)
 {
+	if (id < 0) throw std::invalid_argument("Error: El id no puede ser negativo.");
+
 	nodoUsuario* actual = cabeza;
 
 	while (actual != nullptr)
@@ -91,6 +99,8 @@ Usuario* ListaDoble::buscarPorId(int id)
 
 bool ListaDoble::actualizarUsuario(int id, Usuario* usuario)
 {
+	if (id < 0) throw std::invalid_argument("Error: El id no puede ser negativo.");
+
 	if (usuario == nullptr)
 	{
 		return false;
@@ -124,6 +134,8 @@ bool ListaDoble::actualizarUsuario(int id, Usuario* usuario)
 
 bool ListaDoble::eliminarUsuario(int id)
 {
+	if (id < 0) throw std::invalid_argument("Error: El id no puede ser negativo.");
+
 	nodoUsuario* actual = cabeza;
 
 	while (actual != nullptr)

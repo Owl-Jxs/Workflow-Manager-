@@ -1,5 +1,5 @@
 #include "nodoTarea.h"
-#include "Tarea.h"
+#include "../../models/Tarea/Tarea.h"
 
 nodoTarea::nodoTarea(Tarea* tarea) {
     datos = tarea;

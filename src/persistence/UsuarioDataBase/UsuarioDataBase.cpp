@@ -158,6 +158,8 @@ void UsuarioDataBase::agregarUsuario(Usuario* usuario) { // agrega un usuario nu
 }
 
 void UsuarioDataBase::eliminarUsuario(int idUsuario) { // elimina un usuario del archivo por id
+	if (idUsuario < 0) throw std::invalid_argument("Error: El id del usuario no puede ser negativo.");
+
 	std::ifstream archivoUsuarios(FILENAME_USUARIOS);
 	if (!archivoUsuarios.is_open()) throw std::runtime_error("Error al abrir el archivo de usuarios.");
 

@@ -25,13 +25,17 @@ bool ValidarEntrada::contieneSoloDigitos (std::string entrada, bool permitirNega
 void ValidarEntrada::convertirMayusculas (std::string &palabra) {
     bool ultimoCharEspacio = false; //para cuando pasamos un espacio
 
+    if (palabra.empty ()) return;
+
     palabra[0] = std::toupper (palabra[0]);
-    for (char c : palabra) {
+    for (char &c : palabra) {
         if (c == ' ') {
             ultimoCharEspacio = true;
+            continue;
         }
         if (ultimoCharEspacio) {
-            c = std::toupper (c); ultimoCharEspacio = false;
+            c = std::toupper (c);
+            ultimoCharEspacio = false;
         }
     }
 }
@@ -49,7 +53,7 @@ int ValidarEntrada::leerEntradaNumerica (const std::string& entrada, bool permit
 void ValidarEntrada::leerEntradaTextual (const std::string& entrada,int cantidadEspacios) {
 //validamos que no este vacia y que solo contenga letras
     if (entrada.empty () || entrada ==  " ")  throw std::invalid_argument ("--- Ingrese una entrada no vacia ---");
-    if (!contieneSoloCaracteres (entrada, 1) ) {
+    if (!contieneSoloCaracteres (entrada, cantidadEspacios) ) {
         throw std::invalid_argument ("--- La entrada debe contener caracteres y " + std::to_string(cantidadEspacios) + " espacio maximo ---");
     }
 }
@@ -57,57 +61,49 @@ void ValidarEntrada::leerEntradaTextual (const std::string& entrada,int cantidad
 //               === === === === === === === === === === ===  PUBLIC  === === === === === === === === === === === === === === 
 int ValidarEntrada::validarEntradaRango (const std::string& mensaje,int inicio, int fin) {
     std::string entradaTemporal;
-    bool entradaCorrecta = false;
-    int entradavalidada;
 
-    while (!entradaCorrecta) {
-        int entradaConvertida; //la entrada pasada de string a int
+    while (true) {
     //leemos la entrada
         std::cout << mensaje << std::endl;    std::getline (std::cin,  entradaTemporal);
-    
+
     //la procesamos
+        int entradaConvertida; //la entrada pasada de string a int
         try {
             entradaConvertida = leerEntradaNumerica (entradaTemporal, ( (inicio < 0) ? true : false) );
-        } catch (std::exception &e) {
-            e.what (); std::system ("cls");    continue;
+        } catch (std::exception&) {
+            std::system ("cls");    continue;
         }
 
     //validamos que este en el rango correcto
         if (entradaConvertida < inicio || entradaConvertida > fin) { 
             std::cout << "\n--- Ingrese una entrada dentro del rango ---" << std::endl;     std::system ("cls");    continue;
         }
-        
-    //le entregamos la entrada correcta a la que hara el return y salimos del while
-        entradaCorrecta = entradaConvertida;      entradaCorrecta = true;
+
+    //devolvemos la entrada ya validada
+        return entradaConvertida;
     }
-    return entradaCorrecta;
 }
 
 int ValidarEntrada::validarCodigoNumerico (const std::string& mensaje, int cantidadDigitos) {
     std::string entradaTemporal;
-    bool entradaCorrecta = false;
-    int entradavalidada;
 
-    while (!entradaCorrecta) {
-        int entradaConvertida; //la entrada pasada de string a int    
+    while (true) {
     //leemos la entrada
         std::cout << mensaje << std::endl;    std::getline (std::cin,  entradaTemporal);
-   
+
+    //verificamos la cantidad de digitos
        if (entradaTemporal.size () != cantidadDigitos) { 
         std::cout << "Ingrese la cantidad de digitos correctos [" << cantidadDigitos << "]" <<std::endl; 
         std::system ("cls"); continue;
        } 
 
-        try {    //la procesamos
-            entradaConvertida = leerEntradaNumerica (entradaTemporal, false);
-        } catch (std::exception &e) {
-            e.what (); std::system ("cls");    continue;
+    //la procesamos
+        try {
+            return leerEntradaNumerica (entradaTemporal, false);
+        } catch (std::exception&) {
+            std::system ("cls");    continue;
         }
-
-    //le entregamos la entrada correcta a la que hara el return y salimos del while
-        entradaCorrecta = entradaConvertida;      entradaCorrecta = true;
     }
-    return entradaCorrecta;
 }
 
 std::string ValidarEntrada::validarNombreCompleto () {

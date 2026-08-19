@@ -1,6 +1,6 @@
 #ifndef PILAICOMANDO_H
 #define PILAICOMANDO_H
-#include "IComando.h"
+#include "../../models/Comandos/IComando.h"
 
 class NodoComando {
 private:
