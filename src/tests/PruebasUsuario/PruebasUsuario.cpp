@@ -135,6 +135,13 @@ namespace PruebasUsuario {
         verificar(admin.getHashContrasena() == igual.getHashContrasena(), "misma clave genera el mismo hash");
         admin.setHashDirecto(12345);
         verificar(admin.getHashContrasena() == 12345, "setHashDirecto asigna el valor exacto");
+
+        // --- validaciones de parametros ---
+        verificarQueLanza([&] { admin.setId(-1); }, "id negativo rechazado");
+        verificarQueLanza([&] { admin.setNombre(""); }, "nombre vacio rechazado");
+        verificarQueLanza([&] { admin.setHashContrasena(""); }, "contrasena vacia rechazada");
+        verificarQueLanza([] { Usuario u(-5, "x"); }, "constructor con id negativo rechazado");
+        verificarQueLanza([] { Usuario u(1, ""); }, "constructor con nombre vacio rechazado");
     }
 
     void probarListaDoble() {
@@ -144,8 +151,8 @@ namespace PruebasUsuario {
         Usuario* beto = new Usuario(2, "Beto");
         Usuario* carla = new Usuario(3, "Carla", Usuario::Rol::ADMINISTRADOR);
 
-        // agregar (nullptr no rompe)
-        lista.agregarUsuario(nullptr);
+        // agregar (nulo lanza)
+        verificarQueLanza([&] { lista.agregarUsuario(nullptr); }, "usuario nulo rechazado");
         lista.agregarUsuario(ana);
         lista.agregarUsuario(beto);
         lista.agregarUsuario(carla);
@@ -154,9 +161,19 @@ namespace PruebasUsuario {
         verificar(todos.size() == 3, "se agregaron 3 usuarios");
         verificar(todos[0] == ana && todos[1] == beto && todos[2] == carla, "orden de insercion");
 
+        // agregar duplicado lanza
+        Usuario* anaDuplicada = new Usuario(1, "Ana Duplicada");
+        verificarQueLanza([&] { lista.agregarUsuario(anaDuplicada); }, "usuario con id duplicado rechazado");
+        delete anaDuplicada;
+
         // buscar
         verificar(lista.buscarPorId(2) == beto, "buscarPorId encuentra");
         verificar(lista.buscarPorId(99) == nullptr, "buscarPorId no encuentra");
+
+        // ids negativos rechazados
+        verificarQueLanza([&] { lista.buscarPorId(-1); }, "buscarPorId con id negativo rechazado");
+        verificarQueLanza([&] { lista.actualizarUsuario(-1, ana); }, "actualizarUsuario con id negativo rechazado");
+        verificarQueLanza([&] { lista.eliminarUsuario(-1); }, "eliminarUsuario con id negativo rechazado");
 
         // actualizar existente
         Usuario* nuevoBeto = new Usuario(2, "Beto Actualizado");
@@ -260,6 +277,9 @@ namespace PruebasUsuario {
 
         // eliminarUsuario inexistente -> lanza
         verificarQueLanza([&] { db.eliminarUsuario(999); }, "eliminarUsuario inexistente rechazado");
+
+        // eliminarUsuario con id negativo -> lanza
+        verificarQueLanza([&] { db.eliminarUsuario(-1); }, "eliminarUsuario con id negativo rechazado");
 
         // guardar con lista nula -> lanza
         verificarQueLanza([&] { db.guardarUsuariosEnArchivo(nullptr); }, "guardar lista nula rechazado");

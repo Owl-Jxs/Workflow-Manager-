@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include <stdexcept>
 
 class Usuario {
 public:
@@ -17,6 +18,8 @@ private:
     Rol rolUsuario;
 	size_t hashContrasena; // Almacena el hash de la contraseña
 
+    int validarId(int id);                                    // valida el id y lo devuelve si es correcto
+    const std::string& validarNombre(const std::string& nombre); // valida el nombre y lo devuelve si es correcto
 public:
     // Constructores y destructor
     Usuario();
