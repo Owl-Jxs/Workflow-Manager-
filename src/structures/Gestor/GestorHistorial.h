@@ -1,6 +1,6 @@
 #ifndef GESTORHISTORIAL_H
 #define GESTORHISTORIAL_H
-#include "PilaIComando.h"
+#include "../PilaComando/PilaIComando.h"
 
 class GestorHistorial {
 private:

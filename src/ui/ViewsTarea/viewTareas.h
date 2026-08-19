@@ -1,8 +1,8 @@
 #ifndef VIEWTAREAS_H
 #define VIEWTAREAS_H
 #include <vector>
-#include "Tarea.h"
-#include "ColaFIFO.h"
+#include "../../models/Tarea/Tarea.h"
+#include "../../structures/ColaFIFO/colaFIFO.h"
 
 class ViewTareas {
 
