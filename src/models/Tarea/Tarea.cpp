@@ -58,6 +58,7 @@ Tarea::Tarea (int id, std::string descripcion, bool prioridad, std::string estad
     this->siguienteSubTarea = nullptr;
     this->cantidadSubTareas = 0;
     this->TareaPadre = nullptr; // Inicializar con nullptr para indicar que no tiene padre
+    this->ciclosEspera = 0;
 }
 
 Tarea::~Tarea () {
@@ -200,4 +201,43 @@ Tarea* Tarea::buscarSubTarea (int idBuscada) {
     }
 
     return nullptr; //si no se encontro
+}
+
+Tarea* Tarea::eliminarSubTarea(int idBuscada) {
+    if (primerSubTarea == nullptr) return nullptr;
+    Tarea* actual = primerSubTarea;
+    Tarea* anterior = nullptr;
+    while (actual != nullptr) {
+        if (actual->getIdTarea() == idBuscada) {
+            if (anterior == nullptr) primerSubTarea = actual->siguienteSubTarea;
+            else anterior->siguienteSubTarea = actual->siguienteSubTarea;
+            actual->siguienteSubTarea = nullptr;
+            actual->TareaPadre = nullptr;
+            actual->idTareaPadre = sinPadre;
+            cantidadSubTareas--;
+            return actual;
+        }
+        Tarea* extraida = actual->eliminarSubTarea(idBuscada);
+        if (extraida != nullptr) return extraida;
+        anterior = actual;
+        actual = actual->siguienteSubTarea;
+    }
+    return nullptr;
+}
+
+void Tarea::setCiclosEspera(int ciclos) {
+    if (ciclos < 0) throw std::invalid_argument("Los ciclos de espera no pueden ser negativos.");
+    this->ciclosEspera = ciclos;
+}
+
+int Tarea::getCiclosEspera() const {
+    return this->ciclosEspera;
+}
+
+void Tarea::incrementarCiclosEspera() {
+    this->ciclosEspera++;
+}
+
+void Tarea::reiniciarCiclosEspera() {
+    this->ciclosEspera = 0;
 }

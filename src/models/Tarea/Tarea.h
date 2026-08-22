@@ -16,6 +16,10 @@ private:
     Tarea* siguienteSubTarea;   // hermano siguiente
     int cantidadSubTareas;
     Tarea* TareaPadre; // puntero al padre
+
+//contador de ciclos de espera (para escalamiento SLA)
+    int ciclosEspera;
+
 //funciones privadas de validar parametros
     void validarId (int id);
     void validarDescripcion (std::string descripcion);
@@ -56,8 +60,14 @@ public:
     Tarea* getTareaPadre () const;
     int getCantidadSubTareas () const;
 
-// busca una subTarea
     Tarea* buscarSubTarea (int idBuscada);
+    Tarea* eliminarSubTarea(int idBuscada);
+
+//ciclos de espera (SLA)
+    void setCiclosEspera(int ciclos);
+    int getCiclosEspera() const;
+    void incrementarCiclosEspera();
+    void reiniciarCiclosEspera();
 };
 
 

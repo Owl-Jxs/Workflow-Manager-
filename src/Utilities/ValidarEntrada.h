@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 #include <conio.h>
 
 class ValidarEntrada {

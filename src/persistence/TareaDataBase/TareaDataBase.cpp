@@ -4,7 +4,7 @@ const std::string TareaDataBase::FILENAME_TAREAS_REGULARES = "data/tareas_regula
 const std::string TareaDataBase::FILENAME_TAREAS_URGENTES = "data/tareas_urgentes.csv";
 const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular"}; 
 
-//Formato de guardado --> id, descripcion, prioridad, estado, idPadre,cantidadSubTareas
+//Formato de guardado --> id, descripcion, prioridad, estado, idPadre, cantidadSubTareas, ciclosEspera
 
 //                                  === === ===     FUNCIONES PRIVATE AUXILIARES    === === ===
 
@@ -57,7 +57,8 @@ std::string TareaDataBase::formularLinea (Tarea* tarea) { // formula la linea
     std::string perteneceListaUrgente = ((tarea->getPrioridad ()) ?ENUM_PRIORIDAD_TAREA[0] : ENUM_PRIORIDAD_TAREA[1]); 
 //definimos la linea con el formato que estara en el archivo
     linea << tarea->getIdTarea () << ",\"" << escaparCSV (tarea->getDescripcionTarea ()) << "\"," << perteneceListaUrgente << ","
-    << tarea->getEstado () << ',' << tarea->getIdPadre () << ',' << tarea->getCantidadSubTareas ();
+    << tarea->getEstado () << ',' << tarea->getIdPadre () << ',' << tarea->getCantidadSubTareas ()
+    << ',' << tarea->getCiclosEspera ();
      
     return linea.str ();
 }
@@ -127,6 +128,9 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
             // campos[5] = cantidadSubTareas: se recalcula al reconstruir el arbol
 
             Tarea* nuevaTarea = new Tarea (idTarea, campos[1], urgente, campos[3]);
+            if (campos.size () >= 7) {
+                nuevaTarea->setCiclosEspera (std::stoi (campos[6]));
+            }
             indiceTareas [idTarea] = nuevaTarea; //la ingresamos al "indice rapido"
             padresPorId [idTarea] = idPadre; //guardamos su relacion para adjuntarla despues
             tareasEnlistadas.push_back (nuevaTarea);
