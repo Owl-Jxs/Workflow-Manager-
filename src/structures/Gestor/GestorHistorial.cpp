@@ -51,7 +51,7 @@ void GestorHistorial::deshacer() {
     //deshacer el comando
     comando->deshacer();
 
-    //registrar la accion en la bitacora de auditoria (Aclaratoria 3, parte 2)
+    //registrar la accion en la bitacora de auditoria
     if (auditoria != nullptr) {
         auditoria->registrar(idUsuarioSesion,
                              "DESHACER: " + comando->getAccionAuditoria(),
@@ -73,7 +73,7 @@ void GestorHistorial::rehacer() {
     //ejecutamos el comando
     comando->ejecutar();
 
-    //registrar la accion en la bitacora de auditoria (Aclaratoria 3, parte 2)
+    //registrar la accion en la bitacora de auditoria
     if (auditoria != nullptr) {
         auditoria->registrar(idUsuarioSesion,
                              "REHACER: " + comando->getAccionAuditoria(),
