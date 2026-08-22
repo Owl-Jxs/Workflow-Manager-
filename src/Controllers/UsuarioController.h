@@ -3,6 +3,7 @@
 
 #include "UsuarioDataBase.h"
 #include "ListaDoble.h"
+#include <vector>
 
 class UsuarioController
 {
@@ -26,6 +27,7 @@ public:
     bool eliminarUsuario(int idUsuario);
 
     Usuario* buscarUsuarioPorId(int idUsuario);
+    std::vector<Usuario*> listarUsuarios();
 };
 
 #endif

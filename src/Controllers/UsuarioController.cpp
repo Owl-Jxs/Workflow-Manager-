@@ -126,4 +126,9 @@ Usuario* UsuarioController::buscarUsuarioPorId(
     int idUsuario)
 {
     return listaUsuarios->buscarPorId(idUsuario);
+
+    std::vector<Usuario*> UsuarioController::listarUsuarios()
+{
+    return listaUsuarios->listarUsuarios();
+}
 }
