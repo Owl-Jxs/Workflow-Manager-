@@ -1,7 +1,7 @@
 #ifndef USUARIOVIEW_H
 #define USUARIOVIEW_H
 
-#include "UsuarioController.h"
+#include "../Controllers/UsuarioController.h"
 #include <iostream>
 #include <string>
 #include <limits>

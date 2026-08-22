@@ -4,6 +4,7 @@
 #include <limits>
 #include <vector>
 #include <exception>
+#include "../Utilities/ValidarEntrada.h"
 
 using namespace std;
 
@@ -62,23 +63,37 @@ Usuario* UsuarioView::leerNuevoUsuario()
         {
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
+            Usuario::Rol rol;
+
             if (opcionRol == 1)
             {
-                return new Usuario(
-                    id,
-                    nombre,
-                    Usuario::Rol::ADMINISTRADOR
-                );
+                rol = Usuario::Rol::ADMINISTRADOR;
+            }
+            else if (opcionRol == 2)
+            {
+                rol = Usuario::Rol::USUARIO_NORMAL;
+            }
+            else
+            {
+                cout << "Error: seleccione 1 o 2.\n";
+                continue;
             }
 
-            if (opcionRol == 2)
+            Usuario* nuevoUsuario = new Usuario(id, nombre, rol);
+
+            string contrasena = ValidarEntrada::validarContrasena(
+                "Ingrese la contrasena: ", '*');
+
+            while (contrasena.empty())
             {
-                return new Usuario(
-                    id,
-                    nombre,
-                    Usuario::Rol::USUARIO_NORMAL
-                );
+                cout << "La contrasena no puede estar vacia.\n";
+                contrasena = ValidarEntrada::validarContrasena(
+                    "Ingrese la contrasena: ", '*');
             }
+
+            nuevoUsuario->setHashContrasena(contrasena);
+
+            return nuevoUsuario;
         }
 
         cout << "Error: seleccione 1 o 2.\n";

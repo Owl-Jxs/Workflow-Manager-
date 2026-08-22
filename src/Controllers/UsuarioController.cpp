@@ -22,7 +22,7 @@ UsuarioController::~UsuarioController()
 
 void UsuarioController::guardarUsuarios()
 {
-    archivoUsuarios->guardarListaEnArchivo(listaUsuarios);
+    archivoUsuarios->guardarUsuariosEnArchivo(listaUsuarios);
 }
 
 // ======================================================
@@ -35,7 +35,7 @@ void UsuarioController::cargarUsuarios()
 
     try
     {
-        nuevaLista = archivoUsuarios->cargarListaDelArchivo();
+        nuevaLista = archivoUsuarios->cargarUsuariosDesdeArchivo();
     }
     catch (const std::exception& e)
     {
@@ -74,7 +74,7 @@ void UsuarioController::agregarUsuario(Usuario* usuario)
 
     listaUsuarios->agregarUsuario(usuario);
 
-    archivoUsuarios->guardarNuevoUsuarioEnArchivo(usuario);
+    archivoUsuarios->agregarUsuario(usuario);
 }
 
 // ======================================================
@@ -126,9 +126,9 @@ Usuario* UsuarioController::buscarUsuarioPorId(
     int idUsuario)
 {
     return listaUsuarios->buscarPorId(idUsuario);
+}
 
-    std::vector<Usuario*> UsuarioController::listarUsuarios()
+std::vector<Usuario*> UsuarioController::listarUsuarios()
 {
     return listaUsuarios->listarUsuarios();
-}
 }
