@@ -7,14 +7,70 @@
 
 using namespace std;
 
-MenuPrincipal::MenuPrincipal()
+void MenuPrincipal::crearPrimerUsuario () {
+    std::cout << "No hay ningun registro de usarios,  debe de registrar el primero para utilizar el sistema" << std::endl;
+    Usuario* PrimerUsuario = uv->leerNuevoUsuario ();
+        
+    try {
+        uc->agregarUsuario  (PrimerUsuario);
+    } catch (std::exception &e) {
+        std::cout << e.what (); delete PrimerUsuario;
+    }
+        usuarioActivo = PrimerUsuario;
+}
+
+void MenuPrincipal::iniciarSesion()
 {
-    uc = new UsuarioController();
-    tc = new TareaController();
-    ac = new AsignacionController();
-    auditoria = new AuditoriaDataBase();
-    gestorHistorial = new GestorHistorial(auditoria);
-    uv = new UsuarioView(uc);
+    bool seguirBuscando = true;
+    
+    do { //buscamos el uusuario
+        int idUsuario = ValidarEntrada::validarCodigoNumerico  ("Ingrese su ID de usuario", 9);
+        Usuario* usuario = uc->buscarUsuarioPorId(idUsuario);
+
+        if (usuario == nullptr){
+                std::cout << "\nNo existe un usuario con ese ID.\n";
+                std::cout << "Desea intentar nuevamente.\n";
+                seguirBuscando = ValidarEntrada::respuestas_Si_O_No ("Si", "No, Salir");
+            } else {
+                seguirBuscando = false;
+            }
+    } while (seguirBuscando);
+
+    //validamos su contrasena
+    bool contraValida = false;
+    int numeroIntentos = 8;
+
+    do {
+        std::string contrasena = ValidarEntrada::validarContrasena("Ingrese su contrasena: ", '*');
+        hash<string> hasher;
+
+        if (hasher(contrasena) != usuarioActivo->getHashContrasena())
+        {
+            numeroIntentos--;
+            std::cout << "Contrasena incorrecta. Le quedan " << numeroIntentos << " intentos"; std::system ("pause"); std::system ("cls"); 
+        } else {
+            contraValida = true;
+        }
+
+    } while (!contraValida &&  numeroIntentos != 0);
+
+   if (numeroIntentos == 0) {
+    usuarioActivo = nullptr;
+    std::cout << "Lo sentimos, numero de intentos maximos alcanzados. Ingrese sesion mas tarde"; return;
+   }
+
+   gestorHistorial->setIdUsuarioSesion(usuarioActivo->getId());
+    cout << "\nInicio de sesion exitoso.\n";
+    cout << "Bienvenido/a, " << usuarioActivo->getNombre() << "!\n";
+}
+
+
+MenuPrincipal::MenuPrincipal ()
+{
+    uc = new UsuarioController ();
+    tc = new TareaController ();
+    ac = new AsignacionController ();
+    gestorHistorial = new GestorHistorial ();
 
     try
     {
@@ -47,79 +103,35 @@ MenuPrincipal::MenuPrincipal()
     }
 }
 
-void MenuPrincipal::iniciarSesion()
-{
-    int id;
+void MenuPrincipal::ejecutar () {
+    std::cout << "\n================================\n";
+    std::cout << "       WORKFLOW MANAGER\n";
+    std::cout << "================================\n\n";
 
-    cout << "\n================================\n";
-    cout << "       WORKFLOW MANAGER\n";
-    cout << "================================\n";
+    if ( (uc->listarUsuarios () ).empty () ) {
+         crearPrimerUsuario ();
+    } else {
+        iniciarSesion ();
+    }
 
-    while (true)
-    {
-        cout << "\nIngrese su ID de usuario";
-        cout << " (0 para salir): ";
+    if (usuarioActivo != nullptr ){
 
-        if (!(cin >> id))
+        uv = new UsuarioView (uc, usuarioActivo, gestorHistorial);
+        switch (usuarioActivo->getRol ()) 
         {
-            cout << "Error: debe ingresar un numero entero.\n";
-
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-            continue;
+            case Usuario::Rol::ADMINISTRADOR: {
+                mostrarMenuAdministrador (usuarioActivo); break;
+            }
+            case Usuario::Rol::USUARIO_NORMAL: {
+                mostrarMenuUsuarioNormal (usuarioActivo); break;
+            }   
         }
-
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        if (id == 0)
-        {
-            cout << "Saliendo del programa...\n";
-            return;
-        }
-
-        Usuario* usuario = uc->buscarUsuarioPorId(id);
-
-        if (usuario == nullptr)
-        {
-            cout << "\nNo existe un usuario con ese ID.\n";
-            cout << "Intente nuevamente.\n";
-            continue;
-        }
-
-        string contrasena = ValidarEntrada::validarContrasena(
-            "Ingrese su contrasena: ", '*');
-
-        hash<string> hasher;
-        if (hasher(contrasena) != usuario->getHashContrasena())
-        {
-            cout << "Contrasena incorrecta.\n";
-            continue;
-        }
-
-        gestorHistorial->setIdUsuarioSesion(usuario->getId());
-
-        cout << "\nInicio de sesion exitoso.\n";
-        cout << "Bienvenido/a, "
-             << usuario->getNombre() << "!\n";
-
-        mostrarMenuSegunRol(usuario);
-
-        return;
+    } else {
+        std::cout << "Error al abrir el sistema";
     }
 }
 
-void MenuPrincipal::mostrarMenuSegunRol(Usuario* usuario)
-{
-    if (usuario->getRol() == Usuario::Rol::ADMINISTRADOR)
-    {
-        mostrarMenuAdministrador(usuario);
-    }
-    else
-    {
-        mostrarMenuUsuarioNormal(usuario);
-    }
-}
+        
 
 void MenuPrincipal::mostrarMenuAdministrador(Usuario* usuario)
 {
@@ -135,17 +147,7 @@ void MenuPrincipal::mostrarMenuAdministrador(Usuario* usuario)
         cout << "3. Deshacer ultima accion\n";
         cout << "4. Rehacer ultima accion\n";
         cout << "0. Cerrar sesion\n";
-        cout << "Seleccione una opcion: ";
-
-        if (!(cin >> opcion))
-        {
-            cout << "Error: debe ingresar un numero.\n";
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        opcion = ValidarEntrada::validarEntradaRango("Seleccione una opcion: ", 0, 4);
 
         switch (opcion)
         {
@@ -182,7 +184,6 @@ void MenuPrincipal::mostrarMenuAdministrador(Usuario* usuario)
 void MenuPrincipal::mostrarMenuUsuarioNormal(Usuario* usuario)
 {
     int opcion;
-
     do
     {
         cout << "\n==============================\n";
@@ -191,17 +192,7 @@ void MenuPrincipal::mostrarMenuUsuarioNormal(Usuario* usuario)
         cout << "1. Ver tareas\n";
         cout << "2. Cambiar estado de tarea asignada\n";
         cout << "0. Cerrar sesion\n";
-        cout << "Seleccione una opcion: ";
-
-        if (!(cin >> opcion))
-        {
-            cout << "Error: debe ingresar un numero.\n";
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ", 0, 2);
 
         switch (opcion)
         {
@@ -226,11 +217,11 @@ void MenuPrincipal::mostrarMenuUsuarioNormal(Usuario* usuario)
 }
 
 MenuPrincipal::~MenuPrincipal()
-{
-    delete gestorHistorial;
-    delete auditoria;
-    delete uv;
-    delete ac;
-    delete tc;
+{   
     delete uc;
+    delete tc;
+    delete ac;
+    delete gestorHistorial;
+    delete uv;
+    delete tv;
 }

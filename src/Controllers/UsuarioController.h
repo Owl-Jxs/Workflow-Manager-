@@ -1,8 +1,8 @@
 #ifndef USUARIOCONTROLLER_H
 #define USUARIOCONTROLLER_H
 
-#include "persistence/UsuarioDataBase/UsuarioDataBase.h"
-#include "structures/ListaDoble/ListaDoble.h"
+#include "../persistence/UsuarioDataBase/UsuarioDataBase.h"
+#include "../structures/ListaDoble/ListaDoble.h"
 #include <vector>
 
 class UsuarioController

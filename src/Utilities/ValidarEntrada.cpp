@@ -80,7 +80,7 @@ int ValidarEntrada::validarEntradaRango (const std::string& mensaje,int inicio, 
         }
 
     //devolvemos la entrada ya validada
-        return entradaConvertida;
+        std::system ("cls"); return entradaConvertida;
     }
 }
 
@@ -146,4 +146,14 @@ std::string ValidarEntrada::validarContrasena (const std::string& mensaje, char 
     }
     std::cout << "\n";
     return entrada;
+}
+
+bool ValidarEntrada::respuestas_Si_O_No (std::string mensajeSi, std::string mensajeNo) {
+std::cout << "1." << mensajeSi << std::endl
+    << "2." << mensajeNo << std::endl << std::endl;
+
+int opcion =validarEntradaRango ("ingrese su opcion", 1,2);
+
+if (opcion == 1) return true;
+return false;
 }

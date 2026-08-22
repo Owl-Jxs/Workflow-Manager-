@@ -1,12 +1,15 @@
 #ifndef MENUPRINCIPAL_H
 #define MENUPRINCIPAL_H
-
+//controllers
 #include "Controllers/UsuarioController.h"
 #include "Controllers/TareaController/TareaController.h"
 #include "Controllers/AsignacionController/AsignacionController.h"
 #include "structures/Gestor/GestorHistorial.h"
-#include "persistence/AuditoriaDataBase/AuditoriaDataBase.h"
-#include "ui/UsuarioView.h"
+
+//vistas
+#include "ui/UsuarioView/UsuarioView.h"
+#include "ui/ViewsTarea/viewTareas.h"
+
 #include "models/Usuario/Usuario.h"
 
 class MenuPrincipal {
@@ -14,18 +17,23 @@ private:
     UsuarioController* uc;
     TareaController* tc;
     AsignacionController* ac;
-    UsuarioView* uv;
-    AuditoriaDataBase* auditoria;
     GestorHistorial* gestorHistorial;
 
-    void mostrarMenuSegunRol(Usuario* usuario);
+    UsuarioView* uv;
+    ViewTareas* tv;
+
+    Usuario* usuarioActivo;
+
+    void crearPrimerUsuario ();
+    void iniciarSesion();
     void mostrarMenuAdministrador(Usuario* usuario);
     void mostrarMenuUsuarioNormal(Usuario* usuario);
 
 public:
     MenuPrincipal();
     ~MenuPrincipal();
-    void iniciarSesion();
+    void ejecutar ();
+    
 };
 
 #endif
