@@ -17,18 +17,24 @@ MenuPrincipal::MenuPrincipal()
     }
     catch (const exception& e)
     {
-        cout << "Advertencia: no se pudieron cargar los usuarios.\n";
+        cout << "Advertencia: no se pudieron cargar los usuarios." << endl;
         cout << e.what() << endl;
     }
+}
+
+MenuPrincipal::~MenuPrincipal()
+{
+    delete uv;
+    delete uc;
 }
 
 void MenuPrincipal::iniciarSesion()
 {
     int id;
 
-    cout << "\n================================\n";
-    cout << "       WORKFLOW MANAGER\n";
-    cout << "================================\n";
+    cout << "\n====================================" << endl;
+    cout << "        WORKFLOW MANAGER" << endl;
+    cout << "====================================" << endl;
 
     while (true)
     {
@@ -37,19 +43,25 @@ void MenuPrincipal::iniciarSesion()
 
         if (!(cin >> id))
         {
-            cout << "Error: debe ingresar un numero entero.\n";
+            cout << "Error: debe ingresar un numero entero." << endl;
 
             cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cin.ignore(
+                numeric_limits<streamsize>::max(),
+                '\n'
+            );
 
             continue;
         }
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.ignore(
+            numeric_limits<streamsize>::max(),
+            '\n'
+        );
 
         if (id == 0)
         {
-            cout << "Saliendo del programa...\n";
+            cout << "Saliendo del programa..." << endl;
             return;
         }
 
@@ -57,14 +69,14 @@ void MenuPrincipal::iniciarSesion()
 
         if (usuario == nullptr)
         {
-            cout << "\nNo existe un usuario con ese ID.\n";
-            cout << "Intente nuevamente.\n";
+            cout << "\nNo existe un usuario con ese ID." << endl;
+            cout << "Intente nuevamente." << endl;
             continue;
         }
 
-        cout << "\nInicio de sesion exitoso.\n";
+        cout << "\nInicio de sesion exitoso." << endl;
         cout << "Bienvenido/a, "
-             << usuario->getNombre() << "!\n";
+             << usuario->getNombre() << "!" << endl;
 
         mostrarMenuSegunRol(usuario);
 
@@ -72,8 +84,30 @@ void MenuPrincipal::iniciarSesion()
     }
 }
 
-MenuPrincipal::~MenuPrincipal()
+void MenuPrincipal::mostrarMenuSegunRol(Usuario* usuario)
 {
-    delete uv;
-    delete uc;
+    if (usuario == nullptr)
+    {
+        cout << "Error: usuario invalido." << endl;
+        return;
+    }
+
+    if (usuario->getRol() == Usuario::Rol::ADMINISTRADOR)
+    {
+        mostrarMenuAdministrador();
+    }
+    else
+    {
+        mostrarMenuUsuarioNormal();
+    }
+}
+
+void MenuPrincipal::mostrarMenuAdministrador()
+{
+    uv->mostrarMenuAdministrador();
+}
+
+void MenuPrincipal::mostrarMenuUsuarioNormal()
+{
+    uv->mostrarMenuUsuarioNormal();
 }

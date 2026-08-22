@@ -1,6 +1,10 @@
-#include <iostream>
+#include "MenuPrincipal.h"
 
-int main (int argc, char* argv[]) {
+int main()
+{
+    MenuPrincipal menu;
+
+    menu.iniciarSesion();
 
     return 0;
-}     
+}    
