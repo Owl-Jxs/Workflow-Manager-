@@ -85,3 +85,66 @@ void TareaController::agregarSubTarea (Tarea* nuevaSubTarea, int idTareaPadre, b
     bool padreEsUrgente = (listaPadre == listaTareasUrgentes);
     archivosTareas->guardarNuevaSubTareaEnArchivo (nuevaSubTarea, padreEsUrgente);
 }
+
+Tarea* TareaController::buscarTarea (int idTarea) {
+    ColaFIFO* listas [2] = { listaTareasRegulares, listaTareasUrgentes };
+    for (ColaFIFO* lista : listas) {
+        NodoTarea* nodoActual = lista->getFrente ();
+        while (nodoActual != nullptr) {
+            Tarea* encontrada = nodoActual->datos->buscarSubTarea (idTarea);
+            if (encontrada != nullptr) return encontrada;
+            nodoActual = nodoActual->siguiente;
+        }
+    }
+    return nullptr;
+}
+
+Tarea* TareaController::eliminarTarea (int idTarea, bool perteneceListaUrgente) {
+    if (idTarea < 0) throw std::invalid_argument ("El id de la tarea no puede ser negativo");
+    Tarea* eliminada = perteneceListaUrgente
+        ? listaTareasUrgentes->extraerTarea (idTarea)
+        : listaTareasRegulares->extraerTarea (idTarea);
+    if (eliminada == nullptr) {
+        ColaFIFO* otra = perteneceListaUrgente ? listaTareasRegulares : listaTareasUrgentes;
+        eliminada = otra->extraerTarea(idTarea);
+        if (eliminada == nullptr) throw std::invalid_argument ("No existe una tarea con el id proporcionado");
+    }
+    guardarArchivos();
+    return eliminada;
+}
+
+Tarea* TareaController::escalarTarea (int idTarea) {
+    Tarea* tarea = listaTareasRegulares->extraerTarea (idTarea);
+    if (tarea == nullptr) {
+        throw std::invalid_argument ("No existe una tarea regular con el id proporcionado");
+    }
+    tarea->setPrioridad (true);
+    tarea->reiniciarCiclosEspera ();
+    listaTareasUrgentes->encolar (tarea);
+    guardarArchivos ();
+    return tarea;
+}
+
+namespace {
+    void aplanarArbol(Tarea* tarea, std::vector<Tarea*>& resultado) {
+        if (tarea == nullptr) return;
+        resultado.push_back(tarea);
+        aplanarArbol(tarea->getPrimerSubTarea(), resultado);
+        aplanarArbol(tarea->getSiguienteSubTarea(), resultado);
+    }
+
+    void aplanarCola(ColaFIFO* cola, std::vector<Tarea*>& resultado) {
+        NodoTarea* actual = cola->getFrente();
+        while (actual != nullptr) {
+            aplanarArbol(actual->datos, resultado);
+            actual = actual->siguiente;
+        }
+    }
+}
+
+std::vector<Tarea*> TareaController::listarTodasLasTareas() {
+    std::vector<Tarea*> resultado;
+    aplanarCola(listaTareasRegulares, resultado);
+    aplanarCola(listaTareasUrgentes, resultado);
+    return resultado;
+}

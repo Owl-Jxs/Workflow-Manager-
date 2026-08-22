@@ -2,10 +2,19 @@
 #include <stdexcept>
 using namespace std;
 
-GestorHistorial::GestorHistorial() {
+GestorHistorial::GestorHistorial(AuditoriaDataBase* auditoriaParam, int idUsuarioSesionParam)
+    : auditoria(auditoriaParam), idUsuarioSesion(idUsuarioSesionParam) {
 }
 
 GestorHistorial::~GestorHistorial() {
+}
+
+void GestorHistorial::setAuditoria(AuditoriaDataBase* auditoriaParam) {
+    this->auditoria = auditoriaParam;
+}
+
+void GestorHistorial::setIdUsuarioSesion(int idUsuarioSesionParam) {
+    this->idUsuarioSesion = idUsuarioSesionParam;
 }
 
 void GestorHistorial::ejecutarComando(IComando* comando) {
@@ -13,6 +22,13 @@ void GestorHistorial::ejecutarComando(IComando* comando) {
         throw invalid_argument("El comando no puede ser nulo.");
     }
     comando->ejecutar();
+
+    //registrar la accion en la bitacora de auditoria (Aclaratoria 3, parte 2)
+    if (auditoria != nullptr) {
+        auditoria->registrar(idUsuarioSesion,
+                             comando->getAccionAuditoria(),
+                             comando->getIdTareaAuditoria());
+    }
 
     //guardarlo para poder deshacerlo
     pilaDeshacer.push(comando);
@@ -35,6 +51,13 @@ void GestorHistorial::deshacer() {
     //deshacer el comando
     comando->deshacer();
 
+    //registrar la accion en la bitacora de auditoria (Aclaratoria 3, parte 2)
+    if (auditoria != nullptr) {
+        auditoria->registrar(idUsuarioSesion,
+                             "DESHACER: " + comando->getAccionAuditoria(),
+                             comando->getIdTareaAuditoria());
+    }
+
     //lo pasamos a la pila de rehacer
     pilaRehacer.push(comando);
 }
@@ -49,6 +72,13 @@ void GestorHistorial::rehacer() {
 
     //ejecutamos el comando
     comando->ejecutar();
+
+    //registrar la accion en la bitacora de auditoria (Aclaratoria 3, parte 2)
+    if (auditoria != nullptr) {
+        auditoria->registrar(idUsuarioSesion,
+                             "REHACER: " + comando->getAccionAuditoria(),
+                             comando->getIdTareaAuditoria());
+    }
 
     //se devuelve a la pila de deshacer
     pilaDeshacer.push(comando);
