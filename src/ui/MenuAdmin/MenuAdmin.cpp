@@ -1,0 +1,161 @@
+#include "MenuAdmin.h"
+
+
+MenuAdmin::MenuAdmin (UsuarioController* _uc, TareaController* _tc, AsignacionController* _ac,Usuario* uA, GestorHistorial* gH){
+    uc = _uc;
+    tc = _tc;
+    ac = _ac;
+    usuarioActivo = uA;
+    gestorHistorial = gH;
+    procesosUsuarios = new ProcesosUsuario (uc, usuarioActivo, gestorHistorial);
+    procesosTareas = new ProcesosTarea (uc, tc, ac, usuarioActivo, gestorHistorial);
+}
+
+MenuAdmin::~MenuAdmin () {
+    delete procesosUsuarios; delete procesosTareas;
+}
+
+
+
+void MenuAdmin::mostrarMenuAdministrador() {
+    int opcion;
+    do
+    {
+        std::cout << "\n==============================\n"
+         << "      MENU ADMINISTRADOR     \n"
+         << "==============================\n"
+         << "1. Desplegar menu de gestion de usuarios\n"
+         << "2. Desplegar menu de gestion de tareas\n"
+         << "0. Salir\n";
+
+        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ",0,2);
+
+        switch (opcion)
+        {
+            case 1:
+            {
+               mostrarMenuGestionUsuarios (); break;
+            }   
+
+            case 2:
+            {
+                mostrarMenuGestionTareas (); break;
+            }
+            case 0:
+                std::cout << "Saliendo del menu de usuarios...\n"; break;
+
+            default:
+                std::cout << "Error: opcion no valida.\n"; break;
+        }
+        std::system ("cls");
+    } while (opcion != 0);
+}
+
+
+void MenuAdmin::mostrarMenuGestionUsuarios (){
+    int opcion;
+    do
+    {
+        std::cout << "\n==============================\n"
+         << "      MENU DE GESTION DE USUARIOS     \n"
+         << "==============================\n"
+         << "1. Agregar usuario\n"
+         << "2. Actualizar usuario\n"
+         << "3. Eliminar usuario\n"
+         << "4. Listar usuarios\n"
+         << "5. Buscar usuario por ID\n"
+         << "0. volver al menu Administrador\n";
+
+        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ",0,5);
+
+        switch (opcion)
+        {
+            case 1:
+            {
+                procesosUsuarios-> agregarUsuario (); break;
+            }   
+
+            case 2:
+            {
+                procesosUsuarios-> actualizarUsuario (); break;
+            }
+
+            case 3:
+            {
+               procesosUsuarios-> eliminarUsuario ();
+            }
+
+            case 4:
+            {
+               procesosUsuarios-> mostrarLista ();
+            }
+
+            case 5:
+            {
+               procesosUsuarios-> mostrarUsuarioPorId ();
+            }
+
+            case 0:
+                std::cout << "Saliendo del menu de usuarios...\n"; break;
+
+            default:
+                std::cout << "Error: opcion no valida.\n"; break;
+        }
+        std::system ("cls");
+    } while (opcion != 0);   
+}
+
+
+void MenuAdmin::mostrarMenuGestionTareas (){
+     int opcion;
+    do
+    {
+        std::cout << "\n==============================\n"
+         << "      MENU DE GESTION DE TAREAS     \n"
+         << "==============================\n"
+         << "1. Agregar tarea\n"
+         << "2. Actualizar tarea\n"
+         << "3. Eliminar tarea\n"
+         << "4. Listar tareas pendientes\n"
+         << "5. Buscar tarea por ID\n"
+         << "0. volver al menu Administrador\n";
+
+        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ",0,5);
+
+        switch (opcion)
+        {
+            case 1:
+            {
+                procesosTareas->agregarTarea (); break;
+            }   
+
+            case 2:
+            {
+                procesosTareas->ActualizarTarea (); break;
+            }
+
+            case 3:
+            {
+               procesosTareas->eliminarTarea ();
+            }
+
+            case 4:
+            {
+               procesosTareas->listarTareas(); break;
+            }
+
+            case 5:
+            {
+                break;
+               //procesosTareas-> mostrarTareasPorId ();
+            }
+
+            case 0:
+                std::cout << "Saliendo del menu de usuarios...\n"; break;
+
+            default:
+                std::cout << "Error: opcion no valida.\n"; break;
+        }
+        std::system ("cls");
+    } while (opcion != 0);       
+}

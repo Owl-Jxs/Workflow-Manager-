@@ -5,10 +5,8 @@
 #include "Controllers/TareaController/TareaController.h"
 #include "Controllers/AsignacionController/AsignacionController.h"
 #include "structures/Gestor/GestorHistorial.h"
-
+#include "ui/MenuAdmin/MenuAdmin.h"
 //vistas
-#include "ui/UsuarioView/UsuarioView.h"
-#include "ui/ViewsTarea/viewTareas.h"
 
 #include "models/Usuario/Usuario.h"
 
@@ -18,10 +16,7 @@ private:
     TareaController* tc;
     AsignacionController* ac;
     GestorHistorial* gestorHistorial;
-
-    UsuarioView* uv;
-    ViewTareas* tv;
-
+    MenuAdmin* menuAdmin;
     Usuario* usuarioActivo;
 
     void crearPrimerUsuario ();

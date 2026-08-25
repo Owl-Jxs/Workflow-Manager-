@@ -157,3 +157,29 @@ int opcion =validarEntradaRango ("ingrese su opcion", 1,2);
 if (opcion == 1) return true;
 return false;
 }
+
+// Retorna el string validado usando 'int' para el máximo de caracteres
+std::string ingresarDescripcionCorta(const std::string& mensaje, int maxCaracteres) {
+    std::string entrada;
+    bool esValida = false;
+
+    do {
+        std::cout << mensaje;
+        std::getline(std::cin, entrada);
+
+        // entrada.length() se convierte explícitamente a int para comparar
+        int longitudActual = static_cast<int>(entrada.length());
+
+        if (entrada.empty()) {
+            std::cout << "Error: La descripción no puede estar vacía. Intente de nuevo.\n";  std::system ("pause");
+        } else if (longitudActual > maxCaracteres) {
+            std::cout << "Error: Excede el límite de " << maxCaracteres << " caracteres (longitud actual: " 
+                      << longitudActual << "). Intente de nuevo.\n";  std::system ("pause");
+        } else {
+            esValida = true;
+        }
+        std::system ("cls");
+    } while (!esValida);
+
+    return entrada;
+}

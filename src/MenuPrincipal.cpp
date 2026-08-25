@@ -9,7 +9,33 @@ using namespace std;
 
 void MenuPrincipal::crearPrimerUsuario () {
     std::cout << "No hay ningun registro de usarios,  debe de registrar el primero para utilizar el sistema" << std::endl;
-    Usuario* PrimerUsuario = uv->leerNuevoUsuario ();
+    Usuario* PrimerUsuario;
+
+    int id;
+    std::string nombre;
+    int opcionRol;
+    Usuario::Rol rol;
+    id = ValidarEntrada::validarCodigoNumerico ("Ingrese su identificacion", 9);
+    nombre =ValidarEntrada::validarNombreCompleto ();
+
+    std::cout << "\nSeleccione el rol:\n";
+    std::cout << "1. Administrador\n";
+    std::cout << "2. Usuario Normal\n";
+    opcionRol = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,2);
+
+    switch (opcionRol) {
+        case 1: {
+            rol = Usuario::Rol::ADMINISTRADOR; break;
+        }
+        case 2: {
+            rol = Usuario::Rol::USUARIO_NORMAL; break;
+        }
+            
+    };
+    PrimerUsuario = new Usuario (id, nombre, rol);
+    
+    std::string contrasena = ValidarEntrada::validarContrasena ("Ingrese la contrasena: ", '*');
+    PrimerUsuario->setHashContrasena (contrasena);
         
     try {
         uc->agregarUsuario  (PrimerUsuario);
@@ -19,11 +45,10 @@ void MenuPrincipal::crearPrimerUsuario () {
         usuarioActivo = PrimerUsuario;
 }
 
-void MenuPrincipal::iniciarSesion()
-{
+void MenuPrincipal::iniciarSesion() {
     bool seguirBuscando = true;
-    
-    do { //buscamos el uusuario
+    do { //buscamos el usuario
+
         int idUsuario = ValidarEntrada::validarCodigoNumerico  ("Ingrese su ID de usuario", 9);
         Usuario* usuario = uc->buscarUsuarioPorId(idUsuario);
 
@@ -44,14 +69,12 @@ void MenuPrincipal::iniciarSesion()
         std::string contrasena = ValidarEntrada::validarContrasena("Ingrese su contrasena: ", '*');
         hash<string> hasher;
 
-        if (hasher(contrasena) != usuarioActivo->getHashContrasena())
-        {
+        if (hasher(contrasena) != usuarioActivo->getHashContrasena()) {
             numeroIntentos--;
             std::cout << "Contrasena incorrecta. Le quedan " << numeroIntentos << " intentos"; std::system ("pause"); std::system ("cls"); 
         } else {
             contraValida = true;
         }
-
     } while (!contraValida &&  numeroIntentos != 0);
 
    if (numeroIntentos == 0) {
@@ -64,40 +87,31 @@ void MenuPrincipal::iniciarSesion()
     cout << "Bienvenido/a, " << usuarioActivo->getNombre() << "!\n";
 }
 
-
 MenuPrincipal::MenuPrincipal ()
 {
     uc = new UsuarioController ();
     tc = new TareaController ();
     ac = new AsignacionController ();
     gestorHistorial = new GestorHistorial ();
+    menuAdmin = new  MenuAdmin (uc, tc, ac, usuarioActivo, gestorHistorial);
 
-    try
-    {
+    try {
         uc->cargarUsuarios();
-    }
-    catch (const exception& e)
-    {
+    }catch (const exception& e) {
         cout << "Advertencia: no se pudieron cargar los usuarios.\n";
         cout << e.what() << endl;
     }
 
-    try
-    {
+    try{
         tc->cargarArchivos();
-    }
-    catch (const exception& e)
-    {
+    }catch (const exception& e) {
         cout << "Advertencia: no se pudieron cargar las tareas.\n";
         cout << e.what() << endl;
     }
 
-    try
-    {
+    try {
         ac->cargarAsignaciones();
-    }
-    catch (const exception& e)
-    {
+    } catch (const exception& e) {
         cout << "Advertencia: no se pudieron cargar las asignaciones.\n";
         cout << e.what() << endl;
     }
@@ -115,8 +129,6 @@ void MenuPrincipal::ejecutar () {
     }
 
     if (usuarioActivo != nullptr ){
-
-        uv = new UsuarioView (uc, usuarioActivo, gestorHistorial);
         switch (usuarioActivo->getRol ()) 
         {
             case Usuario::Rol::ADMINISTRADOR: {
@@ -135,52 +147,9 @@ void MenuPrincipal::ejecutar () {
 
 void MenuPrincipal::mostrarMenuAdministrador(Usuario* usuario)
 {
-    int opcion;
-
-    do
-    {
-        cout << "\n==============================\n";
-        cout << "    MENU ADMINISTRADOR\n";
-        cout << "==============================\n";
-        cout << "1. Gestionar usuarios\n";
-        cout << "2. Gestionar tareas\n";
-        cout << "3. Deshacer ultima accion\n";
-        cout << "4. Rehacer ultima accion\n";
-        cout << "0. Cerrar sesion\n";
-        opcion = ValidarEntrada::validarEntradaRango("Seleccione una opcion: ", 0, 4);
-
-        switch (opcion)
-        {
-            case 1:
-                uv->mostrarMenuAdministrador();
-                break;
-
-            case 2:
-                cout << "Modulo de gestion de tareas: pendiente de integrar.\n";
-                break;
-
-            case 3:
-                gestorHistorial->deshacer();
-                cout << "Accion deshecha.\n";
-                break;
-
-            case 4:
-                gestorHistorial->rehacer();
-                cout << "Accion rehecha.\n";
-                break;
-
-            case 0:
-                cout << "Cerrando sesion...\n";
-                break;
-
-            default:
-                cout << "Opcion no valida.\n";
-                break;
-        }
-
-    } while (opcion != 0);
+    menuAdmin->mostrarMenuAdministrador ();
 }
-
+/*
 void MenuPrincipal::mostrarMenuUsuarioNormal(Usuario* usuario)
 {
     int opcion;
@@ -216,12 +185,12 @@ void MenuPrincipal::mostrarMenuUsuarioNormal(Usuario* usuario)
     } while (opcion != 0);
 }
 
+*/
 MenuPrincipal::~MenuPrincipal()
 {   
     delete uc;
     delete tc;
     delete ac;
     delete gestorHistorial;
-    delete uv;
-    delete tv;
+    delete menuAdmin;
 }

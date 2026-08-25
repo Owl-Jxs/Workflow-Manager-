@@ -7,6 +7,7 @@ private:
     NodoTarea* frente;
     NodoTarea* final;
     int cantidad;
+    int ultimoId;
 
 public:
     ColaFIFO();
@@ -17,7 +18,7 @@ public:
     NodoTarea* getCola ();
     bool estaVacia() const;
     bool tareaRepetida (Tarea* tarea) const;
-
+    int getUltimoId () const;
     // Extrae y devuelve la tarea con el id indicado (sin eliminar el objeto Tarea).
     // Devuelve nullptr si no se encuentra. Reencola las demas tareas preservando el orden.
     Tarea* extraerTarea(int idTarea);

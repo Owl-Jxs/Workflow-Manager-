@@ -23,6 +23,7 @@ private:
 public:
     // Constructores y destructor
     Usuario();
+    Usuario (Usuario* otro);
     Usuario(int id, const std::string& nombre, Rol rol = Rol::USUARIO_NORMAL);
     ~Usuario();
 

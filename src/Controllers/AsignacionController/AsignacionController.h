@@ -1,6 +1,6 @@
 #ifndef  ASIGNACIONCONTROLLER_H
 #define ASIGNACIONCONTROLLER_H
-
+#include <vector>
 #include "../../persistence/AsignacionDataBase/AsignacionDataBase.h"
 #include "../../structures/Asignacion/ListaAsignaciones/ListaAsignaciones.h"
 
@@ -21,6 +21,9 @@ public:
     void agregarAsignacion(int idTarea, int idUsuario);
     void eliminarAsignacion(int idTarea, int idUsuario);
     bool buscarAsignacion(int idTarea, int idUsuario);
+
+    std::vector<int> getAsignacionesResponsablesDeTarea (int idTarea);
+    std::vector<int> getAsignacionesTareasPorUsuario (int idUsuario);
 
 
 };

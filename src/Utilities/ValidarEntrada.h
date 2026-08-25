@@ -23,6 +23,8 @@ public:
     static std::string validarNombreCompleto ();
     static std::string validarContrasena (const std::string& mensaje, char mascara);
     static bool respuestas_Si_O_No (std::string mensajeSi, std::string mensajeNo);
+    static std::string ingresarDescripcionCorta (const std::string& mensaje, int maxCaracteres);
+
 };
 
 #endif
