@@ -23,6 +23,24 @@ public:
 };
 
 // ==========================================
+// AgregarSubTareaComando
+// ==========================================
+class AgregarSubTareaComando : public IComando {
+private:
+    TareaController* controller;
+    int idPadre;
+    Tarea* tarea;
+    bool urgente;
+public:
+    AgregarSubTareaComando (TareaController* controller, int idPadre, Tarea* tarea, bool urgente);
+    void ejecutar() override;
+    void deshacer() override;
+    std::string getAccionAuditoria() const override;
+    int getIdTareaAuditoria() const override;
+};
+
+
+// ==========================================
 // ActualizarTareaComando
 // ==========================================
 class ActualizarTareaComando : public IComando {
@@ -31,12 +49,14 @@ private:
     int idTarea;
     std::string nuevaDescripcion;
     std::string descripcionAnterior;
+    std::string estadoAnterior;
+    std::string nuevoEstado;
     bool nuevaPrioridad;
     bool prioridadAnterior;
     bool ejecutado;
 public:
     ActualizarTareaComando(TareaController* controller, int idTarea,
-                           const std::string& nuevaDescripcion, bool nuevaPrioridad);
+                           const std::string& nuevaDescripcion, bool nuevaPrioridad, std::string nuevoEstado);
     void ejecutar() override;
     void deshacer() override;
     std::string getAccionAuditoria() const override;

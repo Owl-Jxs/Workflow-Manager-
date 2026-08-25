@@ -18,9 +18,14 @@ const std::string& Usuario::validarNombre(const std::string& nombre) {
 
 // Constructores
 Usuario::Usuario()
-    : idUsuario(0), nombreUsuario(""), rolUsuario(Rol::USUARIO_NORMAL), hashContrasena(0) {
-}
+    : idUsuario(0), nombreUsuario(""), rolUsuario(Rol::USUARIO_NORMAL), hashContrasena(0) { }
 
+Usuario::Usuario(Usuario* otro) {
+	this-> idUsuario = otro->getId ();
+    this-> nombreUsuario = otro->getNombre ();
+    this-> rolUsuario = otro->getRol ();
+	this-> hashContrasena = otro->getHashContrasena ();
+}
 Usuario::Usuario(int id, const std::string& nombre, Rol rol)
     : idUsuario(validarId(id)), nombreUsuario(validarNombre(nombre)), rolUsuario(rol), hashContrasena(0) {
 }

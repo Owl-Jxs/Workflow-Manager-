@@ -25,15 +25,38 @@ int AgregarTareaComando::getIdTareaAuditoria() const {
 }
 
 // ==========================================
+// AgregarSubTareaComando
+// ==========================================
+
+AgregarSubTareaComando::AgregarSubTareaComando(TareaController* controller,int id, Tarea* tarea, bool urgente)
+    : controller(controller) , idPadre (id), tarea(tarea), urgente(urgente) {}
+
+void AgregarSubTareaComando::ejecutar() {
+    controller->agregarSubTarea (tarea, idPadre,urgente);
+}
+
+void AgregarSubTareaComando::deshacer() {
+    controller->eliminarTarea (tarea->getIdTarea (), urgente);
+}
+
+std::string AgregarTareaComando::getAccionAuditoria() const {
+    return "AGREGAR_SUB_TAREA";
+}
+
+int AgregarTareaComando::getIdTareaAuditoria() const {
+    return tarea->getIdTarea();
+}
+
+// ==========================================
 // ActualizarTareaComando
 // ==========================================
 
 ActualizarTareaComando::ActualizarTareaComando(
     TareaController* controller, int idTarea,
-    const std::string& nuevaDescripcion, bool nuevaPrioridad)
+    const std::string& nuevaDescripcion, bool nuevaPrioridad, std::string nuevoEstado)
     : controller(controller), idTarea(idTarea),
       nuevaDescripcion(nuevaDescripcion), nuevaPrioridad(nuevaPrioridad),
-      ejecutado(false) {}
+      ejecutado(false), nuevoEstado (nuevoEstado) {}
 
 void ActualizarTareaComando::ejecutar() {
     Tarea* tarea = controller->buscarTarea(idTarea);
@@ -43,10 +66,12 @@ void ActualizarTareaComando::ejecutar() {
     if (!ejecutado) {
         descripcionAnterior = tarea->getDescripcionTarea();
         prioridadAnterior = tarea->getPrioridad();
+        estadoAnterior = tarea->getEstado ();
     }
 
     tarea->setDescripcionTarea(nuevaDescripcion);
     tarea->setPrioridad(nuevaPrioridad);
+    tarea->setEstado (nuevoEstado);
     controller->guardarArchivos();
     ejecutado = true;
 }
@@ -57,6 +82,7 @@ void ActualizarTareaComando::deshacer() {
 
     tarea->setDescripcionTarea(descripcionAnterior);
     tarea->setPrioridad(prioridadAnterior);
+    tarea->setEstado (estadoAnterior);
     controller->guardarArchivos();
 }
 

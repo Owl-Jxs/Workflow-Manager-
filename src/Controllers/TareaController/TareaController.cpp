@@ -1,10 +1,39 @@
 #include "TareaController.h"
 
+//                              === === === METODOS PRIVATE  === === ===
+
+ void TareaController:: aplanarArbol(Tarea* tarea, std::vector<Tarea*>& resultado) {
+    if (tarea == nullptr) return;
+    resultado.push_back(tarea);
+    aplanarArbol(tarea->getPrimerSubTarea(), resultado);
+    aplanarArbol(tarea->getSiguienteSubTarea(), resultado);
+}
+
+std::vector <Tarea*> TareaController::listarTareas (ColaFIFO* cola) {
+    std::vector <Tarea*> lista;
+    NodoTarea* nodoActual = cola->getFrente ();
+    
+    while (nodoActual != nullptr) {
+        lista.push_back (nodoActual->datos);
+    }
+    return lista;
+}
+
+std::vector <Tarea*> TareaController::listarSubTareas (Tarea* tarea) {
+    std::vector <Tarea*> lista;
+    Tarea* subTareaActual = tarea->getPrimerSubTarea ();
+    aplanarArbol (subTareaActual, lista); 
+    return lista;
+}
+
+
+
 //                              === === === CONSTRUCTOR Y DESCRUCTOR === === ===
 TareaController::TareaController () {
     this->listaTareasRegulares = new ColaFIFO ();
     this->listaTareasUrgentes = new ColaFIFO ();
     this->archivosTareas = new TareaDataBase ();
+    this->ultimoId = 0;
 }
 
 TareaController::~TareaController () {
@@ -31,23 +60,23 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
         delete  nuevaListaRegular; delete nuevaListaUrgente; 
         throw; //lo lanzamos de nuevo sin cortar su tipo
     }
+
 //si habian datos anteriores los borramos
     if (listaTareasRegulares != nullptr) delete listaTareasRegulares;
     if (listaTareasUrgentes != nullptr) delete listaTareasUrgentes;
 //cargamos las nuevas listas
     listaTareasRegulares = nuevaListaRegular;
     listaTareasUrgentes = nuevaListaUrgente;
+//le damos el ultimo id al id mas grande
+    ultimoId = ( (listaTareasRegulares->getUltimoId () > listaTareasUrgentes->getUltimoId ())  ? listaTareasRegulares->getUltimoId () : listaTareasUrgentes->getUltimoId ());
+
 }
 
- ColaFIFO* TareaController::getListaTareasRegulares () {
-    return this->listaTareasRegulares;
-}
-
-ColaFIFO* TareaController::getListaTareasUrgentes () {
-    return this->listaTareasUrgentes;
-}
 
 void TareaController::agregarTarea (Tarea* tarea, bool perteneceListaUrgente) {
+    if (tarea == nullptr) throw std::invalid_argument ("Tarea no puede ser nula");
+    tarea->setIdTarea (ultimoId + 1);
+    ultimoId++;
     if (perteneceListaUrgente) {
         listaTareasUrgentes->encolar (tarea);
     } else {
@@ -84,6 +113,7 @@ void TareaController::agregarSubTarea (Tarea* nuevaSubTarea, int idTareaPadre, b
     padre->agregarSubTarea (nuevaSubTarea);
     bool padreEsUrgente = (listaPadre == listaTareasUrgentes);
     archivosTareas->guardarNuevaSubTareaEnArchivo (nuevaSubTarea, padreEsUrgente);
+    ultimoId++;
 }
 
 Tarea* TareaController::buscarTarea (int idTarea) {
@@ -104,6 +134,7 @@ Tarea* TareaController::eliminarTarea (int idTarea, bool perteneceListaUrgente) 
     Tarea* eliminada = perteneceListaUrgente
         ? listaTareasUrgentes->extraerTarea (idTarea)
         : listaTareasRegulares->extraerTarea (idTarea);
+        
     if (eliminada == nullptr) {
         ColaFIFO* otra = perteneceListaUrgente ? listaTareasRegulares : listaTareasUrgentes;
         eliminada = otra->extraerTarea(idTarea);
@@ -125,26 +156,23 @@ Tarea* TareaController::escalarTarea (int idTarea) {
     return tarea;
 }
 
-namespace {
-    void aplanarArbol(Tarea* tarea, std::vector<Tarea*>& resultado) {
-        if (tarea == nullptr) return;
-        resultado.push_back(tarea);
-        aplanarArbol(tarea->getPrimerSubTarea(), resultado);
-        aplanarArbol(tarea->getSiguienteSubTarea(), resultado);
-    }
-
-    void aplanarCola(ColaFIFO* cola, std::vector<Tarea*>& resultado) {
-        NodoTarea* actual = cola->getFrente();
-        while (actual != nullptr) {
-            aplanarArbol(actual->datos, resultado);
-            actual = actual->siguiente;
-        }
-    }
+int TareaController::getUltimoId () const {
+    return ultimoId;
 }
 
-std::vector<Tarea*> TareaController::listarTodasLasTareas() {
-    std::vector<Tarea*> resultado;
-    aplanarCola(listaTareasRegulares, resultado);
-    aplanarCola(listaTareasUrgentes, resultado);
-    return resultado;
+// entrega la lista urgente en forma de vector
+std::vector <Tarea*> TareaController::listarTareasUrgentes () {
+    return listarTareas (listaTareasUrgentes);
+}
+// entrega la lista regulares en forma de vector
+std::vector <Tarea*> TareaController::listarTareasRegulares () {
+    return listarTareas (listaTareasRegulares);
+}
+
+std::vector<Tarea*> TareaController::listarSubTareas(int id) {
+    Tarea* tareaBuscada = buscarTarea (id);
+    
+    if (tareaBuscada !=  nullptr) {
+        return listarSubTareas (tareaBuscada);
+    }
 }
