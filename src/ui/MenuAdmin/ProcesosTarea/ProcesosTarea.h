@@ -23,6 +23,7 @@ private:
 
     Tarea* leerNuevaTarea ();
     Tarea* leerSubTarea ();
+    void mostrarInformacionTarea (Tarea* tarea);
     void asignarResponsable (int idTarea);
 
 public:
@@ -32,7 +33,9 @@ public:
     void agregarSubTarea ();
     void ActualizarTarea ();
     void eliminarTarea ();
-    void listarTareas ();
+    void mostrarTableroKanban ();
+    void mostrarTarea ();
+    void ordenarLista ();
     void listarArbolTarea ();
     //void buscarTareaPorId (); implementar cuando esten los 3 algoritmos 
 };

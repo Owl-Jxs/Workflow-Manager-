@@ -51,6 +51,13 @@ Tarea* ProcesosTarea::leerNuevaTarea () {
     return nuevaTarea;
 }
 
+void ProcesosTarea::mostrarInformacionTarea (Tarea* tarea) {
+    std::cout << tarea->getIdTarea () << "| " <<tarea->getDescripcionTarea  () << "| " 
+    << ((tarea->getPrioridad ()) ? "Urgente" : "Regular");
+
+}
+
+
 ProcesosTarea::ProcesosTarea (UsuarioController* _uc,  TareaController* _tc, 
 AsignacionController* _ac, Usuario* _uA, GestorHistorial* _gH) {
     this-> uc = _uc;
@@ -143,6 +150,7 @@ void ProcesosTarea::eliminarTarea () {
     }
 
     EliminarTareaComando* eliminar;
+    EliminarAsignacionComando* eliminarAsignacion;
     std::vector <int> usuariosAsignados = ac->getAsignacionesResponsablesDeTarea (idTarea);
     //EliminarAsignacionComando* eliminarAsignacion = new EliminarAsignacionComando ()
     try {
@@ -152,9 +160,17 @@ void ProcesosTarea::eliminarTarea () {
     } catch (std::exception &e) {
         delete eliminar;
     }
+    for (int i : usuariosAsignados) {
+        try {
+            eliminarAsignacion = new EliminarAsignacionComando (ac, tareaAeliminar->getIdTarea (), i);
+            gestorHistorial->ejecutarComando (eliminarAsignacion);
+        } catch (std::exception &e) {
+            std::cout << e.what ();
+        }
+    }
 }
 
-void ProcesosTarea::listarTareas () {
+void ProcesosTarea::mostrarTableroKanban () {
     //vedtores de las tareas originales
     std::vector <Tarea*> listaUrgente = tc->listarTareasUrgentes ();
     std::vector <Tarea*> listaRegulares = tc->listarTareasRegulares ();
@@ -196,18 +212,14 @@ void ProcesosTarea::listarTareas () {
         std::cout << "\nNo hay tareas por hacer.\n";
 
     } else {
-        for (Tarea* tarea : porHacer) {
-            std::cout << tarea->getIdTarea () << "| " <<tarea->getDescripcionTarea  () << "| " << ((tarea->getPrioridad ()) ? "Urgente" : "Regular");  
-        }
+        for (Tarea* tarea : porHacer) { mostrarInformacionTarea (tarea); }
     }
     std::cout << "\n=================== EN PROCESO ====================\n";
 
     if (enProceso.empty()) {
         std::cout << "\nNo hay tareas en proceso.\n";
     } else {
-        for (Tarea* tarea : enProceso) {
-           std::cout << tarea->getIdTarea () << "| " <<tarea->getDescripcionTarea  () << "| " << ((tarea->getPrioridad ()) ? "Urgente" : "Regular");  
-        }
+        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea);  }
     }
 
     std::cout << "\n=================== COMPLETADAS ===================\n";
@@ -215,11 +227,19 @@ void ProcesosTarea::listarTareas () {
     if (completadas.empty()) {
         std::cout << "\nNo hay tareas completadas.\n";
     } else {
-        for (Tarea* tarea : completadas) {
-           std::cout << tarea->getIdTarea () << "| " <<tarea->getDescripcionTarea  () << "| " << ((tarea->getPrioridad ()) ? "Urgente" : "Regular");  
-        }
+        for (Tarea* tarea : completadas) { mostrarInformacionTarea  (tarea);    }
     }
     std::cout << "\n====================================================\n";
+}
+
+void ProcesosTarea::mostrarTarea () {
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrse el id de la tarea", 0 , tc->getUltimoId () );
+    Tarea* tarea = tc->buscarTarea (idTarea);
+    if (tarea == nullptr) {
+        std::cout << "La Tarea buscada no existe " << std::endl; return;
+    }
+
+    mostrarInformacionTarea (tarea); std::system ("pause"); std::system ("cls");
 }
 
 void ProcesosTarea::listarArbolTarea () {
@@ -238,7 +258,7 @@ void ProcesosTarea::listarArbolTarea () {
 
     std::cout << "\n============== SUBTAREAS ==============\n\n";
     while (subTarea != nullptr) {
-        std::cout << subTarea->getIdTarea () << "| " << subTarea->getDescripcionTarea  () << "| " << ((subTarea->getPrioridad ()) ? "Urgente" : "Regular");  
+        mostrarInformacionTarea (subTarea);  
         std::cout << "\n----------------------------------------\n\n";
         subTarea = subTarea->getSiguienteSubTarea();
     }

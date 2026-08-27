@@ -2,6 +2,7 @@
 //guias para archivos
 const std::string TareaDataBase::FILENAME_TAREAS_REGULARES = "data/tareas_regulares.csv";
 const std::string TareaDataBase::FILENAME_TAREAS_URGENTES = "data/tareas_urgentes.csv";
+const std::string TareaDataBase::FILENAME_TAREAS_COMPLETADAS = "data/tareas_completadas.csv";
 const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular"}; 
 
 //Formato de guardado --> id, descripcion, prioridad, estado, idPadre, cantidadSubTareas, ciclosEspera
@@ -227,4 +228,66 @@ void TareaDataBase::guardarNuevaSubTareaEnArchivo (Tarea* subTarea, bool pertene
     if (!listaDestino.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
     listaDestino << formularLinea (subTarea) << std::endl;
     listaDestino.close ();
+}
+
+
+void TareaDataBase::registrarTareaCompletada (Tarea* tarea) {  
+    if (tarea == nullptr)   throw std::invalid_argument ("No se completar una tarea nula");
+    std::ofstream archivoGuardado (FILENAME_TAREAS_COMPLETADAS, std::ios::app);
+    if (!archivoGuardado.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
+
+    archivoGuardado << formularLinea (tarea) << std::endl;
+    archivoGuardado.close ();
+}
+
+void TareaDataBase::eliminarRegistroTareaCompletada(int idTarea) {
+
+    if (idTarea < 0)
+        throw std::invalid_argument("id invalido");
+
+    std::string temp = "Temp.csv";
+
+    std::ifstream archivoGuardado(FILENAME_TAREAS_COMPLETADAS);
+
+    if (!archivoGuardado.is_open())
+        throw std::runtime_error("Error al abrir el archivo de la lista de tareas");
+
+    std::ofstream archivoTemp(temp);
+
+    if (!archivoTemp.is_open())
+        throw std::runtime_error("Error al abrir el archivo temporal");
+
+    std::string linea;
+
+    while (std::getline(archivoGuardado, linea)) {
+
+        std::stringstream lineaActual(linea);
+
+        std::string idTxT, descripcionTxt, prioridadTxT;
+        std::string estadoTxT, idPadreTxT;
+        std::string cantidadSubTareasTxT, ciclosEsperaTxT;
+
+        if (std::getline(lineaActual, idTxT, ',') &&
+            std::getline(lineaActual, descripcionTxt, ',') &&
+            std::getline(lineaActual, prioridadTxT, ',') &&
+            std::getline(lineaActual, estadoTxT, ',') &&
+            std::getline(lineaActual, idPadreTxT, ',') &&
+            std::getline(lineaActual, cantidadSubTareasTxT, ',') &&
+            std::getline(lineaActual, ciclosEsperaTxT)) {
+
+            if (std::stoi(idTxT) != idTarea) {
+                // Mantener la línea
+                archivoTemp << linea << '\n';
+            }
+        }
+    }
+
+    archivoGuardado.close();
+    archivoTemp.close();
+
+    std::remove(FILENAME_TAREAS_COMPLETADAS.c_str());
+
+    if (std::rename(temp.c_str(), FILENAME_TAREAS_COMPLETADAS.c_str()) != 0) {
+        throw std::runtime_error("Error al reemplazar el archivo");
+    }
 }
