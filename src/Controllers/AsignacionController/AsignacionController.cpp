@@ -35,7 +35,11 @@ void AsignacionController:: agregarAsignacion(int idTarea, int idUsuario) {
     if (listaAsignaciones->buscarAsignacion (idTarea, idUsuario) ) throw std::invalid_argument ("la asignacion ya existe ");
 
     listaAsignaciones->agregarAsignacion (idTarea, idUsuario);
+    try {
     archivosAsignaciones->agregarAsignacion (idTarea, idUsuario);
+    } catch (std::exception &e) {
+        listaAsignaciones->eliminarAsignacion (idTarea, idUsuario); throw;
+    }
 
 }
 
@@ -50,4 +54,30 @@ void AsignacionController::eliminarAsignacion(int idTarea, int idUsuario) {
 
 bool AsignacionController::buscarAsignacion(int idTarea, int idUsuario) {
     return listaAsignaciones->buscarAsignacion (idTarea, idUsuario);
+}
+
+ std::vector<int> AsignacionController::getAsignacionesResponsablesDeTarea (int idTarea) {
+    NodoAsignacion* actual = listaAsignaciones->getCabeza ();
+    std::vector <int> vectorUsuariosResponsables;
+
+    while (actual != nullptr) {
+        if (actual->idTarea == idTarea) {
+            vectorUsuariosResponsables.push_back (actual->idUsuario);
+        }
+        actual = actual->siguiente;
+    }
+    return vectorUsuariosResponsables;
+}
+
+std::vector<int> AsignacionController::getAsignacionesTareasPorUsuario (int idUsuario) {
+    NodoAsignacion* actual = listaAsignaciones->getCabeza ();
+    std::vector <int> vectorTareasUsuario;
+
+    while (actual != nullptr) {
+        if (actual->idUsuario == idUsuario) {
+            vectorTareasUsuario.push_back (actual->idTarea);
+        }
+        actual = actual->siguiente;
+    }
+    return vectorTareasUsuario;
 }

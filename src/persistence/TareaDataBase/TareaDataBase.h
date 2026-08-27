@@ -1,7 +1,7 @@
 #ifndef TAREA_DATABASE_H
 #define TAREA_DATABASE_H
 
-#include "../../structures/ColaFIFO/colaFIFO.h"
+#include "../../structures/ColaFIFO/ColaFIFO.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -18,7 +18,7 @@ private:
     void guardarArbol (Tarea* arbolTarea, std::ofstream& archivo);
     void guardarLista (ColaFIFO* lista, std::string nombreArchivo);
     void guardarNuevaTarea (Tarea* tarea, std::string nombreArchivo);
-    ColaFIFO* cargarLista (std::string nombreArchivo);
+    ColaFIFO* cargarLista (std::string nombreArchivo, int &ultimoId);
 
 //funciones para buscar en los archivos
     Tarea* buscarSubTarea (Tarea* tareaBuscada, int idBuscado);
@@ -30,7 +30,7 @@ public:
 
 //Funciones para manipular la base de datos de tareas
     void guardarListaEnArchivo (ColaFIFO* listaCompleta, bool perteneceListaUrgente);
-    ColaFIFO* cargarListaDelArchivo (bool perteneceListaUrgente);
+    ColaFIFO* cargarListaDelArchivo (bool perteneceListaUrgente, int &ultimoId);
 
 //funciones para manipular tareas
     void guardarNuevaTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente);
