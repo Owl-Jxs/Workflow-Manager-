@@ -11,6 +11,7 @@ class TareaDataBase {
 private:
     static const std::string FILENAME_TAREAS_REGULARES; // Nombre del archivo para guardar y cargar la base de datos
     static const std::string FILENAME_TAREAS_URGENTES; // Nombre del archivo para guardar y cargar la base de datos
+    static const std::string FILENAME_TAREAS_COMPLETADAS; // nombre para las tareas completas
     static const std::string ENUM_PRIORIDAD_TAREA [2]; //variable para guardar la prioridad
 
 //funciones auxiliares para guardado y cargado
@@ -35,11 +36,8 @@ public:
 //funciones para manipular tareas
     void guardarNuevaTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente);
     void guardarNuevaSubTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente);
-    //void completarTarea (bool listaUrgente); <--- Preguntar al profe si esas tareas se eliminan
-    // void descompletarTarea (int idTarea); <--- Preguntar al profe sobre su gestion
-    //void completarSubtarea 
-    //void descompletarSubTarea
-    //Tarea* completarTarea ();
+    void registrarTareaCompletada (Tarea* tarea);
+    void eliminarRegistroTareaCompletada  (int idTarea);
    
 };  
 

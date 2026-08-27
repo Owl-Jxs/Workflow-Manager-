@@ -15,7 +15,9 @@ private:
     void aplanarArbol(Tarea* tarea, std::vector<Tarea*>& resultado);
     std::vector <Tarea*> listarTareas (ColaFIFO* cola);
     std::vector <Tarea*> listarSubTareas (Tarea* tarea);
-    
+    bool completarTarea (Tarea* tarea);
+    bool descompletarTarea (int idTarea);
+
 public:
     TareaController ();
     ~TareaController ();
@@ -38,12 +40,8 @@ public:
     // entrega la lista regulares en forma de vector
     std::vector <Tarea*> listarTareasRegulares ();
     // Devuelve un vector con todas las subtareas de un tarea.
-    std::vector<Tarea*> listarSubTareas(int id);
-    //void completarTarea (bool listaUrgente); <--- Preguntar al profe si esas tareas se eliminan
-    // void descompletarTarea (int idTarea); <--- Preguntar al profe sobre su gestion
-    //void completarSubtarea 
-    //void descompletarSubTarea
-    //void completarTarea ();
+    std::vector<Tarea*> listarSubTareas(int idTarea);
+
 };
 
 #endif

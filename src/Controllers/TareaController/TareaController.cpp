@@ -28,6 +28,15 @@ std::vector <Tarea*> TareaController::listarSubTareas (Tarea* tarea) {
 }
 
 
+bool TareaController::completarTarea (Tarea* tarea) {
+
+}
+
+bool TareaController::descompletarTarea (int idTarea) {
+
+}
+
+
 
 //                              === === === CONSTRUCTOR Y DESCRUCTOR === === ===
 TareaController::TareaController () {

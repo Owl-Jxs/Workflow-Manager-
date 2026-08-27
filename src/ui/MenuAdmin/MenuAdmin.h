@@ -10,6 +10,10 @@
 #include "../../models/Comandos/ComandoUsuario.h"
 #include "ProcesosUsuario/ProcesosUsuario.h"
 #include "ProcesosTarea/ProcesosTarea.h"
+#include "../../algorithms/Condiciones/Icondicion.h"
+#include "../../algorithms/Condiciones/IdCondicion.h"
+#include "../../algorithms/MergeSort/MergeSort.h"
+
 
 #include <iostream>
 #include <string>

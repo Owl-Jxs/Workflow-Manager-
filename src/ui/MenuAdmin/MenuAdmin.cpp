@@ -116,11 +116,13 @@ void MenuAdmin::mostrarMenuGestionTareas (){
          << "1. Agregar tarea\n"
          << "2. Actualizar tarea\n"
          << "3. Eliminar tarea\n"
-         << "4. Listar tareas pendientes\n"
-         << "5. Buscar tarea por ID\n"
+         << "4. Mostrar el tablero kanban\n"
+         << "5. Mostrar tareas ordenadamente\n"
+         << "6. Mostrar tarea por ID\n"
+         << "7. Mostrar subTareas de una tarea\n"
          << "0. volver al menu Administrador\n";
 
-        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ",0,5);
+        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ",0,7);
 
         switch (opcion)
         {
@@ -141,13 +143,19 @@ void MenuAdmin::mostrarMenuGestionTareas (){
 
             case 4:
             {
-               procesosTareas->listarTareas(); break;
+               procesosTareas->mostrarTableroKanban(); break;
             }
-
             case 5:
             {
-                break;
-               //procesosTareas-> mostrarTareasPorId ();
+                procesosTareas->ordenarLista (); break;
+            }
+            case 6:
+            {
+                procesosTareas->mostrarTarea (); break;
+            }
+            case 7:
+            {
+                procesosTareas->listarArbolTarea (); break;
             }
 
             case 0:
