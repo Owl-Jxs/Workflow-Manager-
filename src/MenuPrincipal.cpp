@@ -42,15 +42,18 @@ void MenuPrincipal::crearPrimerUsuario () {
     } catch (std::exception &e) {
         std::cout << e.what (); delete PrimerUsuario;
     }
-        usuarioActivo = PrimerUsuario;
+    
+    if (PrimerUsuario != nullptr) usuarioActivo = PrimerUsuario;
 }
 
 void MenuPrincipal::iniciarSesion() {
     bool seguirBuscando = true;
+    Usuario* usuario;
+    
     do { //buscamos el usuario
 
         int idUsuario = ValidarEntrada::validarCodigoNumerico  ("Ingrese su ID de usuario", 9);
-        Usuario* usuario = uc->buscarUsuarioPorId(idUsuario);
+        usuario = uc->buscarUsuarioPorId(idUsuario);
 
         if (usuario == nullptr){
                 std::cout << "\nNo existe un usuario con ese ID.\n";
@@ -64,27 +67,30 @@ void MenuPrincipal::iniciarSesion() {
     //validamos su contrasena
     bool contraValida = false;
     int numeroIntentos = 8;
+    if (usuario != nullptr){
+        do {
+            std::string contrasena = ValidarEntrada::validarContrasena("Ingrese su contrasena: ", '*');
+            hash<string> hasher;
 
-    do {
-        std::string contrasena = ValidarEntrada::validarContrasena("Ingrese su contrasena: ", '*');
-        hash<string> hasher;
+            if (hasher(contrasena) != usuario->getHashContrasena()) {
+                numeroIntentos--;
+                std::cout << "Contrasena incorrecta. Le quedan " << numeroIntentos << " intentos"; std::system ("pause"); std::system ("cls"); 
+            } else {
+                contraValida = true;
+            }
+        } while (!contraValida &&  numeroIntentos != 0);
 
-        if (hasher(contrasena) != usuarioActivo->getHashContrasena()) {
-            numeroIntentos--;
-            std::cout << "Contrasena incorrecta. Le quedan " << numeroIntentos << " intentos"; std::system ("pause"); std::system ("cls"); 
-        } else {
-            contraValida = true;
+        if (numeroIntentos == 0) {
+            usuarioActivo = nullptr;
+            std::cout << "Lo sentimos, numero de intentos maximos alcanzados. Ingrese sesion mas tarde"; return;
         }
-    } while (!contraValida &&  numeroIntentos != 0);
-
-   if (numeroIntentos == 0) {
-    usuarioActivo = nullptr;
-    std::cout << "Lo sentimos, numero de intentos maximos alcanzados. Ingrese sesion mas tarde"; return;
-   }
-
-   gestorHistorial->setIdUsuarioSesion(usuarioActivo->getId());
-    cout << "\nInicio de sesion exitoso.\n";
-    cout << "Bienvenido/a, " << usuarioActivo->getNombre() << "!\n";
+        
+        usuarioActivo = usuario;
+        gestorHistorial->setIdUsuarioSesion(usuarioActivo->getId());
+        cout << "\nInicio de sesion exitoso.\n";
+        cout << "Bienvenido/a, " << usuarioActivo->getNombre() << "!\n";
+    }
+    
 }
 
 MenuPrincipal::MenuPrincipal ()
@@ -92,9 +98,10 @@ MenuPrincipal::MenuPrincipal ()
     uc = new UsuarioController ();
     tc = new TareaController ();
     ac = new AsignacionController ();
-    gestorHistorial = new GestorHistorial ();
-    menuAdmin = new  MenuAdmin (uc, tc, ac, usuarioActivo, gestorHistorial);
-
+    gestorHistorial = nullptr;
+    auditoria = new AuditoriaDataBase ();
+    menuAdmin = nullptr;
+    //menuRegular = nullptr;
     try {
         uc->cargarUsuarios();
     }catch (const exception& e) {
@@ -118,29 +125,42 @@ MenuPrincipal::MenuPrincipal ()
 }
 
 void MenuPrincipal::ejecutar () {
-    std::cout << "\n================================\n";
-    std::cout << "       WORKFLOW MANAGER\n";
-    std::cout << "================================\n\n";
+    try {
+        std::cout << "\n================================\n";
+        std::cout << "       WORKFLOW MANAGER\n";
+        std::cout << "================================\n\n";
 
-    if ( (uc->listarUsuarios () ).empty () ) {
-         crearPrimerUsuario ();
-    } else {
-        iniciarSesion ();
-    }
-
-    if (usuarioActivo != nullptr ){
-        switch (usuarioActivo->getRol ()) 
-        {
-            case Usuario::Rol::ADMINISTRADOR: {
-                mostrarMenuAdministrador (usuarioActivo); break;
-            }
-            case Usuario::Rol::USUARIO_NORMAL: {
-                mostrarMenuUsuarioNormal (usuarioActivo); break;
-            }   
+        if ( (uc->listarUsuarios () ).empty () ) {
+            crearPrimerUsuario ();
+        } else {
+            iniciarSesion ();
         }
-    } else {
-        std::cout << "Error al abrir el sistema";
+
+        if (usuarioActivo != nullptr ){
+
+        //inicializamos los atributos restantes que ocupan a usuario activo
+            gestorHistorial  = new GestorHistorial (auditoria, usuarioActivo->getId ());
+            menuAdmin = new  MenuAdmin (uc, tc, ac, usuarioActivo, gestorHistorial);
+            //menu normal
+            
+            switch (usuarioActivo->getRol ()) 
+            {
+                case Usuario::Rol::ADMINISTRADOR: {
+                    mostrarMenuAdministrador (usuarioActivo); break;
+                }
+                case Usuario::Rol::USUARIO_NORMAL: {
+                    //mostrarMenuUsuarioNormal (usuarioActivo); break;
+                }   
+            }
+
+        } else {
+            std::cout << "Error al abrir el sistema";
+        }
+
+    } catch (std::exception &e) {
+        std::cout << e.what ();
     }
+
 }
 
         
@@ -191,6 +211,7 @@ MenuPrincipal::~MenuPrincipal()
     delete uc;
     delete tc;
     delete ac;
+    delete auditoria;
     delete gestorHistorial;
-    delete menuAdmin;
+    if (menuAdmin != nullptr ) delete menuAdmin;
 }

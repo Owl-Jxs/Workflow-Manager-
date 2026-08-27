@@ -104,7 +104,7 @@ void TareaDataBase::guardarNuevaTarea (Tarea* tarea, std::string nombreArchivo) 
     archivoListas.close ();
 }
 
-ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una lista de los archivos
+ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo, int &ultimoId) { //carga una lista de los archivos
 //abrimos el archivo de la lista
     std::ifstream lista (nombreArchivo);
     if (!lista.is_open () ) return new ColaFIFO ();
@@ -113,7 +113,7 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
     std::unordered_map <int, int> padresPorId; //guarda el id del padre de cada tarea para reconstruir el arbol
     std::vector <Tarea*> tareasEnlistadas; //donde guardaremos las tareas hasta encontrar sus padres
     std::string linea; // recorre cada linea del archivo
-
+    int idMax = 0;
 //leemos el archivo
     while (std::getline (lista, linea)) {
         if (linea.empty ()) continue;
@@ -124,6 +124,14 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
 
             int idTarea = std::stoi (campos[0]);
             int idPadre = std::stoi (campos[4]);
+
+            // guardamos el id mas grande
+            if (idTarea > idMax && idTarea > idPadre){
+                idMax = idTarea;
+            } else if (idPadre > idMax && idPadre > idTarea) {
+                idMax = idPadre;
+            }
+
             bool urgente = (campos[2] == ENUM_PRIORIDAD_TAREA[0]);
             // campos[5] = cantidadSubTareas: se recalcula al reconstruir el arbol
 
@@ -134,6 +142,7 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
             indiceTareas [idTarea] = nuevaTarea; //la ingresamos al "indice rapido"
             padresPorId [idTarea] = idPadre; //guardamos su relacion para adjuntarla despues
             tareasEnlistadas.push_back (nuevaTarea);
+
         } catch (const std::exception& e) {
             std::cerr << "Advertencia: linea invalida en " << nombreArchivo << ": " << linea
                       << " -> " << e.what () << std::endl;
@@ -169,6 +178,7 @@ ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo) { //carga una l
             delete tarea;
         }
     }
+    ultimoId = idMax;
     return nuevaLista;
 }
 
@@ -197,9 +207,9 @@ void TareaDataBase::guardarListaEnArchivo (ColaFIFO* listaCompleta, bool pertene
     guardarLista (listaCompleta, nombreArchivo); //Guardamos la lista
 }
 
-ColaFIFO* TareaDataBase:: cargarListaDelArchivo (bool perteneceListaUrgente) {
+ColaFIFO* TareaDataBase:: cargarListaDelArchivo (bool perteneceListaUrgente, int &ultimoId) {
      std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES);
-    return cargarLista (nombreArchivo);
+    return cargarLista (nombreArchivo, ultimoId);
 }
 
 void TareaDataBase::guardarNuevaTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente) { //agrega una nueva tarea al sistema y a los archivos

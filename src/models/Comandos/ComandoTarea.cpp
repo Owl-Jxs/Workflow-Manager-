@@ -13,7 +13,7 @@ void AgregarTareaComando::ejecutar() {
 }
 
 void AgregarTareaComando::deshacer() {
-    controller->eliminarTarea(tarea->getIdTarea(), urgente);
+    tarea = controller->eliminarTarea(tarea->getIdTarea(), urgente);
 }
 
 std::string AgregarTareaComando::getAccionAuditoria() const {
@@ -36,14 +36,14 @@ void AgregarSubTareaComando::ejecutar() {
 }
 
 void AgregarSubTareaComando::deshacer() {
-    controller->eliminarTarea (tarea->getIdTarea (), urgente);
+    tarea = controller->eliminarTarea (tarea->getIdTarea (), urgente);
 }
 
-std::string AgregarTareaComando::getAccionAuditoria() const {
+std::string AgregarSubTareaComando::getAccionAuditoria() const {
     return "AGREGAR_SUB_TAREA";
 }
 
-int AgregarTareaComando::getIdTareaAuditoria() const {
+int AgregarSubTareaComando::getIdTareaAuditoria() const {
     return tarea->getIdTarea();
 }
 

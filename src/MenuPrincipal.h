@@ -16,6 +16,7 @@ private:
     TareaController* tc;
     AsignacionController* ac;
     GestorHistorial* gestorHistorial;
+    AuditoriaDataBase* auditoria;
     MenuAdmin* menuAdmin;
     Usuario* usuarioActivo;
 

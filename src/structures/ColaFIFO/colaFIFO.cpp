@@ -7,7 +7,6 @@ ColaFIFO::ColaFIFO() {
     this->frente = nullptr;
     this->final = nullptr;
     this->cantidad = 0;
-    this->ultimoId = 0;
 }
 
 ColaFIFO::~ColaFIFO() {
@@ -38,7 +37,6 @@ void ColaFIFO::encolar(Tarea* tarea) {
     }
 
     cantidad++;
-    ultimoId++;
 }
 
 Tarea* ColaFIFO::desencolar() {
@@ -113,7 +111,4 @@ Tarea* ColaFIFO::extraerTarea(int idTarea) {
         actual = actual->siguiente;
     }
     return nullptr;
-}
-int ColaFIFO::getUltimoId () const {
-    return ultimoId;
 }

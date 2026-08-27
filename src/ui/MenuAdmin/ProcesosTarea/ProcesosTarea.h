@@ -9,7 +9,7 @@
 #include "../../../structures/Gestor/GestorHistorial.h"
 #include "../../../models/Comandos/ComandoTarea.h"
 #include "../../../models/Comandos/ComandoAsignacion.h"
-#include "ProcesosUsuario/ProcesosUsuario.h"
+#include "../ProcesosUsuario/ProcesosUsuario.h"
 
 #include <exception>
 #include <iostream>

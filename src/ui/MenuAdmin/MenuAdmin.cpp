@@ -82,17 +82,17 @@ void MenuAdmin::mostrarMenuGestionUsuarios (){
 
             case 3:
             {
-               procesosUsuarios-> eliminarUsuario ();
+               procesosUsuarios-> eliminarUsuario (); break;
             }
 
             case 4:
             {
-               procesosUsuarios-> mostrarLista ();
+               procesosUsuarios-> mostrarLista (); break;
             }
 
             case 5:
             {
-               procesosUsuarios-> mostrarUsuarioPorId ();
+               procesosUsuarios-> mostrarUsuarioPorId (); break;
             }
 
             case 0:
@@ -136,7 +136,7 @@ void MenuAdmin::mostrarMenuGestionTareas (){
 
             case 3:
             {
-               procesosTareas->eliminarTarea ();
+               procesosTareas->eliminarTarea (); break;
             }
 
             case 4:
@@ -156,6 +156,6 @@ void MenuAdmin::mostrarMenuGestionTareas (){
             default:
                 std::cout << "Error: opcion no valida.\n"; break;
         }
-        std::system ("cls");
+        std::system ("pause"); std::system ("cls");
     } while (opcion != 0);       
 }

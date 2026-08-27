@@ -73,8 +73,11 @@ void UsuarioController::agregarUsuario(Usuario* usuario)
     }
 
     listaUsuarios->agregarUsuario(usuario);
-
-    archivoUsuarios->agregarUsuario(usuario);
+    try {
+        archivoUsuarios->agregarUsuario(usuario);
+    } catch (std::exception &e) {
+        listaUsuarios->eliminarUsuario (usuario->getId ()); throw;
+    }
 }
 
 // ======================================================
