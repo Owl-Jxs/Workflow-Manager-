@@ -15,6 +15,7 @@ std::vector <Tarea*> TareaController::listarTareas (ColaFIFO* cola) {
     
     while (nodoActual != nullptr) {
         lista.push_back (nodoActual->datos);
+        nodoActual = nodoActual->siguiente;
     }
     return lista;
 }
@@ -52,68 +53,74 @@ void TareaController::guardarArchivos () { //guarda todos los archivos de las do
 void TareaController::cargarArchivos () { //carga las dos listas de la DB
     ColaFIFO* nuevaListaRegular = nullptr;
     ColaFIFO* nuevaListaUrgente = nullptr;
-//intentamos cargar los archivos 
-    try {
-        nuevaListaRegular = archivosTareas->cargarListaDelArchivo (false);
-        nuevaListaUrgente = archivosTareas->cargarListaDelArchivo (true);
-    } catch (std::exception&) {
-        delete  nuevaListaRegular; delete nuevaListaUrgente; 
-        throw; //lo lanzamos de nuevo sin cortar su tipo
+    bool errorCargaListaRegular = false, errorCargaListaUrgente = false;
+//intentamos cargar los archivos lista por lista
+    int idMaxRegular = 0;
+    int idMaxUrgente = 0;
+
+    try { //regular
+        nuevaListaRegular = archivosTareas->cargarListaDelArchivo (false, idMaxRegular);
+    } catch (std::exception &e ) {
+        std::cout << e.what () << std::endl; errorCargaListaRegular = true;
+        delete  nuevaListaRegular; idMaxRegular = 0;        
+    }
+    try { //urgente
+        nuevaListaUrgente = archivosTareas->cargarListaDelArchivo (true, idMaxUrgente);
+    } catch (std::exception &e) {
+        std::cout << e.what () << std::endl; errorCargaListaUrgente = true;
+        delete nuevaListaUrgente; idMaxUrgente = 0;         
     }
 
-//si habian datos anteriores los borramos
-    if (listaTareasRegulares != nullptr) delete listaTareasRegulares;
-    if (listaTareasUrgentes != nullptr) delete listaTareasUrgentes;
-//cargamos las nuevas listas
-    listaTareasRegulares = nuevaListaRegular;
-    listaTareasUrgentes = nuevaListaUrgente;
-//le damos el ultimo id al id mas grande
-    ultimoId = ( (listaTareasRegulares->getUltimoId () > listaTareasUrgentes->getUltimoId ())  ? listaTareasRegulares->getUltimoId () : listaTareasUrgentes->getUltimoId ());
+//si habian datos anteriores los borramos solo si no hubo error al cargar los archivos
+    if (listaTareasRegulares != nullptr && !errorCargaListaRegular) delete listaTareasRegulares;
+    if (listaTareasUrgentes != nullptr && !errorCargaListaUrgente) delete listaTareasUrgentes;
 
+//cargamos las nuevas listas y el ultimo id
+    if (!errorCargaListaRegular) listaTareasRegulares = nuevaListaRegular;
+    if (!errorCargaListaUrgente) listaTareasUrgentes = nuevaListaUrgente;
+    ultimoId = ((idMaxUrgente > idMaxRegular) ? idMaxUrgente : idMaxRegular); 
 }
 
 
 void TareaController::agregarTarea (Tarea* tarea, bool perteneceListaUrgente) {
     if (tarea == nullptr) throw std::invalid_argument ("Tarea no puede ser nula");
-    tarea->setIdTarea (ultimoId + 1);
-    ultimoId++;
-    if (perteneceListaUrgente) {
-        listaTareasUrgentes->encolar (tarea);
-    } else {
-        listaTareasRegulares->encolar (tarea);
-    } 
 
-    archivosTareas->guardarNuevaTareaEnArchivo (tarea, perteneceListaUrgente);
+    int idNuevo = ultimoId + 1;
+    tarea->setIdTarea (idNuevo);
+    ultimoId++;
+
+    ColaFIFO* lista = ((perteneceListaUrgente) ? listaTareasUrgentes : listaTareasRegulares);
+    
+    lista->encolar (tarea);
+
+    try{
+        archivosTareas->guardarNuevaTareaEnArchivo (tarea, perteneceListaUrgente);
+    } catch (std::exception &e) {
+        delete eliminarTarea (tarea->getIdTarea (), perteneceListaUrgente); throw;
+    }
  }
 
 void TareaController::agregarSubTarea (Tarea* nuevaSubTarea, int idTareaPadre, bool perteneceListaUrgente) {
-    (void) perteneceListaUrgente; // la lista destino se determina donde se encuentre el padre
-
-    ColaFIFO* listas[2] = { listaTareasRegulares, listaTareasUrgentes };
     ColaFIFO* listaPadre = nullptr;
-    Tarea* padre = nullptr;
-
-    for (ColaFIFO* lista : listas) { //buscamos la tarea padre en ambas listas
-        NodoTarea* nodoActual = lista->getFrente ();
-        while (nodoActual != nullptr) {
-            Tarea* encontrada = nodoActual->datos->buscarSubTarea (idTareaPadre);
-            if (encontrada != nullptr) {
-                padre = encontrada;
-                listaPadre = lista;
-                break;
-            }
-            nodoActual = nodoActual->siguiente;
-        }
-        if (padre != nullptr) break;
-    }
+    Tarea* padre = buscarTarea (idTareaPadre);
 
 //si no se encuentra la tarea padre
     if (padre == nullptr) throw std::invalid_argument ("No existe ninguna tarea con el id proporcionado");
 
+//asignamos un nuevo id
+    int nuevoId = ultimoId + 1;
+    nuevaSubTarea->setIdTarea (nuevoId);
+    ultimoId++;
+
     padre->agregarSubTarea (nuevaSubTarea);
     bool padreEsUrgente = (listaPadre == listaTareasUrgentes);
+
+    try {
     archivosTareas->guardarNuevaSubTareaEnArchivo (nuevaSubTarea, padreEsUrgente);
-    ultimoId++;
+
+    } catch  (std::exception &e) {
+        padre->eliminarSubTarea (nuevaSubTarea->getIdPadre ());
+    }
 }
 
 Tarea* TareaController::buscarTarea (int idTarea) {
@@ -171,8 +178,9 @@ std::vector <Tarea*> TareaController::listarTareasRegulares () {
 
 std::vector<Tarea*> TareaController::listarSubTareas(int id) {
     Tarea* tareaBuscada = buscarTarea (id);
-    
+    std::vector <Tarea*> v; 
     if (tareaBuscada !=  nullptr) {
-        return listarSubTareas (tareaBuscada);
+        v = listarSubTareas (tareaBuscada);
     }
+    return v;
 }

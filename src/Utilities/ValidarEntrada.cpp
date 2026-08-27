@@ -159,7 +159,7 @@ return false;
 }
 
 // Retorna el string validado usando 'int' para el máximo de caracteres
-std::string ingresarDescripcionCorta(const std::string& mensaje, int maxCaracteres) {
+std::string ValidarEntrada::ingresarDescripcionCorta(const std::string& mensaje, int maxCaracteres) {
     std::string entrada;
     bool esValida = false;
 

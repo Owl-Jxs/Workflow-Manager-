@@ -31,7 +31,7 @@ void ProcesosTarea::asignarResponsable (int idTarea) {
 Tarea* ProcesosTarea::leerNuevaTarea () {
    if (tc == nullptr) {
         std::cout << "Error: el TareaController no esta disponible.\n";
-        return;
+        return nullptr;
     }
     std::string descripcion;
     int prioridad;
@@ -70,12 +70,14 @@ void ProcesosTarea::agregarTarea () {
     try {
         agregar = new AgregarTareaComando (tc,nuevaTarea, nuevaTarea->getPrioridad ());
         gestorHistorial->ejecutarComando (agregar);
-        asignarResponsable (nuevaTarea->getIdTarea ());
-
+        
     } catch (const std::exception& e) {
+        EliminarTareaComando* eliminar = new EliminarTareaComando (tc, nuevaTarea->getIdPadre (), nuevaTarea->getPrioridad ());
+        gestorHistorial->ejecutarComando (eliminar);
         std::cout << "\nError al crear la tarea: " << e.what() << std::endl;
-        delete nuevaTarea; delete agregar; throw;
     }
+
+    asignarResponsable (nuevaTarea->getIdTarea ());
 }
 
 void ProcesosTarea::ActualizarTarea () {
@@ -86,24 +88,24 @@ void ProcesosTarea::ActualizarTarea () {
         std::cout << "Id invalido, no existe tarea con ese id" << std::endl; return;
     }
 
-    std::string nuevaDescripcion;
+    std::string nuevaDescripcion = tareaBuscada ->getDescripcionTarea ();
     std::cout << "Desea cambiar la descripcion de la tarea" << std::endl;
     bool cambiarDescripcion = ValidarEntrada::respuestas_Si_O_No ("Si", "No, mantener actual");
     if (cambiarDescripcion) {
         nuevaDescripcion = ValidarEntrada::ingresarDescripcionCorta ("Ingrese su nueva descripccion", 50);
     }
 
-    bool nuevaPrioridad;
+    bool nuevaPrioridad = tareaBuscada->getPrioridad ();
     std::cout << "Desea cambiar la prioridad de la tarea" << std::endl;
-    bool cambiarDescripcion = ValidarEntrada::respuestas_Si_O_No ("Si", "No, mantener actual");
-    if (cambiarDescripcion) {
+    bool cambiarPrioridad = ValidarEntrada::respuestas_Si_O_No ("Si", "No, mantener actual");
+    if (cambiarPrioridad) {
         nuevaPrioridad = ValidarEntrada::respuestas_Si_O_No ("Urgente", "Regular");
     }
 
-    std::string estado;
+    std::string estado = tareaBuscada->getEstado ();
     std::cout << "Desea cambiar el estado de la tarea" << std::endl;
-    bool cambiarDescripcion = ValidarEntrada::respuestas_Si_O_No ("Si", "No, mantener actual");
-    if (cambiarDescripcion) {
+    bool cambiarEstado = ValidarEntrada::respuestas_Si_O_No ("Si", "No, mantener actual");
+    if (cambiarEstado) {
         std::cout << "ESTADOS" << std::endl
          << "1. " << Tarea::ESTADO[0] << std::endl
          << "2. " << Tarea::ESTADO[1] << std::endl
@@ -113,9 +115,9 @@ void ProcesosTarea::ActualizarTarea () {
             case 1:
                 estado = Tarea::ESTADO[0]; break;
             case 2:
-                estado = Tarea::ESTADO[0]; break;
+                estado = Tarea::ESTADO[1]; break;
             case 3: 
-                estado = Tarea::ESTADO[0]; break;
+                estado = Tarea::ESTADO[2]; break;
             default: 
                 break;
         };
@@ -154,7 +156,7 @@ void ProcesosTarea::eliminarTarea () {
 
 void ProcesosTarea::listarTareas () {
     //vedtores de las tareas originales
-    std::vector <Tarea*> listaUrgente = tc->listarTareasRegulares ();
+    std::vector <Tarea*> listaUrgente = tc->listarTareasUrgentes ();
     std::vector <Tarea*> listaRegulares = tc->listarTareasRegulares ();
 
 //VECTORES PARA CLASIFICAR LAS TAREAS
@@ -236,7 +238,7 @@ void ProcesosTarea::listarArbolTarea () {
 
     std::cout << "\n============== SUBTAREAS ==============\n\n";
     while (subTarea != nullptr) {
-        std::cout << subTarea->getIdTarea () << "| " <<tarea->getDescripcionTarea  () << "| " << ((tarea->getPrioridad ()) ? "Urgente" : "Regular");  
+        std::cout << subTarea->getIdTarea () << "| " << subTarea->getDescripcionTarea  () << "| " << ((subTarea->getPrioridad ()) ? "Urgente" : "Regular");  
         std::cout << "\n----------------------------------------\n\n";
         subTarea = subTarea->getSiguienteSubTarea();
     }

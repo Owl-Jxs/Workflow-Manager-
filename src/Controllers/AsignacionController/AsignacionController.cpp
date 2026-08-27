@@ -35,7 +35,11 @@ void AsignacionController:: agregarAsignacion(int idTarea, int idUsuario) {
     if (listaAsignaciones->buscarAsignacion (idTarea, idUsuario) ) throw std::invalid_argument ("la asignacion ya existe ");
 
     listaAsignaciones->agregarAsignacion (idTarea, idUsuario);
+    try {
     archivosAsignaciones->agregarAsignacion (idTarea, idUsuario);
+    } catch (std::exception &e) {
+        listaAsignaciones->eliminarAsignacion (idTarea, idUsuario); throw;
+    }
 
 }
 

@@ -6,8 +6,7 @@ GestorHistorial::GestorHistorial(AuditoriaDataBase* auditoriaParam, int idUsuari
     : auditoria(auditoriaParam), idUsuarioSesion(idUsuarioSesionParam) {
 }
 
-GestorHistorial::~GestorHistorial() {
-}
+GestorHistorial::~GestorHistorial() { }
 
 void GestorHistorial::setAuditoria(AuditoriaDataBase* auditoriaParam) {
     this->auditoria = auditoriaParam;

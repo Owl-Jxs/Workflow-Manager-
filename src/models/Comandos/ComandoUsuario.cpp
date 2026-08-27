@@ -8,9 +8,7 @@ AgregarUsuarioComando::AgregarUsuarioComando(
     UsuarioController* controller, Usuario* usuario)
     : controller(controller), usuario(usuario) {}
 
-AgregarUsuarioComando::~AgregarUsuarioComando() {
-    if (usuario != nullptr) delete usuario;
-}
+AgregarUsuarioComando::~AgregarUsuarioComando() { }
 
 void AgregarUsuarioComando::ejecutar() {
     controller->agregarUsuario(usuario);
@@ -38,20 +36,20 @@ ActualizarUsuarioComando::ActualizarUsuarioComando(
       usuarioNuevo(usuarioNuevo), usuarioAnterior(nullptr), ejecutado(false) {}
 
 ActualizarUsuarioComando::~ActualizarUsuarioComando() {
-    if (usuarioNuevo != nullptr) delete usuarioNuevo;
-    if (usuarioAnterior != nullptr) delete usuarioAnterior;
+    
 }
 
 void ActualizarUsuarioComando::ejecutar() {
     if (!ejecutado) {
         usuarioAnterior = controller->buscarUsuarioPorId(idUsuario);
         if (usuarioAnterior != nullptr) {
+            size_t contraAnterior = usuarioAnterior->getHashContrasena ();
             usuarioAnterior = new Usuario(
                 usuarioAnterior->getId(),
                 usuarioAnterior->getNombre(),
                 usuarioAnterior->getRol()
             );
-            usuarioAnterior->setHashDirecto(usuarioAnterior->getHashContrasena());
+            usuarioAnterior->setHashDirecto(contraAnterior);
         }
     }
 
@@ -88,12 +86,13 @@ EliminarUsuarioComando::~EliminarUsuarioComando() {
 void EliminarUsuarioComando::ejecutar() {
     usuarioGuardado = controller->buscarUsuarioPorId(idUsuario);
     if (usuarioGuardado != nullptr) {
+        size_t contraAnterior = usuarioGuardado->getHashContrasena ();
         usuarioGuardado = new Usuario(
             usuarioGuardado->getId(),
             usuarioGuardado->getNombre(),
             usuarioGuardado->getRol()
         );
-        usuarioGuardado->setHashDirecto(usuarioGuardado->getHashContrasena());
+        usuarioGuardado->setHashDirecto(contraAnterior);
     }
     controller->eliminarUsuario(idUsuario);
 }

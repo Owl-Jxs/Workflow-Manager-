@@ -51,14 +51,17 @@ void ProcesosUsuario::agregarUsuario  () {
 }
 
 void ProcesosUsuario::actualizarUsuario () {
+    
     int id = ValidarEntrada::validarCodigoNumerico ("Ingrese el id del usuario buscado", 9);
     Usuario* usuarioActual = uc->buscarUsuarioPorId(id);
-    Usuario* nuevoUsuario = new Usuario (usuarioActual);
-
     if (usuarioActual == nullptr) {
         std::cout << "No existe un usuario con ese ID.\n";
         return;
     }
+
+    Usuario* nuevoUsuario = new Usuario (usuarioActual);
+
+   
 
     std::cout << "\nUsuario encontrado:\n";
     std::cout << "ID: " << usuarioActual->getId() << std::endl;
@@ -151,5 +154,5 @@ void ProcesosUsuario::mostrarUsuarioPorId () {
     std::cout << "\n========== USUARIO ENCONTRADO ==========\n";
     std::cout << "ID: " << usuario->getId() << std::endl;
     std::cout << "Nombre: " << usuario->getNombre() << std::endl;
-    ((usuario->getRol() == Usuario::Rol::ADMINISTRADOR) ? "Rol: ADMINISTRADOR\n" : "Rol: USUARIO_NORMAL\n");
+    std::cout << ((usuario->getRol() == Usuario::Rol::ADMINISTRADOR) ? "Rol: ADMINISTRADOR\n" : "Rol: USUARIO_NORMAL\n");
 }
