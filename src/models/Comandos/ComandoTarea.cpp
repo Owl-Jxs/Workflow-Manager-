@@ -107,10 +107,18 @@ EliminarTareaComando::~EliminarTareaComando() {
 }
 
 void EliminarTareaComando::ejecutar() {
-    tareaGuardada = controller->eliminarTarea (idTarea);
-    std::vector<int> idsTarea = controller->listarIdsArbol (tareaGuardada);
-    //idTarea, idsuario
-    Asignaciones_Tarea_Usuario = asignacionController->getAsignacionesResponsablesDeTarea (idsTarea);
+    Tarea* tarea = controller->buscarTareaPorHacer(idTarea);
+    if (tarea == nullptr) tarea = controller->buscarTareaEnProceso(idTarea);
+    if (tarea == nullptr) tarea = controller->buscarTareaEnRevision(idTarea);
+    if (tarea == nullptr) tarea = controller->buscarTareaCompletada(idTarea);
+    
+    std::vector<int> idsTarea;
+    if (tarea != nullptr) {
+        idsTarea = controller->listarIdsArbol(tarea);
+        Asignaciones_Tarea_Usuario = asignacionController->getAsignacionesResponsablesDeTarea(idsTarea);
+    }
+    
+    tareaGuardada = controller->eliminarTarea(idTarea);
 
     for (std::pair <int, int> i :Asignaciones_Tarea_Usuario) {
     int idTarea = i.first;

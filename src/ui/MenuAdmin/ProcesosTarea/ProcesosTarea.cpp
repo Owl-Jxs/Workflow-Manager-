@@ -79,6 +79,7 @@ void ProcesosTarea::agregarSubTarea () {
     if (tareaBuscada == nullptr) { std::cout << "Id inexistente" << std::endl; return; }
 
     Tarea* nuevaTarea = leerNuevaTarea ();
+    nuevaTarea->setIdPadre(idTarea);
     AgregarTareaComando* agregar = nullptr; 
     try {
         agregar = new AgregarTareaComando (tc,nuevaTarea);

@@ -26,7 +26,7 @@ void MenuPrincipal::crearPrimerUsuario () {
     try {
         uc->agregarUsuario  (PrimerUsuario);
     } catch (std::exception &e) {
-        std::cout << e.what (); delete PrimerUsuario;
+        std::cout << e.what (); delete PrimerUsuario; PrimerUsuario = nullptr;
     }
     
     if (PrimerUsuario != nullptr) usuarioActivo = PrimerUsuario;
