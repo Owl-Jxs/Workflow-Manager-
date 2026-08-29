@@ -10,10 +10,7 @@
 #include "../../models/Comandos/ComandoUsuario.h"
 #include "ProcesosUsuario/ProcesosUsuario.h"
 #include "ProcesosTarea/ProcesosTarea.h"
-#include "../../algorithms/Condiciones/Icondicion.h"
-#include "../../algorithms/Condiciones/IdCondicion.h"
-#include "../../algorithms/MergeSort/MergeSort.h"
-
+#include "Procesos_Undo_Redo/Procesos_Undo_Redo.h"
 
 #include <iostream>
 #include <string>
@@ -28,6 +25,7 @@ private:
     GestorHistorial* gestorHistorial;
     ProcesosUsuario* procesosUsuarios;
     ProcesosTarea* procesosTareas;
+    Procesos_Undo_Redo* procesosUndoRedo;
 public:
     MenuAdmin(UsuarioController* _uc,  TareaController* _tc, AsignacionController* _ac, Usuario* _uA, GestorHistorial* _gH);
     ~MenuAdmin ();

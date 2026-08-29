@@ -3,6 +3,7 @@
 #include <vector>
 #include "../../persistence/AsignacionDataBase/AsignacionDataBase.h"
 #include "../../structures/Asignacion/ListaAsignaciones/ListaAsignaciones.h"
+#include <vector>
 
 class AsignacionController {
 private:
@@ -17,13 +18,18 @@ public:
     void guardarAsignaciones();
     void cargarAsignaciones();
 
+    void guardarAsignacionesCompletadas (std::vector<std::pair<int, int>> listaAsignacionesRehacer);
+    void deshacerAsignacionesCompletadas (std::vector <std::pair<int, int>> listaAsignacionesRehacer); 
 //manipular asignaciones individuales
     void agregarAsignacion(int idTarea, int idUsuario);
     void eliminarAsignacion(int idTarea, int idUsuario);
+    void eliminarAsignacionPorIdTarea (int idTarea);
+    void eliminarAsignacionPorIdUsuario (int idUsuario);
+
     bool buscarAsignacion(int idTarea, int idUsuario);
 
-    std::vector<int> getAsignacionesResponsablesDeTarea (int idTarea);
-    std::vector<int> getAsignacionesTareasPorUsuario (int idUsuario);
+    std::vector<std::pair <int, int>> getAsignacionesResponsablesDeTarea (std::vector <int> idsTareas);
+    std::vector<std::pair <int, int>> getAsignacionesTareasPorUsuario (std::vector <int> idsResponsables);
 
 
 };

@@ -1,32 +1,6 @@
 #include "ProcesosTarea.h"
 
-void ProcesosTarea::asignarResponsable (int idTarea) {
-    bool seguirBuscando = true, usuarioEncontrado = false;
-    Usuario* responsable;
 
-    do {
-        int idResponsable = ValidarEntrada::validarCodigoNumerico ("Ingrese el id del responsable de esta tarea",  9);
-        responsable = uc->buscarUsuarioPorId (idResponsable);
-
-        if (responsable == nullptr ) {
-            std::cout << " usuario no encontrado, desea seguir buscando? " << std::endl;
-            seguirBuscando  = ValidarEntrada::respuestas_Si_O_No ("Si", "No");
-        } else {
-            usuarioEncontrado = true;
-        }
-
-    } while (seguirBuscando && !usuarioEncontrado);
-
-    if (!seguirBuscando) throw std::runtime_error ("Tarea cancelada");
-
-    AgregarAsignacionComando* nuevaAsignacion;
-    try {
-        nuevaAsignacion = new AgregarAsignacionComando (ac,idTarea, responsable->getId ());
-        gestorHistorial->ejecutarComando (nuevaAsignacion);
-    } catch (std::exception &e) {
-        delete nuevaAsignacion; throw;
-    }
-}
 
 Tarea* ProcesosTarea::leerNuevaTarea () {
    if (tc == nullptr) {
@@ -51,13 +25,28 @@ Tarea* ProcesosTarea::leerNuevaTarea () {
     return nuevaTarea;
 }
 
-void ProcesosTarea::mostrarInformacionTarea (Tarea* tarea) {
-    std::cout << tarea->getIdTarea () << "| " <<tarea->getDescripcionTarea  () << "| " 
-    << ((tarea->getPrioridad ()) ? "Urgente" : "Regular");
+void ProcesosTarea::mostrarInformacionTarea (Tarea* tarea, bool mostrarInfoSubTareas, int nivel) {
+    if (tarea == nullptr) return;
 
+    std::string sangria(nivel * 3, ' ');
+
+    std::cout << sangria << "|-- ID: " << tarea->getIdTarea()
+              << " | " << tarea->getDescripcionTarea()
+              << " | " << (tarea->getPrioridad() ? "Urgente" : "Regular") << "\n";
+
+    if (!mostrarInfoSubTareas) return;
+
+    Tarea* subTarea = tarea->getPrimerSubTarea();
+    while (subTarea != nullptr) { 
+        // Llamada recursiva para bajar de nivel en el árbol
+        mostrarInformacionTarea(subTarea, mostrarInfoSubTareas, nivel + 1);
+        
+        // Moverse horizontalmente a la siguiente subTarea
+        subTarea = subTarea->getSiguienteSubTarea (); 
+    }
 }
 
-
+//constructor
 ProcesosTarea::ProcesosTarea (UsuarioController* _uc,  TareaController* _tc, 
 AsignacionController* _ac, Usuario* _uA, GestorHistorial* _gH) {
     this-> uc = _uc;
@@ -72,28 +61,41 @@ AsignacionController* _ac, Usuario* _uA, GestorHistorial* _gH) {
 void ProcesosTarea::agregarTarea () {
     Tarea* nuevaTarea = leerNuevaTarea ();
     AgregarTareaComando* agregar = nullptr; 
-    AgregarAsignacionComando* AgregarAsignacion = nullptr;
 
     try {
-        agregar = new AgregarTareaComando (tc,nuevaTarea, nuevaTarea->getPrioridad ());
+        agregar = new AgregarTareaComando (tc,nuevaTarea);
         gestorHistorial->ejecutarComando (agregar);
         
     } catch (const std::exception& e) {
-        EliminarTareaComando* eliminar = new EliminarTareaComando (tc, nuevaTarea->getIdPadre (), nuevaTarea->getPrioridad ());
-        gestorHistorial->ejecutarComando (eliminar);
-        std::cout << "\nError al crear la tarea: " << e.what() << std::endl;
+        std::cout << "\nError al crear la tarea: " << e.what() << std::endl; delete nuevaTarea;
+    }
+}
+
+void ProcesosTarea::agregarSubTarea () {
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea padre", 0, tc->getUltimoId ());
+
+    Tarea* tareaBuscada = tc->buscarTareaPorHacer (idTarea);
+    if (tareaBuscada == nullptr) tareaBuscada = tc->buscarTareaEnProceso (idTarea);
+    if (tareaBuscada == nullptr) { std::cout << "Id inexistente" << std::endl; return; }
+
+    Tarea* nuevaTarea = leerNuevaTarea ();
+    AgregarTareaComando* agregar = nullptr; 
+    try {
+        agregar = new AgregarTareaComando (tc,nuevaTarea);
+        gestorHistorial->ejecutarComando (agregar);
+        
+    } catch (const std::exception& e) {
+        std::cout << "\nError al crear la subtarea: " << e.what() << std::endl; delete nuevaTarea;
     }
 
-    asignarResponsable (nuevaTarea->getIdTarea ());
 }
 
 void ProcesosTarea::ActualizarTarea () {
     int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea", 0, tc->getUltimoId ());
 
-    Tarea* tareaBuscada = tc->buscarTarea (idTarea);
-    if (tareaBuscada == nullptr) {
-        std::cout << "Id invalido, no existe tarea con ese id" << std::endl; return;
-    }
+    Tarea* tareaBuscada = tc->buscarTareaPorHacer (idTarea);
+    if (tareaBuscada == nullptr) tareaBuscada= tc->buscarTareaEnProceso (idTarea);
+    if (tareaBuscada == nullptr) { std::cout << "Id invalido, no existe tarea con ese id" << std::endl; return; }
 
     std::string nuevaDescripcion = tareaBuscada ->getDescripcionTarea ();
     std::cout << "Desea cambiar la descripcion de la tarea" << std::endl;
@@ -109,30 +111,9 @@ void ProcesosTarea::ActualizarTarea () {
         nuevaPrioridad = ValidarEntrada::respuestas_Si_O_No ("Urgente", "Regular");
     }
 
-    std::string estado = tareaBuscada->getEstado ();
-    std::cout << "Desea cambiar el estado de la tarea" << std::endl;
-    bool cambiarEstado = ValidarEntrada::respuestas_Si_O_No ("Si", "No, mantener actual");
-    if (cambiarEstado) {
-        std::cout << "ESTADOS" << std::endl
-         << "1. " << Tarea::ESTADO[0] << std::endl
-         << "2. " << Tarea::ESTADO[1] << std::endl
-         << "3. " << Tarea::ESTADO[2] << std::endl;
-        int opcion = ValidarEntrada::validarEntradaRango ("Ingrese su opcion",1,3);
-        switch (opcion) {
-            case 1:
-                estado = Tarea::ESTADO[0]; break;
-            case 2:
-                estado = Tarea::ESTADO[1]; break;
-            case 3: 
-                estado = Tarea::ESTADO[2]; break;
-            default: 
-                break;
-        };
-    }
-
     ActualizarTareaComando* actualizar;
     try {
-        actualizar = new ActualizarTareaComando (tc, idTarea,nuevaDescripcion, nuevaPrioridad, estado);
+        actualizar = new ActualizarTareaComando (tc, idTarea,nuevaDescripcion, nuevaPrioridad);
         gestorHistorial->ejecutarComando(actualizar);
     }catch (std::exception &e) {
         std::cout << "Error al actualizar tarea" << std::endl;
@@ -141,65 +122,81 @@ void ProcesosTarea::ActualizarTarea () {
 
 }
 
-void ProcesosTarea::eliminarTarea () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea a eliminar",0, tc->getUltimoId ());
-    Tarea* tareaAeliminar = tc->buscarTarea (idTarea);
+void ProcesosTarea::asignarResponsable () {
+    int id = ValidarEntrada::validarCodigoNumerico ("ingrese el id del usuario que sera responsable", 9);
+    Usuario* usuarioResponsable = uc->buscarUsuarioPorId (id);
 
-    if (tareaAeliminar == nullptr){
-        std::cout << "Tarea no encontrada" << std::endl; return;
-    }
+    if (usuarioResponsable != nullptr) {
+        AsignarResponsableComando* nuevoResponsable;
 
-    EliminarTareaComando* eliminar;
-    EliminarAsignacionComando* eliminarAsignacion;
-    std::vector <int> usuariosAsignados = ac->getAsignacionesResponsablesDeTarea (idTarea);
-    //EliminarAsignacionComando* eliminarAsignacion = new EliminarAsignacionComando ()
-    try {
-        eliminar = new EliminarTareaComando (tc, idTarea, tareaAeliminar->getPrioridad ());
-        gestorHistorial->ejecutarComando (eliminar);
-        //gestorHistorial-> ejecutarComando (eliminarAsignacion);
-    } catch (std::exception &e) {
-        delete eliminar;
-    }
-    for (int i : usuariosAsignados) {
         try {
-            eliminarAsignacion = new EliminarAsignacionComando (ac, tareaAeliminar->getIdTarea (), i);
-            gestorHistorial->ejecutarComando (eliminarAsignacion);
+            nuevoResponsable = new AsignarResponsableComando (tc, ac, id);
+            gestorHistorial->ejecutarComando (nuevoResponsable);
+        } catch (std::exception &e){
+            std::cout << e.what () << std::endl; delete nuevoResponsable;
+        }
+
+    }
+
+}
+
+void ProcesosTarea::verificarTareaEnColaRevision () {
+    Tarea* frente = tc->getSiguienteTareaProcesable ();
+    if (frente == nullptr ) {
+        std::cout << "No hay tareas en la cola de revision " << std::endl; return;
+    }
+    mostrarInformacionTarea (frente, true, 1);
+    std::cout << "\n\nLa tarea cumple los requisitos para clasificarla como completada? " << std::endl;
+    bool validarTarea = ValidarEntrada::respuestas_Si_O_No  ("Si, Validar", "No, Regresar a En proceso");
+
+    if (validarTarea) {
+        validarTareaEnRevisionComando* validar;
+        try {
+            validar = new validarTareaEnRevisionComando (tc, ac, frente);
+            gestorHistorial->ejecutarComando  (validar);
         } catch (std::exception &e) {
-            std::cout << e.what ();
+            delete validar;
+        }
+    } else{
+        RechazarTareaEnRevisionComando* rechazar;
+        try {
+            rechazar = new RechazarTareaEnRevisionComando (tc, ac, frente);
+            gestorHistorial->ejecutarComando  (rechazar);
+        } catch (std::exception &e) {
+            delete rechazar;
         }
     }
 }
+
+void ProcesosTarea::eliminarTarea () {
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea a eliminar",0, tc->getUltimoId ());
+    
+    Tarea* tareaAeliminar = tc->buscarTareaPorHacer (idTarea);
+    if (tareaAeliminar == nullptr) tareaAeliminar = tc->buscarTareaEnProceso (idTarea);
+    if (tareaAeliminar == nullptr){ std::cout << "Tarea no encontrada" << std::endl; return; }
+
+    EliminarTareaComando* eliminar;
+    try {
+        eliminar = new EliminarTareaComando (tc, ac, idTarea);
+        gestorHistorial->ejecutarComando (eliminar);
+    } catch (std::exception &e) {
+        delete eliminar;
+    }
+   
+}
+
 
 void ProcesosTarea::mostrarTableroKanban () {
     //vedtores de las tareas originales
     std::vector <Tarea*> listaUrgente = tc->listarTareasUrgentes ();
     std::vector <Tarea*> listaRegulares = tc->listarTareasRegulares ();
-
 //VECTORES PARA CLASIFICAR LAS TAREAS
-    std::vector<Tarea*> porHacer;
-    std::vector<Tarea*> enProceso;
-    std::vector<Tarea*> completadas;
+    std::vector<Tarea*> enProceso = tc->listarTareasEnProceso ();
+    std::vector<Tarea*> enRevision = tc->listarTareasEnRevision ();
+    std::vector<Tarea*> completadas = tc->listarTareasCompletadas ();
 
-    for (Tarea* tarea : listaUrgente) { //lista de urgentes
-
-         if (tarea->getEstado() == "POR HACER") {
-            porHacer.push_back(tarea);
-        } else if (tarea->getEstado() == "EN PROCESO") {
-            enProceso.push_back(tarea);
-        } else if (tarea->getEstado() == "COMPLETADA") {
-            completadas.push_back(tarea);
-        }
-    }
-
-     for (Tarea* tarea : listaRegulares) { //lista de regular
-
-         if (tarea->getEstado() == "POR HACER") {
-            porHacer.push_back(tarea);
-        } else if (tarea->getEstado() == "EN PROCESO") {
-            enProceso.push_back(tarea);
-        } else if (tarea->getEstado() == "COMPLETADA") {
-            completadas.push_back(tarea);
-        }
+    if (listaUrgente.empty () && listaRegulares.empty () && enProceso.empty () && enRevision.empty () && completadas.empty ()) {
+        std::cout << "No hay registros de tareas" << std::endl; return;
     }
 
     std::cout << "====================================================\n"
@@ -208,60 +205,92 @@ void ProcesosTarea::mostrarTableroKanban () {
      << "\n"
      << "=================== POR HACER ======================\n";
 
-    if (porHacer.empty()) {
+    if (listaUrgente.empty() && listaRegulares.empty () )  {
         std::cout << "\nNo hay tareas por hacer.\n";
 
     } else {
-        for (Tarea* tarea : porHacer) { mostrarInformacionTarea (tarea); }
+        for (Tarea* tarea : listaUrgente) { mostrarInformacionTarea (tarea, false, 1); }
+        for (Tarea* tarea : listaRegulares) { mostrarInformacionTarea (tarea, false, 1); }
+
     }
     std::cout << "\n=================== EN PROCESO ====================\n";
 
     if (enProceso.empty()) {
         std::cout << "\nNo hay tareas en proceso.\n";
     } else {
-        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea);  }
+        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea, false, 1);  }
     }
 
+     std::cout << "\n=================== EN REVISION ===================\n";
+    if (enRevision.empty()) {  
+        std::cout << "\nNo hay tareas completadas.\n";
+    } else {
+        for (Tarea* tarea : enRevision) { mostrarInformacionTarea  (tarea, false, 1);    }
+    }
+    
     std::cout << "\n=================== COMPLETADAS ===================\n";
-
     if (completadas.empty()) {
         std::cout << "\nNo hay tareas completadas.\n";
     } else {
-        for (Tarea* tarea : completadas) { mostrarInformacionTarea  (tarea);    }
+        for (Tarea* tarea : completadas) { mostrarInformacionTarea  (tarea, false, 1);    }
     }
     std::cout << "\n====================================================\n";
 }
 
-void ProcesosTarea::mostrarTarea () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrse el id de la tarea", 0 , tc->getUltimoId () );
-    Tarea* tarea = tc->buscarTarea (idTarea);
-    if (tarea == nullptr) {
-        std::cout << "La Tarea buscada no existe " << std::endl; return;
-    }
+void ProcesosTarea::mostrarTareaPorId () {
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea", 0 , tc->getUltimoId () );
 
-    mostrarInformacionTarea (tarea); std::system ("pause"); std::system ("cls");
+    Tarea* tarea = tc->buscarTareaPorHacer (idTarea);
+    if (tarea == nullptr) tarea = tc->buscarTareaEnProceso (idTarea);
+    if (tarea == nullptr) tarea = tc->buscarTareaEnRevision (idTarea);
+    if (tarea == nullptr) tarea = tc->buscarTareaCompletada (idTarea);
+    if (tarea == nullptr) {std::cout << "La Tarea buscada no existe " << std::endl; return;}
+    
+    mostrarInformacionTarea (tarea, true, 1); std::system ("pause"); std::system ("cls");
 }
 
-void ProcesosTarea::listarArbolTarea () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrse el id de la tarea", 0 , tc->getUltimoId () );
-    Tarea* tarea = tc->buscarTarea (idTarea);
-    if (tarea == nullptr) {
-        std::cout << "La Tarea buscada no existe " << std::endl; return;
-    }
-    Tarea* subTarea = tarea->getPrimerSubTarea();
-
-    if (subTarea == nullptr) {
-        std::cout << "\nEsta tarea no tiene subtareas.\n";
-        return;
+void ProcesosTarea::ordenarLista () {
+    std::vector <Tarea*> vectorOrdenado = tc->listarTodasLasTareasActivas (); 
+     
+    if (vectorOrdenado.empty ()){
+        std::cout << "No hay registros de tareas" << std::endl; return;
     }
 
+    std::cout << "Que algoritmo de ordenamiento prefiere usar? " << std::endl
+     << "1. QuickSort" << std::endl
+     << "2. MergeSort" << std::endl 
+     << "3. (Por elegir)" << std::endl;
+    int opcion = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,3);   
+    
+    std::cout << "Desea usar un ordenamiento ascendente o descendente? " << std::endl
+     << "1. Ascendente" << std::endl
+     << "2. Descendente" << std::endl; 
+    int opcionOrden = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,2);   
+    Icondicion<Tarea*>* condicion;
 
-    std::cout << "\n============== SUBTAREAS ==============\n\n";
-    while (subTarea != nullptr) {
-        mostrarInformacionTarea (subTarea);  
-        std::cout << "\n----------------------------------------\n\n";
-        subTarea = subTarea->getSiguienteSubTarea();
+    if (opcionOrden == 1){
+        condicion = new ordenarTareaPorIdAscedente ();
+    } else {
+        condicion = new ordenarTareaPorIdDescendente ();
     }
 
-    std::cout << "\n========================================\n";
+    switch (opcion) {
+    case 1:{    
+        QuickSort<Tarea*>* algoritmo = new QuickSort<Tarea*> ();    algoritmo->ordenar (vectorOrdenado, condicion);
+        delete algoritmo;
+        break;
+    }
+    case 2:{
+        MergeSort<Tarea*>* algoritmo = new MergeSort<Tarea*> ();     algoritmo->sort (vectorOrdenado, condicion);
+        delete algoritmo;
+    }
+    default:
+        break;
+    }
+    
+    delete condicion;
+    for (Tarea* t : vectorOrdenado) {
+        std:: cout << "--------------------------------------------------------------------------------" << std::endl;
+            mostrarInformacionTarea (t, false, 1);
+    }
 }

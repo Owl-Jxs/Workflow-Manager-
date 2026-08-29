@@ -1,7 +1,58 @@
 #include "AsignacionDataBase.h"
 #include <iostream>
 const std::string AsignacionDataBase::FILENAME_ASIGNACIONES = "data/asignaciones.csv"; // Nombre del archivo para almacenar las asignaciones
+const std::string AsignacionDataBase::FILENAME_ASIGNACIONES_COMPLETADAS = "data/asignacionesCompletadas.csv"; 
 // Formato de guardado ----> idTarea, idUsuario
+
+void AsignacionDataBase::eliminarAsignacionesDeArchivo (std::vector <std::pair <int, int>> listaAsignacionesRehacer, std::string nombreArchivo){
+    if (listaAsignacionesRehacer.empty()) return;
+
+    std::ifstream archivo(nombreArchivo);
+    if (!archivo.is_open()) return;
+
+    std::string temp = "Temp.csv";
+    std::ofstream archivoTemp (temp);
+    if (!archivoTemp.is_open()) return;
+
+    std::string linea; 
+    while (std::getline (archivo, linea)) {
+        std::stringstream lineaActual (linea);
+        std::string idTarea, idUsuario;
+        
+        if (std::getline (lineaActual,idTarea, ',') && std::getline (lineaActual, idUsuario)) {
+            bool guardarLinea = true;
+            for (const auto& par : listaAsignacionesRehacer) {
+                if (par.first == std::stoi (idTarea) && par.second == std::stoi (idUsuario)) {
+                    guardarLinea = false; break;
+                }
+            }
+
+            if (guardarLinea) {
+                archivoTemp << linea << std::endl;
+            }
+        }
+    }
+    
+    archivoTemp.close ();
+    archivo.close ();
+
+// Reemplazar el archivo original con el temporal
+    std::remove(nombreArchivo.c_str()); // si el archivo no existia, no es un error
+    if (std::rename(temp.c_str (), nombreArchivo.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal.");
+}
+
+void AsignacionDataBase::agregarAsignacionesDeArchivo (std::vector <std::pair <int, int>> listaAsignacionesRehacer, std::string nombreArchivo) {
+    if (listaAsignacionesRehacer.empty()) return;
+
+    std::ofstream archivo(nombreArchivo, std::ios::app);
+    if (!archivo.is_open()) return;
+
+    // Escribir cada pareja (idTarea,idUsuario)
+    for (const auto& par : listaAsignacionesRehacer) {
+        archivo << par.first << "," << par.second << "\n";
+    }
+    archivo.close();
+}
 
 AsignacionDataBase::AsignacionDataBase() { }
 
@@ -57,6 +108,17 @@ ListaAsignaciones* AsignacionDataBase::cargarAsignacionesDesdeArchivo () {
     archivoAsignaciones.close();
     return nuevaLista;
 }
+
+void  AsignacionDataBase::guardarAsignacionesCompletadas (std::vector <std::pair<int, int>> listaAsignaciones) {
+    eliminarAsignacionesDeArchivo (listaAsignaciones, FILENAME_ASIGNACIONES);
+    agregarAsignacionesDeArchivo (listaAsignaciones, FILENAME_ASIGNACIONES_COMPLETADAS);
+
+}
+void AsignacionDataBase::deshacerAsignacionesCompletadas (std::vector <std::pair<int, int>> listaAsignacionesRehacer) {
+    eliminarAsignacionesDeArchivo (listaAsignacionesRehacer,FILENAME_ASIGNACIONES_COMPLETADAS );
+    agregarAsignacionesDeArchivo (listaAsignacionesRehacer, FILENAME_ASIGNACIONES );
+}
+
 
 void AsignacionDataBase::agregarAsignacion(int idTarea, int idUsuario) { //agrega una asignación a la lista y al archivo
 

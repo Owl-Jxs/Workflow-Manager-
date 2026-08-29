@@ -3,14 +3,13 @@
 #include <vector>
 #include "../Condiciones/Icondicion.h"
 
-
 #include <vector>
 #include <cstddef> // Para size_t
 
 template <typename T>
-class MergeSorter {
+class MergeSort {
 private:
-    void merge(std::vector<T>& vec, size_t left, size_t mid, size_t right, ICondicion<T>& condicion) {
+    void merge(std::vector<T>& vec, size_t left, size_t mid, size_t right, Icondicion<T>* condicion) {
         size_t n1 = mid - left + 1;
         size_t n2 = right - mid;
 
@@ -25,7 +24,7 @@ private:
         size_t i = 0, j = 0, k = left;
 
         while (i < n1 && j < n2) {
-            if (condicion.ordenar(leftArr[i], rightArr[j])) {
+            if (condicion->ordenar(leftArr[i], rightArr[j])) {
                 vec[k] = leftArr[i];
                 i++;
             } else {
@@ -48,7 +47,7 @@ private:
         }
     }
 
-    void mergeSort(std::vector<T>& vec, size_t left, size_t right, ICondicion<T>& condicion) {
+    void mergeSort(std::vector<T>& vec, size_t left, size_t right, Icondicion<T>* condicion) {
         if (left >= right)
             return;
 
@@ -60,11 +59,13 @@ private:
     }
 
 public:
-    void sort(std::vector<T>& vector, ICondicion<T>* condicion) {
+    void sort(std::vector<T>& vector, Icondicion<T>* condicion) {
     // Protección contra vector vacío o puntero nulo
         if (vector.size() <= 1 || !condicion) return;
         
-        mergeSort(vector, 0, vector.size() - 1, *condicion);
+        mergeSort(vector, 0, vector.size() - 1, condicion);
     }
 };
+
+
 #endif

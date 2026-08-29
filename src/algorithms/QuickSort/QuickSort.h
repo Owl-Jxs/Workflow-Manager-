@@ -9,12 +9,12 @@ class QuickSort {
 
 private:
 
-    static int particionar (std::vector<T>& arreglo, int inicio, int fin, ICondicion<T>* condicion) {
+    static int particionar (std::vector<T>& arreglo, int inicio, int fin, Icondicion<T>* condicion) {
         T pivote = arreglo[fin];
         int i = inicio - 1;
 
         for (int j = inicio; j < fin; j++) {
-            if (condicion->comparar(arreglo[j], pivote)) {
+            if (condicion-> ordenar (arreglo[j], pivote)) {
                 i++;
                 T temporal = arreglo[i];
                 arreglo[i] = arreglo[j];
@@ -29,7 +29,7 @@ private:
     }
 
 
-    static void ordenarRecursivo(std::vector<T>& arreglo, int inicio, int fin, ICondicion<T>* condicion) {
+    static void ordenarRecursivo(std::vector<T>& arreglo, int inicio, int fin, Icondicion<T>* condicion) {
         if (inicio < fin) {
             int posicionPivote = particionar(arreglo, inicio, fin, condicion);
             
@@ -41,10 +41,10 @@ private:
 
 public:
 
-    static void ordenar(std::vector<T>& arreglo, int cantidad, ICondicion<T>* condicion) {
-        if (arreglo.empty() || cantidad <= 1 || condicion == nullptr) return;
+    static void ordenar (std::vector<T>& arreglo, Icondicion<T>* condicion) {
+        if (arreglo.empty() || condicion == nullptr) return;
         
-        ordenarRecursivo(arreglo, 0, cantidad - 1, condicion);
+        ordenarRecursivo(arreglo, 0, arreglo.size () - 1, condicion);
     }
 };
 
