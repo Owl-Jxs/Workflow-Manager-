@@ -75,6 +75,9 @@ TareaController::TareaController () :cantidadCiclosParaEscalar (3) {
 }
 
 TareaController::~TareaController () {
+    for (Tarea* t : listaTareasEnProceso) {
+        delete t;
+    }
     delete listaTareasRegulares;
     delete listaTareasUrgentes;
     delete listaTareasEnRevision;
@@ -92,6 +95,9 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
     try{
         archivosTareas->cargarTareasActivas (listaTareasRegulares, listaTareasUrgentes, listaTareasEnProceso, listaTareasEnRevision, ultimoId);
     } catch (std::exception &e) {
+        delete listaTareasRegulares;
+        delete listaTareasUrgentes;
+        delete listaTareasEnRevision;
         this-> listaTareasRegulares = new ColaFIFO ();
         this-> listaTareasUrgentes = new ColaFIFO ();
         this-> listaTareasEnRevision = new ColaPrioridad ();

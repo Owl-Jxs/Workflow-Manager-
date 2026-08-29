@@ -13,8 +13,6 @@ void MenuPrincipal::crearPrimerUsuario () {
 
     int id;
     std::string nombre;
-    int opcionRol;
-    Usuario::Rol rol;
     id = ValidarEntrada::validarCodigoNumerico ("Ingrese su identificacion", 9);
     nombre =ValidarEntrada::validarNombreCompleto ();
 
@@ -87,7 +85,6 @@ MenuPrincipal::MenuPrincipal ()
     gestorHistorial = nullptr;
     auditoria = new AuditoriaDataBase ();
     menuAdmin = nullptr;
-    //menuRegular = nullptr;
     try {
         uc->cargarUsuarios();
     }catch (const exception& e) {
@@ -199,6 +196,6 @@ MenuPrincipal::~MenuPrincipal()
     delete tc;
     delete ac;
     delete auditoria;
-    delete gestorHistorial;
+    if (gestorHistorial != nullptr) delete gestorHistorial;
     if (menuAdmin != nullptr ) delete menuAdmin;
 }

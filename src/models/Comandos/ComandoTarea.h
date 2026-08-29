@@ -13,7 +13,7 @@
 class AgregarTareaComando : public IComando {
 private:
     TareaController* controller;
-    Tarea* tarea;;
+    Tarea* tarea;
 public:
     AgregarTareaComando(TareaController* controller, Tarea* tarea);
     void ejecutar() override;
@@ -86,7 +86,7 @@ public:
 class validarTareaEnRevisionComando : public IComando {
 private:
     TareaController* controller;
-    AsignacionController* asignacionController;;
+    AsignacionController* asignacionController;
     std::vector<std::pair <int, int>> Asignaciones_Tarea_Usuario;
     Tarea* tareaGuardada;
     bool ejecutado;

@@ -34,7 +34,9 @@ Usuario* ProcesosUsuario::leerNuevoUsuario() {
         case 2: {
             rol = Usuario::Rol::USUARIO_NORMAL; break;
         }
-            
+        default: {
+            rol = Usuario::Rol::USUARIO_NORMAL; break;
+        }
     };
     
     nuevoUsuario = new Usuario (id, nombre, rol);
@@ -101,7 +103,7 @@ void ProcesosUsuario::actualizarUsuario () {
         gestorHistorial->ejecutarComando (actualizacion);
         std::cout << "Usuario actualizado" << std::endl;
     } catch (std::exception &e) {
-        std::cout << "Error al actualizar usuario" << std::endl; throw;
+        std::cout << "Error al actualizar usuario: " << e.what() << std::endl; throw;
     }
 }
 

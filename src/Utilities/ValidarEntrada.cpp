@@ -22,24 +22,6 @@ bool ValidarEntrada::contieneSoloDigitos (std::string entrada, bool permitirNega
 }
 
 
-void ValidarEntrada::convertirMayusculas (std::string &palabra) {
-    bool ultimoCharEspacio = false; //para cuando pasamos un espacio
-
-    if (palabra.empty ()) return;
-
-    palabra[0] = std::toupper (palabra[0]);
-    for (char &c : palabra) {
-        if (c == ' ') {
-            ultimoCharEspacio = true;
-            continue;
-        }
-        if (ultimoCharEspacio) {
-            c = std::toupper (c);
-            ultimoCharEspacio = false;
-        }
-    }
-}
-
 int ValidarEntrada::leerEntradaNumerica (const std::string& entrada, bool permitirNegativos) {
 //validamos que no este vacia ni contenga caracteres
     if (entrada.empty () || entrada ==  " ") throw std::invalid_argument ("---La entrada no puede estar vacia ---"); 

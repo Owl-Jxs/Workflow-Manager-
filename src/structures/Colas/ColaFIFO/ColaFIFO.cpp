@@ -41,35 +41,3 @@ Tarea* ColaFIFO::desencolar() {
     return tarea;
 }
 
-/*
-Tarea* ColaFIFO::extraerTarea(int idTarea) {
-    if (estaVacia()) return nullptr;
-
-    NodoTarea* anterior = nullptr;
-    NodoTarea* actual = frente;
-
-    while (actual != nullptr) {
-        if (actual->datos != nullptr) {
-            if (actual->datos->getIdTarea() == idTarea) {
-                Tarea* tarea = actual->datos;
-                if (anterior == nullptr) {
-                    frente = actual->siguiente;
-                    if (frente == nullptr) final = nullptr;
-                } else {
-                    anterior->siguiente = actual->siguiente;
-                    if (actual == final) final = anterior;
-                }
-                actual->datos = nullptr;
-                delete actual;
-                cantidad--;
-                return tarea;
-            }
-            Tarea* subExtraida = actual->datos->eliminarSubTarea(idTarea);
-            if (subExtraida != nullptr) return subExtraida;
-        }
-        anterior = actual;
-        actual = actual->siguiente;
-    }
-    return nullptr;
-}
-*/

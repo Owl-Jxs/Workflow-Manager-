@@ -64,7 +64,7 @@ public:
     std::vector <Tarea*> listarTareasUrgentes () const; // entrega la lista urgente en forma de vector
     std::vector <Tarea*> listarTareasRegulares () const; // entrega la lista regulares en forma de vector
     std::vector <Tarea*> listarTareasEnProceso () const; // entrega la lista en proceso en forma de vector
-    std::vector <Tarea*> listarTareasEnRevision () const; // entrega la lista regulares en forma de vector
+    std::vector <Tarea*> listarTareasEnRevision () const; // entrega la lista en revision en forma de vector
     std::vector <Tarea*> listarTareasCompletadas () const;//listar tareas en completas
     std::vector <Tarea*> listarTodasLasTareasActivas () const; //listar TODAS las tareas activas sin importar su estado o su priorida
     std::vector <int> listarIdsArbol (Tarea* tarea);//devuelve un vector con los ids de las tareas;

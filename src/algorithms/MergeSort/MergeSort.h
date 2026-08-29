@@ -2,8 +2,6 @@
 #define MERGESORT_H
 #include <vector>
 #include "../Condiciones/Icondicion.h"
-
-#include <vector>
 #include <cstddef> // Para size_t
 
 template <typename T>

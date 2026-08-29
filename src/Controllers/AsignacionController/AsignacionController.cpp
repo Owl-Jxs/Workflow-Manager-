@@ -61,9 +61,9 @@ void AsignacionController::eliminarAsignacion(int idTarea, int idUsuario) {
     archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
 }
 
-void AsignacionController::eliminarAsignacionPorIdTarea (int idTarea) {
+void AsignacionController::eliminarAsignacionPorIdTarea (int idTareaParam) {
     std::vector <int> id;
-    id.push_back (idTarea);
+    id.push_back (idTareaParam);
     std::vector<std::pair <int, int>> pares = getAsignacionesResponsablesDeTarea (id);
     
     for (std::pair <int, int> par : pares) {

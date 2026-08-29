@@ -25,7 +25,6 @@ private:
     GestorHistorial* gestorHistorial;
 
     Tarea* leerNuevaTarea ();
-    Tarea* leerSubTarea ();
     void mostrarInformacionTarea (Tarea* tarea, bool mostrarInfoSubTareas, int nivel);
 
 public:

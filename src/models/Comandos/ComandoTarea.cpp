@@ -216,6 +216,7 @@ void RechazarTareaEnRevisionComando::ejecutar() {
 void RechazarTareaEnRevisionComando::deshacer() {
     if (numDeshacer < 1){
         controller->mandar_A_Revision (tareaGuardada->getIdTarea ());
+        numDeshacer++;
     } else {
         std::cout << "La tarea esta ingresada en una posicion mas atras en la cola de revision"  << std::endl;
     }

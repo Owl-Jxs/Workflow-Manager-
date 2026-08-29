@@ -8,7 +8,6 @@ Tarea* ProcesosTarea::leerNuevaTarea () {
         return nullptr;
     }
     std::string descripcion;
-    int prioridad;
 
     std::cout << "\n"
      << "=============================================\n"
@@ -112,7 +111,7 @@ void ProcesosTarea::ActualizarTarea () {
         nuevaPrioridad = ValidarEntrada::respuestas_Si_O_No ("Urgente", "Regular");
     }
 
-    ActualizarTareaComando* actualizar;
+    ActualizarTareaComando* actualizar = nullptr;
     try {
         actualizar = new ActualizarTareaComando (tc, idTarea,nuevaDescripcion, nuevaPrioridad);
         gestorHistorial->ejecutarComando(actualizar);
@@ -128,7 +127,7 @@ void ProcesosTarea::asignarResponsable () {
     Usuario* usuarioResponsable = uc->buscarUsuarioPorId (id);
 
     if (usuarioResponsable != nullptr) {
-        AsignarResponsableComando* nuevoResponsable;
+        AsignarResponsableComando* nuevoResponsable = nullptr;
 
         try {
             nuevoResponsable = new AsignarResponsableComando (tc, ac, id);
@@ -151,7 +150,7 @@ void ProcesosTarea::verificarTareaEnColaRevision () {
     bool validarTarea = ValidarEntrada::respuestas_Si_O_No  ("Si, Validar", "No, Regresar a En proceso");
 
     if (validarTarea) {
-        validarTareaEnRevisionComando* validar;
+        validarTareaEnRevisionComando* validar = nullptr;
         try {
             validar = new validarTareaEnRevisionComando (tc, ac, frente);
             gestorHistorial->ejecutarComando  (validar);
@@ -159,7 +158,7 @@ void ProcesosTarea::verificarTareaEnColaRevision () {
             delete validar;
         }
     } else{
-        RechazarTareaEnRevisionComando* rechazar;
+        RechazarTareaEnRevisionComando* rechazar = nullptr;
         try {
             rechazar = new RechazarTareaEnRevisionComando (tc, ac, frente);
             gestorHistorial->ejecutarComando  (rechazar);
@@ -176,7 +175,7 @@ void ProcesosTarea::eliminarTarea () {
     if (tareaAeliminar == nullptr) tareaAeliminar = tc->buscarTareaEnProceso (idTarea);
     if (tareaAeliminar == nullptr){ std::cout << "Tarea no encontrada" << std::endl; return; }
 
-    EliminarTareaComando* eliminar;
+    EliminarTareaComando* eliminar = nullptr;
     try {
         eliminar = new EliminarTareaComando (tc, ac, idTarea);
         gestorHistorial->ejecutarComando (eliminar);
@@ -224,7 +223,7 @@ void ProcesosTarea::mostrarTableroKanban () {
 
      std::cout << "\n=================== EN REVISION ===================\n";
     if (enRevision.empty()) {  
-        std::cout << "\nNo hay tareas completadas.\n";
+        std::cout << "\nNo hay tareas en revision.\n";
     } else {
         for (Tarea* tarea : enRevision) { mostrarInformacionTarea  (tarea, false, 1);    }
     }
