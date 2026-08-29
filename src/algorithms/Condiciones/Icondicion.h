@@ -1,12 +1,11 @@
 #ifndef ICONDICION_H
 #define ICONDICION_H
 
-template <typename t>
+template <typename T>
 class Icondicion {
 public:
-    virtual bool ordenar (const t& object1, const t& object2) = 0;
-    
+    virtual bool ordenar(T object1, T object2) = 0;
+    virtual ~Icondicion() = default;
 };
-
 
 #endif

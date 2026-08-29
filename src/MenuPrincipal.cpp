@@ -18,21 +18,7 @@ void MenuPrincipal::crearPrimerUsuario () {
     id = ValidarEntrada::validarCodigoNumerico ("Ingrese su identificacion", 9);
     nombre =ValidarEntrada::validarNombreCompleto ();
 
-    std::cout << "\nSeleccione el rol:\n";
-    std::cout << "1. Administrador\n";
-    std::cout << "2. Usuario Normal\n";
-    opcionRol = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,2);
-
-    switch (opcionRol) {
-        case 1: {
-            rol = Usuario::Rol::ADMINISTRADOR; break;
-        }
-        case 2: {
-            rol = Usuario::Rol::USUARIO_NORMAL; break;
-        }
-            
-    };
-    PrimerUsuario = new Usuario (id, nombre, rol);
+    PrimerUsuario = new Usuario (id, nombre, Usuario::Rol::ADMINISTRADOR);
     
     std::string contrasena = ValidarEntrada::validarContrasena ("Ingrese la contrasena: ", '*');
     PrimerUsuario->setHashContrasena (contrasena);
@@ -86,7 +72,6 @@ void MenuPrincipal::iniciarSesion() {
         }
         
         usuarioActivo = usuario;
-        gestorHistorial->setIdUsuarioSesion(usuarioActivo->getId());
         cout << "\nInicio de sesion exitoso.\n";
         cout << "Bienvenido/a, " << usuarioActivo->getNombre() << "!\n";
     }
@@ -98,6 +83,7 @@ MenuPrincipal::MenuPrincipal ()
     uc = new UsuarioController ();
     tc = new TareaController ();
     ac = new AsignacionController ();
+    usuarioActivo = nullptr;
     gestorHistorial = nullptr;
     auditoria = new AuditoriaDataBase ();
     menuAdmin = nullptr;
@@ -140,6 +126,7 @@ void MenuPrincipal::ejecutar () {
 
         //inicializamos los atributos restantes que ocupan a usuario activo
             gestorHistorial  = new GestorHistorial (auditoria, usuarioActivo->getId ());
+            gestorHistorial->setIdUsuarioSesion(usuarioActivo->getId()); //agregamos el usuaeio 
             menuAdmin = new  MenuAdmin (uc, tc, ac, usuarioActivo, gestorHistorial);
             //menu normal
             

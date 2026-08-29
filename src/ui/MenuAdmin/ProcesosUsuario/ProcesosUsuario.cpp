@@ -1,5 +1,11 @@
 #include "ProcesosUsuario.h"
 
+void ProcesosUsuario::mostrarInformacionUsuario (Usuario* usuario) {
+    std::string rol =((usuario->getRol() == Usuario::Rol::ADMINISTRADOR) ? "ADMINISTRADOR" : "USUARIO_NORMAL");
+    std::cout << usuario->getId() << " | " << usuario->getNombre() << " | " << rol << std::endl;
+} 
+
+
 ProcesosUsuario::ProcesosUsuario (UsuarioController* _uc, Usuario* _uA, GestorHistorial* _gH) {
     this-> uc = _uc;
     this->usuarioActivo = _uA;
@@ -128,18 +134,47 @@ void ProcesosUsuario::eliminarUsuario () {
 
 void ProcesosUsuario::mostrarLista () {
     std::vector<Usuario*> usuarios = uc->listarUsuarios();
-    if (usuarios.empty()) 
-    {
+    if (usuarios.empty()) {
         std::cout << "No hay usuarios registrados.\n"; return;
+    }  
+
+    std::cout << "Que algoritmo de ordenamiento prefiere usar? " << std::endl
+     << "1. QuickSort" << std::endl
+     << "2. MergeSort" << std::endl 
+     << "3. (Por elegir)" << std::endl;
+    int opcion = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,3);   
+    
+    std::cout << "Desea usar un ordenamiento ascendente o descendente? " << std::endl
+     << "1. Ascendente" << std::endl
+     << "2. Descendente" << std::endl; 
+    int opcionOrden = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,2);   
+
+    Icondicion<Usuario*> * condicion;
+    if (opcionOrden == 1) {
+        condicion = new ordenarUsuarioPorIdAscedente ();
+    } else {
+        condicion = new ordenarUsuarioPorIdDescendente ();
     }
 
+    switch (opcion) {
+        case 1:{    
+        QuickSort<Usuario*>* algoritmo = new QuickSort<Usuario*> ();    algoritmo->ordenar (usuarios, condicion);
+        delete algoritmo;
+        break;
+    }
+    case 2:{
+        MergeSort<Usuario*>* algoritmo = new MergeSort<Usuario*> ();     algoritmo->sort (usuarios, condicion);
+        delete algoritmo;
+    }
+    default:
+        break;
+    }
+
+    delete condicion;
     std::cout << "\n========== LISTA DE USUARIOS ==========\n";
-    for (Usuario* usuario : usuarios) {
-        
-        std::cout << "ID: " << usuario->getId() << std::endl;
-        std::cout << "Nombre: " << usuario->getNombre() << std::endl;
-        std::cout << ((usuario->getRol() == Usuario::Rol::ADMINISTRADOR) ? "Rol: ADMINISTRADOR\n" : "Rol: USUARIO_NORMAL\n");
-        std::cout << "--------------------------------------\n";
+    for (Usuario* u : usuarios) {
+        mostrarInformacionUsuario (u);
+        std:: cout << "--------------------------------------------------------------------------------" << std::endl;
     }
 }
 
@@ -151,8 +186,5 @@ void ProcesosUsuario::mostrarUsuarioPorId () {
         std::cout << "No existe un usuario con ese ID.\n"; return;
     }
 
-    std::cout << "\n========== USUARIO ENCONTRADO ==========\n";
-    std::cout << "ID: " << usuario->getId() << std::endl;
-    std::cout << "Nombre: " << usuario->getNombre() << std::endl;
-    std::cout << ((usuario->getRol() == Usuario::Rol::ADMINISTRADOR) ? "Rol: ADMINISTRADOR\n" : "Rol: USUARIO_NORMAL\n");
+    mostrarInformacionUsuario (usuario);  
 }

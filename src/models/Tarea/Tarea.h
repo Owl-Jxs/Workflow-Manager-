@@ -25,13 +25,14 @@ private:
     void validarDescripcion (std::string descripcion);
     void validarEstado (std::string estado);
    void esAncestro (const Tarea* buscado) const; // Verifica si 'buscado' es un ancestro de 'this'
+
 public:
 //constructores y destructores
     Tarea (int id, std::string descripcion, bool prioridad, std::string estado);
     ~Tarea ();
 
 //variables static
-    static const std::string ESTADO [3];
+    static const std::string ESTADO [4];
     static const int sinPadre;
 
 //getters and setters

@@ -11,7 +11,7 @@ AsignacionController:: ~AsignacionController () {
     delete this->listaAsignaciones;
 }
 
-//                                  === === ===     METODOS PUBLICOS    === === ===
+//                                 === === ===     METODOS PUBLICOS    === === ===
 
 void AsignacionController::guardarAsignaciones () {
     archivosAsignaciones->guardarAsignacionesEnArchivo (listaAsignaciones);
@@ -28,6 +28,15 @@ void AsignacionController::cargarAsignaciones () {
     if (listaAsignaciones != nullptr) delete listaAsignaciones; //se borra una posible lista anterior si la hay
     listaAsignaciones = listaCargada;
 }
+
+void AsignacionController::guardarAsignacionesCompletadas (std::vector<std::pair<int, int>> listaAsignaciones){
+    archivosAsignaciones->guardarAsignacionesCompletadas (listaAsignaciones);
+}
+
+void AsignacionController::deshacerAsignacionesCompletadas (std::vector <std::pair<int, int>> listaAsignacionesRehacer){
+    archivosAsignaciones->deshacerAsignacionesCompletadas (listaAsignacionesRehacer);
+} 
+
 
 void AsignacionController:: agregarAsignacion(int idTarea, int idUsuario) {
     if (idTarea < 0) throw std::invalid_argument ("el id de la tarea no puede ser negativo ");
@@ -47,36 +56,67 @@ void AsignacionController::eliminarAsignacion(int idTarea, int idUsuario) {
     if (idTarea < 0) throw std::invalid_argument ("el id de la tarea no puede ser negativo ");
     if (idUsuario < 0) throw std::invalid_argument ("el id del usuario no puede ser negativo ");
     if (! (listaAsignaciones->buscarAsignacion (idTarea, idUsuario) ) ) throw std::invalid_argument ("la asignacion no existe ");
-
+    
     listaAsignaciones->eliminarAsignacion (idTarea, idUsuario);
     archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
+}
+
+void AsignacionController::eliminarAsignacionPorIdTarea (int idTarea) {
+    std::vector <int> id;
+    id.push_back (idTarea);
+    std::vector<std::pair <int, int>> pares = getAsignacionesResponsablesDeTarea (id);
+    
+    for (std::pair <int, int> par : pares) {
+        int idTarea = par.first;
+        int idUsuario = par.second;
+        archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
+    }
+}
+
+void AsignacionController::eliminarAsignacionPorIdUsuario (int idUsuario){
+    std::vector <int> id;
+    id.push_back (idUsuario);
+    std::vector<std::pair <int, int>> pares = getAsignacionesResponsablesDeTarea (id);
+    
+    for (std::pair <int, int> par : pares) {
+        int idTarea = par.first;
+        int idUsuario = par.second;
+        archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
+    }
 }
 
 bool AsignacionController::buscarAsignacion(int idTarea, int idUsuario) {
     return listaAsignaciones->buscarAsignacion (idTarea, idUsuario);
 }
 
- std::vector<int> AsignacionController::getAsignacionesResponsablesDeTarea (int idTarea) {
+
+std::vector<std::pair <int, int>> AsignacionController::getAsignacionesResponsablesDeTarea (std::vector <int> idsTareas) {
     NodoAsignacion* actual = listaAsignaciones->getCabeza ();
-    std::vector <int> vectorUsuariosResponsables;
+    std::vector<std::pair <int, int>> vectorUsuariosResponsables;
 
     while (actual != nullptr) {
-        if (actual->idTarea == idTarea) {
-            vectorUsuariosResponsables.push_back (actual->idUsuario);
+        for (int i: idsTareas) {
+            if (actual->idTarea == i) {
+                vectorUsuariosResponsables.push_back ( {i,actual->idUsuario});
+            }
         }
+        
         actual = actual->siguiente;
     }
     return vectorUsuariosResponsables;
 }
 
-std::vector<int> AsignacionController::getAsignacionesTareasPorUsuario (int idUsuario) {
+std::vector<std::pair <int, int>> AsignacionController::getAsignacionesTareasPorUsuario (std::vector <int> idsResponsables) {
     NodoAsignacion* actual = listaAsignaciones->getCabeza ();
-    std::vector <int> vectorTareasUsuario;
+    std::vector<std::pair <int, int>> vectorTareasUsuario;
 
     while (actual != nullptr) {
-        if (actual->idUsuario == idUsuario) {
-            vectorTareasUsuario.push_back (actual->idTarea);
+       for (int i: idsResponsables) {
+            if (actual->idUsuario == i) {
+                vectorTareasUsuario.push_back  ({actual->idTarea, i});
+            }
         }
+        
         actual = actual->siguiente;
     }
     return vectorTareasUsuario;

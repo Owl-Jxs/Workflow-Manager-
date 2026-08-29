@@ -1,24 +1,6 @@
 #include "ColaFIFO.h"
 #include <stdexcept>
-
 using namespace std;
-
-ColaFIFO::ColaFIFO() {
-    this->frente = nullptr;
-    this->final = nullptr;
-    this->cantidad = 0;
-}
-
-ColaFIFO::~ColaFIFO() {
-    if (!estaVacia() ) {
-        NodoTarea* aux = frente;
-        while (aux != nullptr) {
-            NodoTarea* temp = aux;
-            aux = aux->siguiente;
-            delete temp;
-        }
-    }
-}
 
 void ColaFIFO::encolar(Tarea* tarea) {
     if (tarea == nullptr) {
@@ -59,29 +41,7 @@ Tarea* ColaFIFO::desencolar() {
     return tarea;
 }
 
-NodoTarea* ColaFIFO::getFrente () {
-    return frente;
-}
-
-NodoTarea* ColaFIFO::getCola () {
-    return final;
-}
-
-bool ColaFIFO::estaVacia() const {
-    return frente == nullptr;
-}
-
-bool ColaFIFO::tareaRepetida (Tarea* tarea) const {
-    NodoTarea* actual = frente;
-    while (actual != nullptr) {
-        if (actual->datos != nullptr && actual->datos->buscarSubTarea(tarea->getIdTarea()) != nullptr) {
-            return true;
-        }
-        actual = actual->siguiente;
-    }
-    return false;
-}
-
+/*
 Tarea* ColaFIFO::extraerTarea(int idTarea) {
     if (estaVacia()) return nullptr;
 
@@ -112,3 +72,4 @@ Tarea* ColaFIFO::extraerTarea(int idTarea) {
     }
     return nullptr;
 }
+*/

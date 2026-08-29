@@ -1,7 +1,6 @@
 #include "TareaDataBase.h"
 //guias para archivos
-const std::string TareaDataBase::FILENAME_TAREAS_REGULARES = "data/tareas_regulares.csv";
-const std::string TareaDataBase::FILENAME_TAREAS_URGENTES = "data/tareas_urgentes.csv";
+const std::string TareaDataBase::FILENAME_TAREAS_ACTIVAS = "data/Tareas_Data.csv";
 const std::string TareaDataBase::FILENAME_TAREAS_COMPLETADAS = "data/tareas_completadas.csv";
 const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular"}; 
 
@@ -74,220 +73,221 @@ void TareaDataBase::guardarArbol (Tarea* arbolTarea, std::ofstream& archivo) { /
     guardarArbol (arbolTarea->getSiguienteSubTarea (), archivo);
 }
 
-void TareaDataBase::guardarLista (ColaFIFO* lista, std::string nombreArchivo) { //guardar una lista dada
-    if (lista == nullptr) throw std::invalid_argument ("La lista del archivo: " + nombreArchivo + "Esta vacia");
-//Crear archivo de  temporal 
-    std::string nombreTemp = "data/tareas_temporal.csv";
-    std::ofstream archivoTemp (nombreTemp);
-    if (!archivoTemp.is_open () ) throw std::runtime_error("Error al abrir el archivo temporal.");
-
+void TareaDataBase::guardarLista (Cola* lista, std::ofstream& archivo) { //guardar una lista dada
+    if (lista == nullptr) return;
  //guardar cada posicion
     NodoTarea* nodoActual = lista->getFrente ();
     while (nodoActual != nullptr) {
         try{
-            guardarArbol (nodoActual->datos, archivoTemp);
+            guardarArbol (nodoActual->datos, archivo);
         }   catch (const std::exception& e) {
             std::cerr << "Advertencia: Error al guardar tarea en archivo temporal: " << e.what() << std::endl;
          }       
         nodoActual = nodoActual->siguiente;
     }
-    archivoTemp.close (); //cerramos el archivo
 
-//cambiamos el archivo de persistencia
-    std::remove (nombreArchivo.c_str ()); // si el archivo no existia, no es un error
-    if (std::rename (nombreTemp.c_str () , nombreArchivo.c_str()) != 0) throw std::runtime_error("Error al renombrar el archivo temporal de tareas.");   
 }
 
-void TareaDataBase::guardarNuevaTarea (Tarea* tarea, std::string nombreArchivo) { //guarda una tarea en los archivos de las listas
-    std::ofstream archivoListas (nombreArchivo, std::ios::app);
-    if (!archivoListas.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
-    guardarArbol (tarea, archivoListas);
-    archivoListas.close ();
+void TareaDataBase::guardarVector (const std::vector<Tarea*>& enProceso, std::ofstream& archivo){
+    for (Tarea* t : enProceso) {
+        archivo << formularLinea (t) << std::endl;
+    }
 }
 
-ColaFIFO* TareaDataBase::cargarLista (std::string nombreArchivo, int &ultimoId) { //carga una lista de los archivos
-//abrimos el archivo de la lista
-    std::ifstream lista (nombreArchivo);
-    if (!lista.is_open () ) return new ColaFIFO ();
+void TareaDataBase::guardarNuevaTarea (Tarea* tarea, std::ofstream& archivo) { //guarda una tarea en los archivos de las listas
+   guardarArbol (tarea, archivo);
+}
 
-    std::unordered_map <int, Tarea*> indiceTareas; //donde se almacenaran las tareas hasta encontrar sus arboles completos
-    std::unordered_map <int, int> padresPorId; //guarda el id del padre de cada tarea para reconstruir el arbol
-    std::vector <Tarea*> tareasEnlistadas; //donde guardaremos las tareas hasta encontrar sus padres
-    std::string linea; // recorre cada linea del archivo
-    int idMax = 0;
-//leemos el archivo
-    while (std::getline (lista, linea)) {
-        if (linea.empty ()) continue;
+void TareaDataBase::eliminarTarea (std::vector<int> idArbolTarea, std::string nombreArchivo) {
+    std::ifstream archivo(nombreArchivo);
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
 
+    std::string nombreTemporal = "Temp.csv";
+    std::ofstream archivoTemp(nombreTemporal);
+
+    if (!archivoTemp.is_open()) {
+        archivo.close();
+        throw std::runtime_error("Error al crear archivo temporal");
+    }
+
+    std::string linea;
+    while (std::getline(archivo, linea)) {
+        std::vector <std::string> lineaActual = dividirCamposCSV (linea);
         try {
-            std::vector<std::string> campos = dividirCamposCSV (linea);
-            if (campos.size () < 6) throw std::invalid_argument ("linea incompleta");
+            bool escribir = true;
+            for (int i : idArbolTarea) {
 
-            int idTarea = std::stoi (campos[0]);
-            int idPadre = std::stoi (campos[4]);
+                if (i < 0) throw std::invalid_argument ("Id invalido");
+                if (lineaActual[0] == std::to_string (i) ) {
+                    escribir = false; break;
+                }
+            }  
 
-            // guardamos el id mas grande
-            if (idTarea > idMax && idTarea > idPadre){
-                idMax = idTarea;
-            } else if (idPadre > idMax && idPadre > idTarea) {
-                idMax = idPadre;
-            }
-
-            bool urgente = (campos[2] == ENUM_PRIORIDAD_TAREA[0]);
-            // campos[5] = cantidadSubTareas: se recalcula al reconstruir el arbol
-
-            Tarea* nuevaTarea = new Tarea (idTarea, campos[1], urgente, campos[3]);
-            if (campos.size () >= 7) {
-                nuevaTarea->setCiclosEspera (std::stoi (campos[6]));
-            }
-            indiceTareas [idTarea] = nuevaTarea; //la ingresamos al "indice rapido"
-            padresPorId [idTarea] = idPadre; //guardamos su relacion para adjuntarla despues
-            tareasEnlistadas.push_back (nuevaTarea);
-
-        } catch (const std::exception& e) {
-            std::cerr << "Advertencia: linea invalida en " << nombreArchivo << ": " << linea
-                      << " -> " << e.what () << std::endl;
+            if (escribir) {// Si NO es la tarea que queremos eliminar,la copiamos al archivo temporal
+                    archivoTemp << linea << std::endl;
+                }
+        } catch (std::exception &e) {
+            std::cout << e.what (); continue;
         }
+        
+        
     }
-    lista.close (); //cerramos el archivo de la lista
-
-//creamos la cola
-    ColaFIFO* nuevaLista = new ColaFIFO ();
-//buscamos los hijos de cada tarea y la ingresamos a la cola
-    for (Tarea* tarea: tareasEnlistadas) {
-        int idPadre = padresPorId [tarea->getIdTarea ()];
-
-        if (idPadre == Tarea::sinPadre) { //si es una tarea raiz
-            try {
-                nuevaLista->encolar (tarea);
-            } catch (const std::exception& e) {
-                std::cerr << "Advertencia: tarea repetida (" << tarea->getIdTarea ()
-                          << "); se ignora: " << e.what () << std::endl;
-                delete tarea;
-            }
-        } else if (indiceTareas.find (idPadre) != indiceTareas.end ()) { //buscamos la tarea padre
-            try {
-                indiceTareas [idPadre]->agregarSubTarea (tarea);
-            } catch (const std::exception& e) {
-                std::cerr << "Advertencia: no se pudo adjuntar la tarea " << tarea->getIdTarea ()
-                          << " a su padre " << idPadre << ": " << e.what () << std::endl;
-                delete tarea;
-            }
-        } else { //el padre no existe en el archivo
-            std::cerr << "Advertencia: la tarea " << tarea->getIdTarea ()
-                      << " tiene un padre inexistente (" << idPadre << "); se ignora." << std::endl;
-            delete tarea;
-        }
-    }
-    ultimoId = idMax;
-    return nuevaLista;
+    archivo.close();    archivoTemp.close();
+// Eliminar el archivo original
+    std::remove(nombreArchivo.c_str());
+// Renombrar el temporal con el nombre original
+    if (std::rename(nombreTemporal.c_str(), nombreArchivo.c_str()) != 0)throw std::runtime_error("Error al reemplazar el archivo");    
 }
-
-Tarea* TareaDataBase::buscarSubTarea (Tarea* TareaActual, int idBuscado) { //buscar una subtarea en el arbol
-    if (TareaActual == nullptr) return nullptr;
-    if (TareaActual->getIdTarea () == idBuscado) {
-        return TareaActual;
-    } else {
-        Tarea* primerSubTarea = buscarSubTarea (TareaActual->getPrimerSubTarea (), idBuscado);
-        if (primerSubTarea != nullptr) return primerSubTarea;
-        Tarea* siguienteSubTarea = buscarSubTarea (TareaActual->getSiguienteSubTarea (), idBuscado);
-        if (siguienteSubTarea != nullptr) return siguienteSubTarea;
-    } 
-    return nullptr;
-}
-
 
 //                                  === === ===     CONSTRUCTOR Y DESTRUCTOR    === === ===
 TareaDataBase::TareaDataBase () { }
 TareaDataBase::~TareaDataBase () { }
 
 //                                  === === ===     METODOS PUBLICOS    === === ===
+void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::vector<Tarea*>& enProceso,
+ Cola* enRevision, int &ultimoId) {
 
-void TareaDataBase::guardarListaEnArchivo (ColaFIFO* listaCompleta, bool perteneceListaUrgente) { //guardar la base de datos en ambas listas
-    std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES);
-    guardarLista (listaCompleta, nombreArchivo); //Guardamos la lista
+    std::ifstream archivoLectura (FILENAME_TAREAS_ACTIVAS);// cargamos el archivo con los datos
+    if (!archivoLectura.is_open()) throw std::runtime_error ("error al cargar los archivos");;
+
+    std::unordered_map <int, Tarea*> indiceTareas; // guarda todas las tareas principales de los archivos
+    std::unordered_map   <int, int> indicePadres; // guarda el indice de los padres para colocar las subtareas con sus padres
+    std::vector <Tarea*> tareasEnlistadas; //donde guardaremos todas las tareas
+    std::string linea;
+    int idMax = 0;
+
+    while (std::getline (archivoLectura, linea) ) { //cargamos TODAS las tareas y las ordenamos
+        if (linea.empty ()) continue;
+        try {
+            std::vector < std::string> camposPorLinea = dividirCamposCSV (linea);
+            if (camposPorLinea.size () < 7) throw std::invalid_argument("linea incompleta"); //si no tiene todos los campos
+        //Formato de guardado --> id, descripcion, prioridad, estado, idPadre, cantidadSubTareas, ciclosEspera
+
+            int idTarea = std::stoi (camposPorLinea[0]);
+            int idPadre = std::stoi (camposPorLinea[4]);
+
+            if (idPadre >= idMax && idPadre >= idTarea) {
+                idMax = idPadre;
+            } else if (idTarea >= idMax && idTarea >= idPadre) {
+                idMax = idTarea;
+            }
+
+
+            bool urgente = ((ENUM_PRIORIDAD_TAREA[0] == camposPorLinea[2]) ? true : false);
+
+            Tarea* nuevaTarea = new Tarea (idTarea, camposPorLinea[1], urgente, camposPorLinea[3]); //creamos la tarea
+            if (camposPorLinea.size() >= 7) nuevaTarea->setCiclosEspera(std::stoi(camposPorLinea[6]));
+            
+            indiceTareas [idTarea] = nuevaTarea;
+            indicePadres [idTarea] = idPadre;
+            tareasEnlistadas.push_back (nuevaTarea);
+
+        } catch (std::exception &e) {
+            std::cerr << "Advertencia: linea invalida: " << linea << " -> " << e.what() << std::endl;   
+        }
+    }
+    archivoLectura.close ();
+
+    for (Tarea* t: tareasEnlistadas) { // construimos todas las listas
+        if (t->getIdPadre () == Tarea::sinPadre){ // si es una  tarea "Raiz"
+            try {
+                if (t->getEstado() == Tarea::ESTADO [0] && t->getPrioridad ()) urgentes->encolar (t); //si es una tarea urgente y esta en por hacer
+                else if (t->getEstado() == Tarea::ESTADO [0] && !(t->getPrioridad () ) ) regulares->encolar (t); // si es una tarea regular y esta en por hacer
+                else if (t->getEstado () == Tarea::ESTADO[1]) enProceso.push_back (t); 
+                else if (t->getEstado () == Tarea::ESTADO[2]) enRevision->encolar (t);
+            } catch (std::exception &e) {
+                delete t; std::cout << e.what ();
+            }
+    
+        } else if (indicePadres.find (t->getIdPadre ()) != indicePadres.end ()) { // si es una subTarea con un padre
+            try {
+                indiceTareas[t->getIdPadre ()]->agregarSubTarea(t);
+            } catch (const std::exception& e) {
+                std::cerr << "Advertencia: fallo al adjuntar subtarea " << t->getIdTarea() << std::endl;    delete t;
+            }
+        } else {
+            std::cout << "Tarea con padre Huerfano, se porcedera a ignorar" <<std::endl; delete t;
+        }
+       
+    }
+    ultimoId = idMax;
 }
 
-ColaFIFO* TareaDataBase:: cargarListaDelArchivo (bool perteneceListaUrgente, int &ultimoId) {
-     std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES);
-    return cargarLista (nombreArchivo, ultimoId);
+void TareaDataBase::guardarTareasActivas (Cola* regulares, Cola* urgentes, const std::vector<Tarea*>& enProceso, Cola* enRevision){ 
+    std::ofstream archivo(FILENAME_TAREAS_ACTIVAS, std::ios::trunc);
+    if (!archivo.is_open()) throw std::runtime_error ("Error al abrir el archivo de guardado");
+
+// Guardar las colas usando la función auxiliar private
+    guardarLista (regulares, archivo);
+    guardarLista (urgentes, archivo);
+    guardarLista (enRevision, archivo);
+// Guardar el vector
+    guardarVector (enProceso, archivo);
+    archivo.close();
 }
 
-void TareaDataBase::guardarNuevaTareaEnArchivo (Tarea* tarea, bool perteneceListaUrgente) { //agrega una nueva tarea al sistema y a los archivos
+void TareaDataBase::guardarTareasCompletadas (Cola* listaTareasCompletadas) {
+    std::ofstream archivo (FILENAME_TAREAS_COMPLETADAS, std::ios::trunc);
+    if (!archivo.is_open()) throw std::runtime_error ("Error al abrir el archivos");
+
+// Guardar las colas usando la función auxiliar private   
+    guardarLista (listaTareasCompletadas, archivo);
+    archivo.close ();
+}
+   
+void TareaDataBase::guardarNuevaTareaEnArchivo (Tarea* tarea) { //agrega una nueva tarea al sistema y a los archivos
     if (tarea == nullptr) throw std::invalid_argument ("No se puede agregar una tarea nula");
-    std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES);
-    guardarNuevaTarea (tarea, nombreArchivo); //la guardamos en el archivo
+    std::ofstream archivo (FILENAME_TAREAS_ACTIVAS, std::ios::app);
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
+
+    guardarNuevaTarea (tarea, archivo); //la guardamos en el archivo
+    archivo.close();
 }
 
-void TareaDataBase::guardarNuevaSubTareaEnArchivo (Tarea* subTarea, bool perteneceListaUrgente) {
-    if (subTarea == nullptr) throw std::invalid_argument ("No se puede agregar una sub tarea nula");
-    std::string nombreArchivo = ((perteneceListaUrgente) ? FILENAME_TAREAS_URGENTES : FILENAME_TAREAS_REGULARES); //el nombre del archivo
+void TareaDataBase::actualizarEstadoTarea (Tarea* tarea) {
+    if (tarea == nullptr) throw std::invalid_argument("tarea nula");
+    if (tarea->getIdTarea () < 0) throw std::invalid_argument("ID de tarea invalido");
+    
+    std::ifstream archivo(FILENAME_TAREAS_ACTIVAS);
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
 
-//guardamos en el archivo
-    std::ofstream listaDestino (nombreArchivo, std::ios::app);
-    if (!listaDestino.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
-    listaDestino << formularLinea (subTarea) << std::endl;
-    listaDestino.close ();
+    std::string nombreTemporal = "Temp.csv";
+    std::ofstream archivoTemp(nombreTemporal);
+    if (!archivoTemp.is_open()) {
+        archivo.close();
+        throw std::runtime_error("Error al crear archivo temporal");
+    }
+
+    std::string linea;
+    while (std::getline(archivo, linea)) {
+        std::vector <std::string> lineaActual = dividirCamposCSV (linea);
+
+        if (lineaActual[0] != std::to_string (tarea->getIdTarea ()) ) {// Si NO es la tarea que queremos eliminar,la copiamos al archivo temporal
+                archivoTemp << linea << '\n';
+        } else {
+            archivoTemp << formularLinea (tarea) << std::endl;
+        }
+    }
+    archivo.close();    archivoTemp.close();
+// Eliminar el archivo original
+    std::remove(FILENAME_TAREAS_ACTIVAS.c_str());
+// Renombrar el temporal con el nombre original
+    if (std::rename(nombreTemporal.c_str(), FILENAME_TAREAS_ACTIVAS.c_str()) != 0)throw std::runtime_error("Error al reemplazar el archivo"); 
 }
 
+void TareaDataBase::eliminarTareaActiva (std::vector<int> idArbolTarea){
+    eliminarTarea (idArbolTarea, FILENAME_TAREAS_ACTIVAS);
+}
 
 void TareaDataBase::registrarTareaCompletada (Tarea* tarea) {  
     if (tarea == nullptr)   throw std::invalid_argument ("No se completar una tarea nula");
     std::ofstream archivoGuardado (FILENAME_TAREAS_COMPLETADAS, std::ios::app);
     if (!archivoGuardado.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
-
-    archivoGuardado << formularLinea (tarea) << std::endl;
+    
+    guardarNuevaTarea (tarea, archivoGuardado);
     archivoGuardado.close ();
 }
 
-void TareaDataBase::eliminarRegistroTareaCompletada(int idTarea) {
-
-    if (idTarea < 0)
-        throw std::invalid_argument("id invalido");
-
-    std::string temp = "Temp.csv";
-
-    std::ifstream archivoGuardado(FILENAME_TAREAS_COMPLETADAS);
-
-    if (!archivoGuardado.is_open())
-        throw std::runtime_error("Error al abrir el archivo de la lista de tareas");
-
-    std::ofstream archivoTemp(temp);
-
-    if (!archivoTemp.is_open())
-        throw std::runtime_error("Error al abrir el archivo temporal");
-
-    std::string linea;
-
-    while (std::getline(archivoGuardado, linea)) {
-
-        std::stringstream lineaActual(linea);
-
-        std::string idTxT, descripcionTxt, prioridadTxT;
-        std::string estadoTxT, idPadreTxT;
-        std::string cantidadSubTareasTxT, ciclosEsperaTxT;
-
-        if (std::getline(lineaActual, idTxT, ',') &&
-            std::getline(lineaActual, descripcionTxt, ',') &&
-            std::getline(lineaActual, prioridadTxT, ',') &&
-            std::getline(lineaActual, estadoTxT, ',') &&
-            std::getline(lineaActual, idPadreTxT, ',') &&
-            std::getline(lineaActual, cantidadSubTareasTxT, ',') &&
-            std::getline(lineaActual, ciclosEsperaTxT)) {
-
-            if (std::stoi(idTxT) != idTarea) {
-                // Mantener la línea
-                archivoTemp << linea << '\n';
-            }
-        }
-    }
-
-    archivoGuardado.close();
-    archivoTemp.close();
-
-    std::remove(FILENAME_TAREAS_COMPLETADAS.c_str());
-
-    if (std::rename(temp.c_str(), FILENAME_TAREAS_COMPLETADAS.c_str()) != 0) {
-        throw std::runtime_error("Error al reemplazar el archivo");
-    }
+void TareaDataBase::eliminarRegistroTareaCompletada (std::vector<int> idArbolTarea) {
+    eliminarTarea (idArbolTarea, FILENAME_TAREAS_COMPLETADAS);
 }

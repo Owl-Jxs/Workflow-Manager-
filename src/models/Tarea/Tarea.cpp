@@ -1,8 +1,9 @@
 #include "Tarea.h"
 //atributos static
- const std::string Tarea::ESTADO [3] = {
+ const std::string Tarea::ESTADO [4] = {
     "POR HACER",
     "EN PROCESO",
+    "EN REVISION",
     "COMPLETADA"
 };
 const int Tarea::sinPadre = -1;
