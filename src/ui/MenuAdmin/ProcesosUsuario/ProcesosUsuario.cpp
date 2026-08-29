@@ -141,7 +141,7 @@ void ProcesosUsuario::mostrarLista () {
     std::cout << "Que algoritmo de ordenamiento prefiere usar? " << std::endl
      << "1. QuickSort" << std::endl
      << "2. MergeSort" << std::endl 
-     << "3. (Por elegir)" << std::endl;
+     << "3. BubbleSort" << std::endl;
     int opcion = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,3);   
     
     std::cout << "Desea usar un ordenamiento ascendente o descendente? " << std::endl
@@ -165,6 +165,12 @@ void ProcesosUsuario::mostrarLista () {
     case 2:{
         MergeSort<Usuario*>* algoritmo = new MergeSort<Usuario*> ();     algoritmo->sort (usuarios, condicion);
         delete algoritmo;
+        break;
+    }
+    case 3:{
+        BubbleSort<Usuario*>* algoritmo = new BubbleSort<Usuario*> ();    algoritmo->sort (usuarios, condicion);
+        delete algoritmo;
+        break;
     }
     default:
         break;

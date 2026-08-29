@@ -12,6 +12,7 @@
 #include "../../../algorithms/Condiciones/TareaCondicion.h"
 #include "../../../algorithms/MergeSort/MergeSort.h"
 #include "../../../algorithms/QuickSort/QuickSort.h"
+#include "../../../algorithms/BubbleSort/BubbleSort.h"
 
 #include <exception>
 #include <iostream>
