@@ -8,13 +8,11 @@
 using namespace std;
 
 void MenuPrincipal::crearPrimerUsuario () {
-    std::cout << "No hay ningun registro de usarios,  debe de registrar el primero para utilizar el sistema" << std::endl;
+    std::cout << "No hay ningun registro de usuarios, debe de registrar el primero para utilizar el sistema" << std::endl;
     Usuario* PrimerUsuario;
 
     int id;
     std::string nombre;
-    int opcionRol;
-    Usuario::Rol rol;
     id = ValidarEntrada::validarCodigoNumerico ("Ingrese su identificacion", 9);
     nombre =ValidarEntrada::validarNombreCompleto ();
 
@@ -26,7 +24,7 @@ void MenuPrincipal::crearPrimerUsuario () {
     try {
         uc->agregarUsuario  (PrimerUsuario);
     } catch (std::exception &e) {
-        std::cout << e.what (); delete PrimerUsuario;
+        std::cout << e.what (); delete PrimerUsuario; PrimerUsuario = nullptr;
     }
     
     if (PrimerUsuario != nullptr) usuarioActivo = PrimerUsuario;
@@ -34,7 +32,7 @@ void MenuPrincipal::crearPrimerUsuario () {
 
 void MenuPrincipal::iniciarSesion() {
     bool seguirBuscando = true;
-    Usuario* usuario;
+    Usuario* usuario = nullptr;
     
     do { //buscamos el usuario
 
@@ -68,7 +66,7 @@ void MenuPrincipal::iniciarSesion() {
 
         if (numeroIntentos == 0) {
             usuarioActivo = nullptr;
-            std::cout << "Lo sentimos, numero de intentos maximos alcanzados. Ingrese sesion mas tarde"; return;
+            std::cout << "Lo sentimos, numero de intentos maximos alcanzados. Inicie sesion mas tarde"; return;
         }
         
         usuarioActivo = usuario;
@@ -87,7 +85,7 @@ MenuPrincipal::MenuPrincipal ()
     gestorHistorial = nullptr;
     auditoria = new AuditoriaDataBase ();
     menuAdmin = nullptr;
-    //menuRegular = nullptr;
+    menuNormal = nullptr;
     try {
         uc->cargarUsuarios();
     }catch (const exception& e) {
@@ -126,9 +124,8 @@ void MenuPrincipal::ejecutar () {
 
         //inicializamos los atributos restantes que ocupan a usuario activo
             gestorHistorial  = new GestorHistorial (auditoria, usuarioActivo->getId ());
-            gestorHistorial->setIdUsuarioSesion(usuarioActivo->getId()); //agregamos el usuaeio 
             menuAdmin = new  MenuAdmin (uc, tc, ac, usuarioActivo, gestorHistorial);
-            //menu normal
+            menuNormal = new MenuUsuarioNormal (tc, ac, usuarioActivo, gestorHistorial);
             
             switch (usuarioActivo->getRol ()) 
             {
@@ -136,7 +133,7 @@ void MenuPrincipal::ejecutar () {
                     mostrarMenuAdministrador (usuarioActivo); break;
                 }
                 case Usuario::Rol::USUARIO_NORMAL: {
-                    //mostrarMenuUsuarioNormal (usuarioActivo); break;
+                    menuNormal->mostrarMenuUsuarioNormal(); break;
                 }   
             }
 
@@ -145,60 +142,25 @@ void MenuPrincipal::ejecutar () {
         }
 
     } catch (std::exception &e) {
-        std::cout << e.what ();
+        std::cout << e.what () << std::endl;
     }
 
-}
+} 
 
-        
-
-void MenuPrincipal::mostrarMenuAdministrador(Usuario* usuario)
+void MenuPrincipal::mostrarMenuAdministrador(Usuario* /*usuario*/)
 {
     menuAdmin->mostrarMenuAdministrador ();
 }
-/*
-void MenuPrincipal::mostrarMenuUsuarioNormal(Usuario* usuario)
-{
-    int opcion;
-    do
-    {
-        cout << "\n==============================\n";
-        cout << "    MENU USUARIO NORMAL\n";
-        cout << "==============================\n";
-        cout << "1. Ver tareas\n";
-        cout << "2. Cambiar estado de tarea asignada\n";
-        cout << "0. Cerrar sesion\n";
-        opcion = ValidarEntrada::validarEntradaRango ("Seleccione una opcion: ", 0, 2);
 
-        switch (opcion)
-        {
-            case 1:
-                cout << "Modulo de tareas: pendiente de integrar.\n";
-                break;
-
-            case 2:
-                cout << "Cambio de estado: pendiente de integrar.\n";
-                break;
-
-            case 0:
-                cout << "Cerrando sesion...\n";
-                break;
-
-            default:
-                cout << "Opcion invalida.\n";
-                break;
-        }
-
-    } while (opcion != 0);
-}
-
-*/
 MenuPrincipal::~MenuPrincipal()
 {   
+    if (tc != nullptr) tc->guardarArchivos();
+    if (ac != nullptr) ac->guardarAsignaciones();
     delete uc;
     delete tc;
     delete ac;
     delete auditoria;
-    delete gestorHistorial;
+    if (gestorHistorial != nullptr) delete gestorHistorial;
     if (menuAdmin != nullptr ) delete menuAdmin;
+    if (menuNormal != nullptr ) delete menuNormal;
 }

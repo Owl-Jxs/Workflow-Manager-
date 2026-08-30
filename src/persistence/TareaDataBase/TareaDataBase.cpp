@@ -102,7 +102,7 @@ void TareaDataBase::eliminarTarea (std::vector<int> idArbolTarea, std::string no
     std::ifstream archivo(nombreArchivo);
     if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
 
-    std::string nombreTemporal = "Temp.csv";
+    std::string nombreTemporal = "data/Temp.csv";
     std::ofstream archivoTemp(nombreTemporal);
 
     if (!archivoTemp.is_open()) {
@@ -148,7 +148,7 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
  Cola* enRevision, int &ultimoId) {
 
     std::ifstream archivoLectura (FILENAME_TAREAS_ACTIVAS);// cargamos el archivo con los datos
-    if (!archivoLectura.is_open()) throw std::runtime_error ("error al cargar los archivos");;
+    if (!archivoLectura.is_open()) throw std::runtime_error ("error al cargar los archivos");
 
     std::unordered_map <int, Tarea*> indiceTareas; // guarda todas las tareas principales de los archivos
     std::unordered_map   <int, int> indicePadres; // guarda el indice de los padres para colocar las subtareas con sus padres
@@ -188,6 +188,7 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
     }
     archivoLectura.close ();
 
+    std::vector<Tarea*> tareasCompletadas; // para borrar después del loop
     for (Tarea* t: tareasEnlistadas) { // construimos todas las listas
         if (t->getIdPadre () == Tarea::sinPadre){ // si es una  tarea "Raiz"
             try {
@@ -195,21 +196,25 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
                 else if (t->getEstado() == Tarea::ESTADO [0] && !(t->getPrioridad () ) ) regulares->encolar (t); // si es una tarea regular y esta en por hacer
                 else if (t->getEstado () == Tarea::ESTADO[1]) enProceso.push_back (t); 
                 else if (t->getEstado () == Tarea::ESTADO[2]) enRevision->encolar (t);
+                else if (t->getEstado () == Tarea::ESTADO[3]) tareasCompletadas.push_back(t); // completadas se cargan por separado
+                else tareasCompletadas.push_back(t); // estado inválido
             } catch (std::exception &e) {
-                delete t; std::cout << e.what ();
+                tareasCompletadas.push_back(t); std::cerr << e.what () << std::endl;
             }
     
         } else if (indicePadres.find (t->getIdPadre ()) != indicePadres.end ()) { // si es una subTarea con un padre
             try {
                 indiceTareas[t->getIdPadre ()]->agregarSubTarea(t);
             } catch (const std::exception& e) {
-                std::cerr << "Advertencia: fallo al adjuntar subtarea " << t->getIdTarea() << std::endl;    delete t;
+                std::cerr << "Advertencia: fallo al adjuntar subtarea " << t->getIdTarea() << std::endl;    tareasCompletadas.push_back(t);
             }
         } else {
-            std::cout << "Tarea con padre Huerfano, se porcedera a ignorar" <<std::endl; delete t;
+            std::cerr << "Tarea con padre Huerfano, se procedera a ignorar" <<std::endl; tareasCompletadas.push_back(t);
         }
        
     }
+    // Limpiar tareas completadas/inválidas/huérfanas después del loop
+    for (Tarea* t : tareasCompletadas) { delete t; }
     ultimoId = idMax;
 }
 
@@ -251,7 +256,7 @@ void TareaDataBase::actualizarEstadoTarea (Tarea* tarea) {
     std::ifstream archivo(FILENAME_TAREAS_ACTIVAS);
     if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
 
-    std::string nombreTemporal = "Temp.csv";
+    std::string nombreTemporal = "data/Temp.csv";
     std::ofstream archivoTemp(nombreTemporal);
     if (!archivoTemp.is_open()) {
         archivo.close();
@@ -290,4 +295,29 @@ void TareaDataBase::registrarTareaCompletada (Tarea* tarea) {
 
 void TareaDataBase::eliminarRegistroTareaCompletada (std::vector<int> idArbolTarea) {
     eliminarTarea (idArbolTarea, FILENAME_TAREAS_COMPLETADAS);
+}
+
+void TareaDataBase::cargarTareasCompletadas (Cola* completadas, int &ultimoId) {
+    std::ifstream archivo (FILENAME_TAREAS_COMPLETADAS);
+    if (!archivo.is_open()) return;
+
+    std::string linea;
+    while (std::getline (archivo, linea)) {
+        if (linea.empty ()) continue;
+        try {
+            std::vector<std::string> campos = dividirCamposCSV (linea);
+            if (campos.size () < 7) continue;
+
+            int id = std::stoi (campos[0]);
+            if (id > ultimoId) ultimoId = id;
+
+            bool urgente = (ENUM_PRIORIDAD_TAREA[0] == campos[2]);
+            Tarea* tarea = new Tarea (id, campos[1], urgente, campos[3]);
+            if (campos.size () >= 7) tarea->setCiclosEspera (std::stoi (campos[6]));
+            completadas->encolar (tarea);
+        } catch (std::exception& e) {
+            std::cerr << "Advertencia: error al cargar tarea completada: " << e.what() << std::endl;
+        }
+    }
+    archivo.close ();
 }

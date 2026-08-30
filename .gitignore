@@ -45,3 +45,6 @@ CMakeSettings.json
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ===== Datos de la app (generados al ejecutar) =====
+data/*.csv

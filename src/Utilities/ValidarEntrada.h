@@ -10,7 +10,6 @@ class ValidarEntrada {
 private: 
     static bool contieneSoloCaracteres (std::string entrada, int cantidadEspacios);
     static bool contieneSoloDigitos (std::string entrada, bool permitirNegativos);
-    static void convertirMayusculas (std::string &palabra);
 
     static int leerEntradaNumerica (const std::string& entrada, bool permitirNegativos);
     static void leerEntradaTextual (const std::string& entrada, int cantidadEspacios);

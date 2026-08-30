@@ -41,10 +41,9 @@ std::vector <Tarea*> TareaController::listarSubTareas (Tarea* tarea) const {
 
 bool TareaController::subTareasCompletas (Tarea* tarea) {
     Tarea* subTareaActual = tarea->getPrimerSubTarea ();
-    if (subTareaActual != nullptr) {
+    while (subTareaActual != nullptr) {
         if (subTareaActual->getEstado() != Tarea::ESTADO[3]) return false; 
         if (!subTareasCompletas(subTareaActual)) return false;
-    
         subTareaActual = subTareaActual->getSiguienteSubTarea();
     }
     return true;
@@ -76,6 +75,9 @@ TareaController::TareaController () :cantidadCiclosParaEscalar (3) {
 }
 
 TareaController::~TareaController () {
+    for (Tarea* t : listaTareasEnProceso) {
+        delete t;
+    }
     delete listaTareasRegulares;
     delete listaTareasUrgentes;
     delete listaTareasEnRevision;
@@ -93,11 +95,19 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
     try{
         archivosTareas->cargarTareasActivas (listaTareasRegulares, listaTareasUrgentes, listaTareasEnProceso, listaTareasEnRevision, ultimoId);
     } catch (std::exception &e) {
+        for (Tarea* t : listaTareasEnProceso) { delete t; }
+        listaTareasEnProceso.clear();
+        delete listaTareasRegulares;
+        delete listaTareasUrgentes;
+        delete listaTareasEnRevision;
         this-> listaTareasRegulares = new ColaFIFO ();
         this-> listaTareasUrgentes = new ColaFIFO ();
         this-> listaTareasEnRevision = new ColaPrioridad ();
         ultimoId = 0;     
     }
+    try {
+        archivosTareas->cargarTareasCompletadas (listaTareasCompletadas, ultimoId);
+    } catch (...) {}
 }
 
 void TareaController::agregarTarea (Tarea* tarea) {
@@ -125,7 +135,11 @@ void TareaController::agregarTarea (Tarea* tarea) {
  }
 
 void TareaController::completarSubTarea (int idTarea) { 
-    Tarea* t = buscarTareaEnProceso (idTarea);   if (t != nullptr)  t->setEstado (Tarea::ESTADO[3]);
+    Tarea* t = buscarTareaEnProceso (idTarea);
+    if (t != nullptr) {
+        t->setEstado (Tarea::ESTADO[3]);
+        archivosTareas->actualizarEstadoTarea (t);
+    }
 }
 
 Tarea* TareaController::buscarTareaPorHacer (int idTarea){
@@ -157,17 +171,21 @@ Tarea* TareaController::eliminarTarea (int idTarea) {
     if (eliminada == nullptr) eliminada = listaTareasRegulares->extraerTarea (idTarea); //si no se encontro
     
     if (eliminada == nullptr){
+        int indice = 0;
         for (Tarea* t : listaTareasEnProceso) {
             if (t->getIdTarea () == idTarea) {
-                eliminada = t; break;
+                eliminada = t;
+                listaTareasEnProceso.erase (listaTareasEnProceso.begin () + indice);
+                break;
             }
+            indice++;
         }
     }
     
     if (eliminada == nullptr) eliminada = listaTareasEnRevision->extraerTarea (idTarea);
 
     if (eliminada != nullptr) {
-        archivosTareas->eliminarTareaActiva (listarIdsArbol (eliminada)); delete eliminada; 
+        archivosTareas->eliminarTareaActiva (listarIdsArbol (eliminada));
     }
     return eliminada;
 }
@@ -176,13 +194,17 @@ Tarea* TareaController::escalarTarea () {
     NodoTarea* nodo = listaTareasRegulares->getFrente (); 
     Tarea* tarea = nullptr;
     if (nodo != nullptr) tarea = nodo->datos;
+    if (tarea == nullptr) return nullptr;
     
     if (tarea-> getCiclosEspera () >= cantidadCiclosParaEscalar) {
         tarea->setPrioridad (true);
         tarea->reiniciarCiclosEspera ();
-        listaTareasUrgentes->encolar (listaTareasRegulares->desencolar ());
-        archivosTareas->actualizarEstadoTarea (tarea);
-        return tarea;
+        Tarea* tareaEscalada = listaTareasRegulares->desencolar ();
+        if (tareaEscalada != nullptr) {
+            listaTareasUrgentes->encolar (tareaEscalada);
+            archivosTareas->actualizarEstadoTarea (tareaEscalada);
+            return tareaEscalada;
+        }
     }
     return nullptr;
 }
@@ -200,6 +222,7 @@ std::vector <int> TareaController::delegarTarea () {
     
     listaTareasEnProceso.push_back (tareaDelegada);
     cambiarEstadoArbol (tareaDelegada,Tarea::ESTADO[1]);
+    archivosTareas->actualizarEstadoTarea (tareaDelegada);
 
     std::vector<int> ids;
     aplanarIdsArbol (tareaDelegada, ids);
@@ -220,7 +243,8 @@ void TareaController::deshacerDelegacion (int idTarea) {
     if (tareaDerrogada != nullptr){
         cambiarEstadoArbol ( tareaDerrogada, Tarea::ESTADO[0]);
     Cola* lista = ((tareaDerrogada->getPrioridad () ) ? listaTareasUrgentes : listaTareasRegulares);
-    lista->encolar (tareaDerrogada); 
+    lista->encolar (tareaDerrogada);
+    archivosTareas->actualizarEstadoTarea (tareaDerrogada);
     }
 }
 
@@ -240,29 +264,34 @@ int TareaController::mandar_A_Revision (int idTarea) {
         }
         indice++;
     }
+    if (tarea == nullptr) throw std::invalid_argument ("Tarea no encontrada en proceso");
     tarea->setEstado (Tarea::ESTADO[2]);
     listaTareasEnRevision->encolar (tarea);
+    archivosTareas->actualizarEstadoTarea (tarea);
     return tarea->getIdTarea ();
 }
 
 void TareaController::revisionExitosa () {
+    if (listaTareasEnRevision->estaVacia()) throw std::invalid_argument("No hay tareas en cola de revision");
     Tarea* tareaCompletada = listaTareasEnRevision->desencolar ();
     listaTareasCompletadas->encolar (tareaCompletada);
     tareaCompletada->setEstado (Tarea::ESTADO[3]);
     archivosTareas->registrarTareaCompletada (tareaCompletada);
-
 }
 
 void TareaController::anularRevisionExitosa (int idTarea) {
     Tarea* tareaAnulada = listaTareasCompletadas->extraerTarea (idTarea);
     if (tareaAnulada == nullptr) throw std::invalid_argument ("Tarea completa no existente");
+    tareaAnulada->setEstado (Tarea::ESTADO[2]);
     listaTareasEnRevision->encolar (tareaAnulada);
+    archivosTareas->actualizarEstadoTarea (tareaAnulada);
 }
 
 void TareaController::rechazarRevision (){
+    if (listaTareasEnRevision->estaVacia()) throw std::invalid_argument("No hay tareas en cola de revision");
     Tarea* tareaRechazada = listaTareasEnRevision->desencolar ();
     listaTareasEnProceso.push_back (tareaRechazada);
-    tareaRechazada->setEstado (Tarea::ESTADO[2]);
+    tareaRechazada->setEstado (Tarea::ESTADO[1]);
     archivosTareas->actualizarEstadoTarea (tareaRechazada);
 }
 
@@ -273,10 +302,14 @@ void TareaController::anularRechazo (int idTarea) {
     for (Tarea* t : listaTareasEnProceso) {
         if (t->getIdTarea () == idTarea) {
             tareaBuscada = t; listaTareasEnProceso.erase (listaTareasEnProceso.begin () + indice);  break;
-        indice++;
         }
+        indice++;
     }
-    if (tareaBuscada != nullptr) listaTareasEnRevision->encolar (tareaBuscada);
+    if (tareaBuscada != nullptr) {
+        tareaBuscada->setEstado (Tarea::ESTADO[2]);
+        listaTareasEnRevision->encolar (tareaBuscada);
+        archivosTareas->actualizarEstadoTarea (tareaBuscada);
+    }
 }   
 
 Tarea* TareaController::getSiguienteTareaProcesable () const {
@@ -330,7 +363,7 @@ std::vector<Tarea*> TareaController::listarTodasLasTareasActivas() const {
     }
 
     for (Tarea* tarea : listaTareasEnProceso) { // Tareas en proceso
-        if (tarea != nullptr) { vectorTotalTareas.push_back(tarea); }
+        if (tarea != nullptr) { aplanarArbol(tarea, vectorTotalTareas); }
     }
 
     NodoActual = listaTareasEnRevision->getFrente(); // Tareas en revisión
@@ -342,7 +375,7 @@ std::vector<Tarea*> TareaController::listarTodasLasTareasActivas() const {
     return vectorTotalTareas;
 }
 
-bool TareaController::listaPorHacerVacia () { return (listaTareasRegulares->estaVacia () || listaTareasUrgentes->estaVacia () ); }
+bool TareaController::listaPorHacerVacia () { return (listaTareasRegulares->estaVacia () && listaTareasUrgentes->estaVacia () ); }
 bool TareaController::listaEnProcesoVacia () {return listaTareasEnProceso.empty ();}
 bool TareaController::listaEnRevisionVacia () { return listaTareasEnRevision->estaVacia (); }
 bool TareaController::listaCompletadasVacia () { return listaTareasCompletadas->estaVacia ();}

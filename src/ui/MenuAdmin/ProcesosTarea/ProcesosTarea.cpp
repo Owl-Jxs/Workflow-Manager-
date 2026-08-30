@@ -8,7 +8,6 @@ Tarea* ProcesosTarea::leerNuevaTarea () {
         return nullptr;
     }
     std::string descripcion;
-    int prioridad;
 
     std::cout << "\n"
      << "=============================================\n"
@@ -79,6 +78,7 @@ void ProcesosTarea::agregarSubTarea () {
     if (tareaBuscada == nullptr) { std::cout << "Id inexistente" << std::endl; return; }
 
     Tarea* nuevaTarea = leerNuevaTarea ();
+    nuevaTarea->setIdPadre(idTarea);
     AgregarTareaComando* agregar = nullptr; 
     try {
         agregar = new AgregarTareaComando (tc,nuevaTarea);
@@ -111,13 +111,12 @@ void ProcesosTarea::ActualizarTarea () {
         nuevaPrioridad = ValidarEntrada::respuestas_Si_O_No ("Urgente", "Regular");
     }
 
-    ActualizarTareaComando* actualizar;
+    ActualizarTareaComando* actualizar = nullptr;
     try {
         actualizar = new ActualizarTareaComando (tc, idTarea,nuevaDescripcion, nuevaPrioridad);
         gestorHistorial->ejecutarComando(actualizar);
     }catch (std::exception &e) {
-        std::cout << "Error al actualizar tarea" << std::endl;
-        delete actualizar;  throw;
+        std::cout << "Error al actualizar tarea: " << e.what() << std::endl;
     }
 
 }
@@ -127,7 +126,7 @@ void ProcesosTarea::asignarResponsable () {
     Usuario* usuarioResponsable = uc->buscarUsuarioPorId (id);
 
     if (usuarioResponsable != nullptr) {
-        AsignarResponsableComando* nuevoResponsable;
+        AsignarResponsableComando* nuevoResponsable = nullptr;
 
         try {
             nuevoResponsable = new AsignarResponsableComando (tc, ac, id);
@@ -150,7 +149,7 @@ void ProcesosTarea::verificarTareaEnColaRevision () {
     bool validarTarea = ValidarEntrada::respuestas_Si_O_No  ("Si, Validar", "No, Regresar a En proceso");
 
     if (validarTarea) {
-        validarTareaEnRevisionComando* validar;
+        validarTareaEnRevisionComando* validar = nullptr;
         try {
             validar = new validarTareaEnRevisionComando (tc, ac, frente);
             gestorHistorial->ejecutarComando  (validar);
@@ -158,7 +157,7 @@ void ProcesosTarea::verificarTareaEnColaRevision () {
             delete validar;
         }
     } else{
-        RechazarTareaEnRevisionComando* rechazar;
+        RechazarTareaEnRevisionComando* rechazar = nullptr;
         try {
             rechazar = new RechazarTareaEnRevisionComando (tc, ac, frente);
             gestorHistorial->ejecutarComando  (rechazar);
@@ -175,7 +174,7 @@ void ProcesosTarea::eliminarTarea () {
     if (tareaAeliminar == nullptr) tareaAeliminar = tc->buscarTareaEnProceso (idTarea);
     if (tareaAeliminar == nullptr){ std::cout << "Tarea no encontrada" << std::endl; return; }
 
-    EliminarTareaComando* eliminar;
+    EliminarTareaComando* eliminar = nullptr;
     try {
         eliminar = new EliminarTareaComando (tc, ac, idTarea);
         gestorHistorial->ejecutarComando (eliminar);
@@ -223,7 +222,7 @@ void ProcesosTarea::mostrarTableroKanban () {
 
      std::cout << "\n=================== EN REVISION ===================\n";
     if (enRevision.empty()) {  
-        std::cout << "\nNo hay tareas completadas.\n";
+        std::cout << "\nNo hay tareas en revision.\n";
     } else {
         for (Tarea* tarea : enRevision) { mostrarInformacionTarea  (tarea, false, 1);    }
     }
@@ -259,7 +258,7 @@ void ProcesosTarea::ordenarLista () {
     std::cout << "Que algoritmo de ordenamiento prefiere usar? " << std::endl
      << "1. QuickSort" << std::endl
      << "2. MergeSort" << std::endl 
-     << "3. (Por elegir)" << std::endl;
+     << "3. BubbleSort" << std::endl;
     int opcion = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,3);   
     
     std::cout << "Desea usar un ordenamiento ascendente o descendente? " << std::endl
@@ -283,6 +282,12 @@ void ProcesosTarea::ordenarLista () {
     case 2:{
         MergeSort<Tarea*>* algoritmo = new MergeSort<Tarea*> ();     algoritmo->sort (vectorOrdenado, condicion);
         delete algoritmo;
+        break;
+    }
+    case 3:{
+        BubbleSort<Tarea*>* algoritmo = new BubbleSort<Tarea*> ();    algoritmo->sort (vectorOrdenado, condicion);
+        delete algoritmo;
+        break;
     }
     default:
         break;

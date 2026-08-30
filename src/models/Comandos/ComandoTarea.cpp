@@ -1,5 +1,6 @@
 #include "ComandoTarea.h"
 #include <stdexcept>
+#include <iostream>
 
 
 // ==========================================
@@ -8,6 +9,10 @@
 
 AgregarTareaComando::AgregarTareaComando(TareaController* controller, Tarea* tarea)
     : controller(controller), tarea(tarea) {}
+
+AgregarTareaComando::~AgregarTareaComando() {
+    if (tarea != nullptr) delete tarea;
+}
 
 void AgregarTareaComando::ejecutar() {
     controller->agregarTarea(tarea);
@@ -41,9 +46,11 @@ void AsignarResponsableComando::ejecutar() {
 }
 
 void AsignarResponsableComando::deshacer() {
-    controller->deshacerDelegacion (idsTarea[0]);
-    for (int i : idsTarea) {
-        controllerAsignacion->eliminarAsignacion (i, idUsuario);
+    if (!idsTarea.empty()) {
+        controller->deshacerDelegacion (idsTarea[0]);
+        for (int i : idsTarea) {
+            controllerAsignacion->eliminarAsignacion (i, idUsuario);
+        }
     }
 }
 
@@ -52,7 +59,7 @@ std::string AsignarResponsableComando::getAccionAuditoria() const {
 }
 
 int AsignarResponsableComando::getIdTareaAuditoria() const {
-    return idsTarea[0];
+    return idsTarea.empty() ? -1 : idsTarea[0];
 }
 
 
@@ -107,10 +114,18 @@ EliminarTareaComando::~EliminarTareaComando() {
 }
 
 void EliminarTareaComando::ejecutar() {
-    tareaGuardada = controller->eliminarTarea (idTarea);
-    std::vector<int> idsTarea = controller->listarIdsArbol (tareaGuardada);
-    //idTarea, idsuario
-    Asignaciones_Tarea_Usuario = asignacionController->getAsignacionesResponsablesDeTarea (idsTarea);
+    Tarea* tarea = controller->buscarTareaPorHacer(idTarea);
+    if (tarea == nullptr) tarea = controller->buscarTareaEnProceso(idTarea);
+    if (tarea == nullptr) tarea = controller->buscarTareaEnRevision(idTarea);
+    if (tarea == nullptr) tarea = controller->buscarTareaCompletada(idTarea);
+    
+    std::vector<int> idsTarea;
+    if (tarea != nullptr) {
+        idsTarea = controller->listarIdsArbol(tarea);
+        Asignaciones_Tarea_Usuario = asignacionController->getAsignacionesResponsablesDeTarea(idsTarea);
+    }
+    
+    tareaGuardada = controller->eliminarTarea(idTarea);
 
     for (std::pair <int, int> i :Asignaciones_Tarea_Usuario) {
     int idTarea = i.first;
@@ -208,6 +223,7 @@ void RechazarTareaEnRevisionComando::ejecutar() {
 void RechazarTareaEnRevisionComando::deshacer() {
     if (numDeshacer < 1){
         controller->mandar_A_Revision (tareaGuardada->getIdTarea ());
+        numDeshacer++;
     } else {
         std::cout << "La tarea esta ingresada en una posicion mas atras en la cola de revision"  << std::endl;
     }
@@ -220,5 +236,37 @@ std::string RechazarTareaEnRevisionComando::getAccionAuditoria() const {
 
 int RechazarTareaEnRevisionComando::getIdTareaAuditoria() const {
     return tareaGuardada->getIdTarea ();
+}
+
+
+// ==========================================
+// MandarARevisionComando
+// ==========================================
+
+MandarARevisionComando::MandarARevisionComando(TareaController* controller, int idTarea)
+    : controller(controller), idTarea(idTarea), ejecutado(false) {}
+
+void MandarARevisionComando::ejecutar() {
+    if (!ejecutado) {
+        controller->mandar_A_Revision(idTarea);
+        ejecutado = true;
+    } else {
+        std::cout << "La tarea ya fue enviada a revision" << std::endl;
+    }
+}
+
+void MandarARevisionComando::deshacer() {
+    if (ejecutado) {
+        controller->anularRechazo(idTarea);
+        ejecutado = false;
+    }
+}
+
+std::string MandarARevisionComando::getAccionAuditoria() const {
+    return "ENVIAR_A_REVISION";
+}
+
+int MandarARevisionComando::getIdTareaAuditoria() const {
+    return idTarea;
 }
 

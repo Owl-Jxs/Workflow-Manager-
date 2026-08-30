@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstddef>
 #include <utility>
-#include "Icondicion.h"
+#include "../Condiciones/Icondicion.h"
 
 template <typename T>
 class BubbleSort {

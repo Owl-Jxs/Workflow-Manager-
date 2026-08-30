@@ -1,6 +1,7 @@
 #ifndef TAREACONDICION_H
 #define TAREACONDICION_H
 #include "../../models/Usuario/Usuario.h"
+#include "../../models/Tarea/Tarea.h"
 #include "Icondicion.h"
 
 //orden ascendente 

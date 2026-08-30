@@ -6,6 +6,8 @@
 #include "../../Controllers/TareaController/TareaController.h"
 #include "../../Controllers/AsignacionController/AsignacionController.h"
 #include <string>
+#include <vector>
+#include <utility>
 
 // ==========================================
 // AgregarTareaComando
@@ -13,9 +15,10 @@
 class AgregarTareaComando : public IComando {
 private:
     TareaController* controller;
-    Tarea* tarea;;
+    Tarea* tarea;
 public:
     AgregarTareaComando(TareaController* controller, Tarea* tarea);
+    ~AgregarTareaComando() override;
     void ejecutar() override;
     void deshacer() override;
     std::string getAccionAuditoria() const override;
@@ -43,7 +46,7 @@ public:
 };
 
 // ==========================================
-// AgregarTareaComando
+// AsignarResponsableComando
 // ==========================================
 class AsignarResponsableComando : public IComando {
 private:
@@ -86,7 +89,7 @@ public:
 class validarTareaEnRevisionComando : public IComando {
 private:
     TareaController* controller;
-    AsignacionController* asignacionController;;
+    AsignacionController* asignacionController;
     std::vector<std::pair <int, int>> Asignaciones_Tarea_Usuario;
     Tarea* tareaGuardada;
     bool ejecutado;
@@ -113,6 +116,23 @@ private:
 public:
     RechazarTareaEnRevisionComando (TareaController* controller, AsignacionController* ac, Tarea* tareaGuardada);
     ~RechazarTareaEnRevisionComando() override;
+    void ejecutar() override;
+    void deshacer() override;
+    std::string getAccionAuditoria() const override;
+    int getIdTareaAuditoria() const override;
+};
+
+
+// ==========================================
+// MandarARevisionComando
+// ==========================================
+class MandarARevisionComando : public IComando {
+private:
+    TareaController* controller;
+    int idTarea;
+    bool ejecutado;
+public:
+    MandarARevisionComando(TareaController* controller, int idTarea);
     void ejecutar() override;
     void deshacer() override;
     std::string getAccionAuditoria() const override;

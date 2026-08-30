@@ -34,7 +34,9 @@ Usuario* ProcesosUsuario::leerNuevoUsuario() {
         case 2: {
             rol = Usuario::Rol::USUARIO_NORMAL; break;
         }
-            
+        default: {
+            rol = Usuario::Rol::USUARIO_NORMAL; break;
+        }
     };
     
     nuevoUsuario = new Usuario (id, nombre, rol);
@@ -52,7 +54,6 @@ void ProcesosUsuario::agregarUsuario  () {
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
-        delete usuario;
     }
 }
 
@@ -101,7 +102,7 @@ void ProcesosUsuario::actualizarUsuario () {
         gestorHistorial->ejecutarComando (actualizacion);
         std::cout << "Usuario actualizado" << std::endl;
     } catch (std::exception &e) {
-        std::cout << "Error al actualizar usuario" << std::endl; throw;
+        std::cout << "Error al actualizar usuario: " << e.what() << std::endl;
     }
 }
 
@@ -125,7 +126,7 @@ void ProcesosUsuario::eliminarUsuario () {
             gestorHistorial->ejecutarComando (eliminar);
             std::cout << "Usuario eliminado correctamente.\n";
         } catch (std::exception &e) {
-            std::cout << "No se pudo eliminar el usuario.\n"; throw;
+            std::cout << "No se pudo eliminar el usuario: " << e.what() << "\n";
         }
     } else {
         std::cout << "Operacion cancelada.\n";
@@ -141,7 +142,7 @@ void ProcesosUsuario::mostrarLista () {
     std::cout << "Que algoritmo de ordenamiento prefiere usar? " << std::endl
      << "1. QuickSort" << std::endl
      << "2. MergeSort" << std::endl 
-     << "3. (Por elegir)" << std::endl;
+     << "3. BubbleSort" << std::endl;
     int opcion = ValidarEntrada::validarEntradaRango ("Ingrese su opcion", 1,3);   
     
     std::cout << "Desea usar un ordenamiento ascendente o descendente? " << std::endl
@@ -165,6 +166,12 @@ void ProcesosUsuario::mostrarLista () {
     case 2:{
         MergeSort<Usuario*>* algoritmo = new MergeSort<Usuario*> ();     algoritmo->sort (usuarios, condicion);
         delete algoritmo;
+        break;
+    }
+    case 3:{
+        BubbleSort<Usuario*>* algoritmo = new BubbleSort<Usuario*> ();    algoritmo->sort (usuarios, condicion);
+        delete algoritmo;
+        break;
     }
     default:
         break;

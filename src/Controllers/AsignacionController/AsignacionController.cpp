@@ -61,27 +61,29 @@ void AsignacionController::eliminarAsignacion(int idTarea, int idUsuario) {
     archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
 }
 
-void AsignacionController::eliminarAsignacionPorIdTarea (int idTarea) {
+void AsignacionController::eliminarAsignacionPorIdTarea (int idTareaParam) {
     std::vector <int> id;
-    id.push_back (idTarea);
+    id.push_back (idTareaParam);
     std::vector<std::pair <int, int>> pares = getAsignacionesResponsablesDeTarea (id);
     
     for (std::pair <int, int> par : pares) {
         int idTarea = par.first;
         int idUsuario = par.second;
+        listaAsignaciones->eliminarAsignacion (idTarea, idUsuario);
         archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
     }
 }
 
 void AsignacionController::eliminarAsignacionPorIdUsuario (int idUsuario){
-    std::vector <int> id;
-    id.push_back (idUsuario);
-    std::vector<std::pair <int, int>> pares = getAsignacionesResponsablesDeTarea (id);
+    std::vector <int> ids;
+    ids.push_back (idUsuario);
+    std::vector<std::pair <int, int>> pares = getAsignacionesTareasPorUsuario (ids);
     
     for (std::pair <int, int> par : pares) {
         int idTarea = par.first;
-        int idUsuario = par.second;
-        archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
+        int idUsuarioPar = par.second;
+        listaAsignaciones->eliminarAsignacion (idTarea, idUsuarioPar);
+        archivosAsignaciones->eliminarAsignacion (idTarea, idUsuarioPar);
     }
 }
 
