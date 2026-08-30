@@ -195,6 +195,8 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
                 else if (t->getEstado() == Tarea::ESTADO [0] && !(t->getPrioridad () ) ) regulares->encolar (t); // si es una tarea regular y esta en por hacer
                 else if (t->getEstado () == Tarea::ESTADO[1]) enProceso.push_back (t); 
                 else if (t->getEstado () == Tarea::ESTADO[2]) enRevision->encolar (t);
+                else if (t->getEstado () == Tarea::ESTADO[3]) delete t; // completadas se cargan por separado
+                else delete t; // estado inválido
             } catch (std::exception &e) {
                 delete t; std::cout << e.what ();
             }
@@ -290,4 +292,27 @@ void TareaDataBase::registrarTareaCompletada (Tarea* tarea) {
 
 void TareaDataBase::eliminarRegistroTareaCompletada (std::vector<int> idArbolTarea) {
     eliminarTarea (idArbolTarea, FILENAME_TAREAS_COMPLETADAS);
+}
+
+void TareaDataBase::cargarTareasCompletadas (Cola* completadas, int &ultimoId) {
+    std::ifstream archivo (FILENAME_TAREAS_COMPLETADAS);
+    if (!archivo.is_open()) return;
+
+    std::string linea;
+    while (std::getline (archivo, linea)) {
+        if (linea.empty ()) continue;
+        try {
+            std::vector<std::string> campos = dividirCamposCSV (linea);
+            if (campos.size () < 7) continue;
+
+            int id = std::stoi (campos[0]);
+            if (id > ultimoId) ultimoId = id;
+
+            bool urgente = (ENUM_PRIORIDAD_TAREA[0] == campos[2]);
+            Tarea* tarea = new Tarea (id, campos[1], urgente, campos[3]);
+            if (campos.size () >= 7) tarea->setCiclosEspera (std::stoi (campos[6]));
+            completadas->encolar (tarea);
+        } catch (...) {}
+    }
+    archivo.close ();
 }

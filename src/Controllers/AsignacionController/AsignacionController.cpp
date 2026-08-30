@@ -69,6 +69,7 @@ void AsignacionController::eliminarAsignacionPorIdTarea (int idTareaParam) {
     for (std::pair <int, int> par : pares) {
         int idTarea = par.first;
         int idUsuario = par.second;
+        listaAsignaciones->eliminarAsignacion (idTarea, idUsuario);
         archivosAsignaciones->eliminarAsignacion (idTarea, idUsuario);
     }
 }

@@ -43,6 +43,7 @@ public:
     void actualizarEstadoTarea (Tarea* tareaActualizada);
     void registrarTareaCompletada (Tarea* tarea);
     void eliminarRegistroTareaCompletada  (std::vector<int> idArbolTarea);
+    void cargarTareasCompletadas (Cola* completadas, int &ultimoId);
    
 };  
 
