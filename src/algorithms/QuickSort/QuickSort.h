@@ -1,7 +1,7 @@
 #ifndef QUICKSORT_H
 #define QUICKSORT_H
 
-#include "../Condiciones/ICondicion.h"
+#include "../Condiciones/Icondicion.h"
 #include <vector>
 
 template <typename T>

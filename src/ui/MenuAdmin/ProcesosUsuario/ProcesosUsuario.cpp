@@ -54,7 +54,6 @@ void ProcesosUsuario::agregarUsuario  () {
 
     } catch (const std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;
-        delete usuario;
     }
 }
 
@@ -103,7 +102,7 @@ void ProcesosUsuario::actualizarUsuario () {
         gestorHistorial->ejecutarComando (actualizacion);
         std::cout << "Usuario actualizado" << std::endl;
     } catch (std::exception &e) {
-        std::cout << "Error al actualizar usuario: " << e.what() << std::endl; throw;
+        std::cout << "Error al actualizar usuario: " << e.what() << std::endl;
     }
 }
 
@@ -127,7 +126,7 @@ void ProcesosUsuario::eliminarUsuario () {
             gestorHistorial->ejecutarComando (eliminar);
             std::cout << "Usuario eliminado correctamente.\n";
         } catch (std::exception &e) {
-            std::cout << "No se pudo eliminar el usuario.\n"; throw;
+            std::cout << "No se pudo eliminar el usuario: " << e.what() << "\n";
         }
     } else {
         std::cout << "Operacion cancelada.\n";

@@ -10,7 +10,7 @@ void AsignacionDataBase::eliminarAsignacionesDeArchivo (std::vector <std::pair <
     std::ifstream archivo(nombreArchivo);
     if (!archivo.is_open()) return;
 
-    std::string temp = "Temp.csv";
+    std::string temp = "data/Temp.csv";
     std::ofstream archivoTemp (temp);
     if (!archivoTemp.is_open()) return;
 

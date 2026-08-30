@@ -23,7 +23,6 @@ private:
     void guardarLista (Cola* lista, std::ofstream& archivo); //corregida
     void guardarVector (const std::vector<Tarea*>& enProceso, std::ofstream& archivo); //corregida
     void guardarNuevaTarea (Tarea* tarea, std::ofstream& archivo); 
-    void cargarLista (Cola* colaLLegada,std::ofstream& archivo, int &ultimoId);
 
 //funciones para eliminar una tarea
     void eliminarTarea (std::vector<int> idArbolTarea, std::string nombreArchivo);

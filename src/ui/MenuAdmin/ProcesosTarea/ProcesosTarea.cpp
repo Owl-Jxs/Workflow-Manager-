@@ -116,8 +116,7 @@ void ProcesosTarea::ActualizarTarea () {
         actualizar = new ActualizarTareaComando (tc, idTarea,nuevaDescripcion, nuevaPrioridad);
         gestorHistorial->ejecutarComando(actualizar);
     }catch (std::exception &e) {
-        std::cout << "Error al actualizar tarea" << std::endl;
-        delete actualizar;  throw;
+        std::cout << "Error al actualizar tarea: " << e.what() << std::endl;
     }
 
 }

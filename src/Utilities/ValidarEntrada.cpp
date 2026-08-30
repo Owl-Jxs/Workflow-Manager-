@@ -1,22 +1,24 @@
 #include "ValidarEntrada.h"
 bool ValidarEntrada::contieneSoloCaracteres (std::string entrada, int cantidadEspacios) {
     int cantidadActualEspacios = 0; 
-    for (char c : entrada) {
+    for (unsigned char uc : entrada) {
+        char c = static_cast<char>(uc);
         if (c == ' ' && cantidadActualEspacios < cantidadEspacios) {
             cantidadActualEspacios++; continue;
         }
-        if (!isalpha (c)) return false;
+        if (!isalpha (uc)) return false;
     }
     return true;
 }
 
 bool ValidarEntrada::contieneSoloDigitos (std::string entrada, bool permitirNegativos) {
     bool primeraLetra = true;
-    for (char c : entrada) {
+    for (unsigned char uc : entrada) {
+        char c = static_cast<char>(uc);
         if (permitirNegativos && primeraLetra && c == '-') {
             primeraLetra = false;   continue; 
         }
-        if (!isdigit (c) ) return false;
+        if (!isdigit (uc) ) return false;
     }
     return true;
 }
@@ -75,15 +77,16 @@ int ValidarEntrada::validarCodigoNumerico (const std::string& mensaje, int canti
 
     //verificamos la cantidad de digitos
        if (entradaTemporal.size () != cantidadDigitos) { 
-        std::cout << "Ingrese la cantidad de digitos correctos [" << cantidadDigitos << "]" <<std::endl; 
-        std::system ("cls"); continue;
+        std::cout << "Ingrese la cantidad de digitos correctos [" << cantidadDigitos << "]" <<std::endl;
+        continue;
        } 
 
     //la procesamos
         try {
             return leerEntradaNumerica (entradaTemporal, false);
         } catch (std::exception&) {
-            std::system ("cls");    continue;
+            std::cout << "La entrada debe contener solo digitos." << std::endl;
+            continue;
         }
     }
 }
@@ -103,7 +106,7 @@ std::string ValidarEntrada::validarNombreCompleto () {
             nombreCompleto << nombre << " " << apellidos;
             nombreValidado = true;
         } catch (std::exception &e) {
-            e.what (); continue;
+            std::cout << e.what () << std::endl; continue;
         }
     }
     return nombreCompleto.str ();
@@ -112,10 +115,13 @@ std::string ValidarEntrada::validarNombreCompleto () {
 std::string ValidarEntrada::validarContrasena (const std::string& mensaje, char mascara) {
     std::string entrada = "";
     std::cout << mensaje << std::endl;
-    while (true) { //miientras se quiera escribir un caracter 
+    while (true) {
         char c = _getch ();
         if (c == '\r') {
-            break;
+            if (!entrada.empty()) break;
+            std::cout << "\nLa contrasena no puede estar vacia.\n";
+            std::cout << mensaje << std::endl;
+            continue;
         } else if (c == '\b' || c == 127) {
             if (!entrada.empty ()) {
                 entrada.pop_back ();

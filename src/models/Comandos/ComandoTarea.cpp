@@ -1,5 +1,6 @@
 #include "ComandoTarea.h"
 #include <stdexcept>
+#include <iostream>
 
 
 // ==========================================
@@ -8,6 +9,10 @@
 
 AgregarTareaComando::AgregarTareaComando(TareaController* controller, Tarea* tarea)
     : controller(controller), tarea(tarea) {}
+
+AgregarTareaComando::~AgregarTareaComando() {
+    if (tarea != nullptr) delete tarea;
+}
 
 void AgregarTareaComando::ejecutar() {
     controller->agregarTarea(tarea);
@@ -41,9 +46,11 @@ void AsignarResponsableComando::ejecutar() {
 }
 
 void AsignarResponsableComando::deshacer() {
-    controller->deshacerDelegacion (idsTarea[0]);
-    for (int i : idsTarea) {
-        controllerAsignacion->eliminarAsignacion (i, idUsuario);
+    if (!idsTarea.empty()) {
+        controller->deshacerDelegacion (idsTarea[0]);
+        for (int i : idsTarea) {
+            controllerAsignacion->eliminarAsignacion (i, idUsuario);
+        }
     }
 }
 
@@ -52,7 +59,7 @@ std::string AsignarResponsableComando::getAccionAuditoria() const {
 }
 
 int AsignarResponsableComando::getIdTareaAuditoria() const {
-    return idsTarea[0];
+    return idsTarea.empty() ? -1 : idsTarea[0];
 }
 
 
@@ -229,5 +236,37 @@ std::string RechazarTareaEnRevisionComando::getAccionAuditoria() const {
 
 int RechazarTareaEnRevisionComando::getIdTareaAuditoria() const {
     return tareaGuardada->getIdTarea ();
+}
+
+
+// ==========================================
+// MandarARevisionComando
+// ==========================================
+
+MandarARevisionComando::MandarARevisionComando(TareaController* controller, int idTarea)
+    : controller(controller), idTarea(idTarea), ejecutado(false) {}
+
+void MandarARevisionComando::ejecutar() {
+    if (!ejecutado) {
+        controller->mandar_A_Revision(idTarea);
+        ejecutado = true;
+    } else {
+        std::cout << "La tarea ya fue enviada a revision" << std::endl;
+    }
+}
+
+void MandarARevisionComando::deshacer() {
+    if (ejecutado) {
+        controller->anularRechazo(idTarea);
+        ejecutado = false;
+    }
+}
+
+std::string MandarARevisionComando::getAccionAuditoria() const {
+    return "ENVIAR_A_REVISION";
+}
+
+int MandarARevisionComando::getIdTareaAuditoria() const {
+    return idTarea;
 }
 
