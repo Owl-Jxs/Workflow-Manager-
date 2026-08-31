@@ -2,8 +2,11 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <iostream>
+#include <direct.h>
 
 const std::string AuditoriaDataBase::FILENAME_AUDITORIA = "data/auditoria_log.csv";
+namespace { void asegurarDirectorioData(){ _mkdir("data"); _mkdir("bin/data"); } }
 
 AuditoriaDataBase::AuditoriaDataBase() {}
 
@@ -35,9 +38,12 @@ void AuditoriaDataBase::registrar(int idUsuario, const std::string& accion, int 
 }
 
 void AuditoriaDataBase::registrarLinea(const std::string& linea) {
+    asegurarDirectorioData();
     std::ofstream archivo(FILENAME_AUDITORIA, std::ios::app);
     if (!archivo.is_open()) {
-        throw std::runtime_error("Error al abrir el archivo de auditoria para escritura.");
+        // No lanzar para no romper la operacion principal; log a cerr y retornar
+        std::cerr << "Advertencia: no se pudo abrir auditoria_log.csv\n";
+        return;
     }
     archivo << linea << std::endl;
     archivo.close();

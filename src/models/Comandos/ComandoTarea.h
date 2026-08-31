@@ -56,6 +56,7 @@ private:
     AsignacionController* controllerAsignacion;
     std::vector <int> idsTarea;
     int idUsuario;
+    bool ejecutado;
 public:
     AsignarResponsableComando (TareaController* controller, AsignacionController* ac, int idUsuario);
     void ejecutar() override;

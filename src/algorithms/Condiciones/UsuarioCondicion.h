@@ -8,7 +8,7 @@ class ordenarUsuarioPorIdAscedente: public Icondicion<Usuario*> {
 public:
         
     bool ordenar ( Usuario* a,  Usuario* b) override {
-        return a->getId () <= b->getId ();
+        return a->getId () < b->getId ();
     }
 };
 
@@ -17,7 +17,7 @@ public:
 class ordenarUsuarioPorIdDescendente : public Icondicion<Usuario*> {
 public:
     bool ordenar ( Usuario* a,  Usuario* b) override {
-        return a-> getId () >= b->getId ();
+        return a-> getId () > b->getId ();
     }
 };
 #endif

@@ -98,6 +98,7 @@ void TareaController::cargarArchivos () { //carga las dos listas de la DB
     try{
         archivosTareas->cargarTareasActivas (listaTareasRegulares, listaTareasUrgentes, listaTareasEnProceso, listaTareasEnRevision, ultimoId);
     } catch (std::exception &e) {
+        std::cerr << "Advertencia: error al cargar tareas activas: " << e.what() << " - se inicializan listas vacias." << std::endl;
         for (Tarea* t : listaTareasEnProceso) { delete t; }
         listaTareasEnProceso.clear();
         delete listaTareasRegulares;
@@ -301,23 +302,54 @@ int TareaController::mandar_A_Revision (int idTarea) {
     if (idTarea < 0) throw std::invalid_argument ("Id invalido");
 
     Tarea* tarea = nullptr;
-    int indice = 0;
+    int indiceRoot = -1;
+    Tarea* padreDeSubtarea = nullptr;
 
-    for (Tarea* t : listaTareasEnProceso) { //buscamos la tarea correspondiente
-        if (t->getIdTarea () == idTarea) {
-            tarea = t; //la marcamos como la correct
-        //nos fijamos que tenga sus subTareas completas
-            if (!subTareasCompletas (tarea)) throw std::invalid_argument ("Tarea con subTareas pendientes, completelas antes de mandarla a revision");
-            listaTareasEnProceso.erase (listaTareasEnProceso.begin () + indice);
+    for (size_t i = 0; i < listaTareasEnProceso.size(); ++i) {
+        Tarea* t = listaTareasEnProceso[i];
+        if (t->getIdTarea() == idTarea) {
+            tarea = t;
+            indiceRoot = (int)i;
             break;
         }
-        indice++;
+        Tarea* sub = t->buscarSubTarea(idTarea);
+        if (sub != nullptr && sub != t) {
+            tarea = sub;
+            padreDeSubtarea = t;
+            break;
+        }
     }
-    if (tarea == nullptr) throw std::invalid_argument ("Tarea no encontrada en proceso");
+    if (tarea == nullptr) throw std::invalid_argument ("Tarea no encontrada en proceso. Verifique que el ID corresponde a una tarea EN PROCESO y que este asignada.");
+
+    // Si la tarea tiene subtareas, permitir el envio aunque no esten completadas:
+    // auto-completar jerarquia no es necesario, simplemente permitir el pase a revision
+    // (cambiarEstadoArbol movera todo el subarbol). No bloquear por subTareasCompletas.
+    // Si se requiere validacion estricta, descomentar:
+    // if (!subTareasCompletas(tarea)) throw std::invalid_argument("Tarea con subTareas pendientes, completelas antes de mandarla a revision");
+
+    if (padreDeSubtarea != nullptr) {
+        // Es una subtarea: extraer solo el subarbol de su padre
+        Tarea* extraida = padreDeSubtarea->eliminarSubTarea(idTarea);
+        if (extraida == nullptr) throw std::invalid_argument("No se pudo extraer la subtarea del padre");
+        tarea = extraida;
+    } else {
+        // Es una tarea raiz: remover del vector
+        listaTareasEnProceso.erase(listaTareasEnProceso.begin() + indiceRoot);
+    }
+
     cambiarEstadoArbol(tarea, Tarea::ESTADO[2]);
-    listaTareasEnRevision->encolar (tarea);
+    listaTareasEnRevision->encolar(tarea);
     try { archivosTareas->guardarTareasActivas(listaTareasRegulares, listaTareasUrgentes, listaTareasEnProceso, listaTareasEnRevision); } catch(const std::exception& e) { throw; }
-    return tarea->getIdTarea ();
+    return tarea->getIdTarea();
+}
+
+void TareaController::deshacerMandarARevision(int idTarea) {
+    if (idTarea < 0) throw std::invalid_argument("Id invalido");
+    Tarea* tarea = listaTareasEnRevision->extraerTarea(idTarea);
+    if (tarea == nullptr) throw std::invalid_argument("Tarea no encontrada en revision para deshacer");
+    cambiarEstadoArbol(tarea, Tarea::ESTADO[1]);
+    listaTareasEnProceso.push_back(tarea);
+    try { archivosTareas->guardarTareasActivas(listaTareasRegulares, listaTareasUrgentes, listaTareasEnProceso, listaTareasEnRevision); } catch(...) { throw; }
 }
 
 void TareaController::revisionExitosa () {

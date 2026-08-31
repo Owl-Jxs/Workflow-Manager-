@@ -74,11 +74,12 @@ void ProcesosTarea::agregarTarea () {
 }
 
 void ProcesosTarea::agregarSubTarea () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea padre", 0, tc->getUltimoId ());
+    if (tc->getUltimoId() == 0) { std::cout << "No hay tareas registradas.\n"; return; }
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea padre", 1, tc->getUltimoId ());
 
     Tarea* tareaBuscada = tc->buscarTareaPorHacer (idTarea);
     if (tareaBuscada == nullptr) tareaBuscada = tc->buscarTareaEnProceso (idTarea);
-    if (tareaBuscada == nullptr) { std::cout << "Id inexistente" << std::endl; return; }
+    if (tareaBuscada == nullptr) { std::cout << "Id inexistente (verifique que la tarea este en POR HACER o EN PROCESO)" << std::endl; return; }
 
     Tarea* nuevaTarea = leerNuevaTarea ();
     if (nuevaTarea == nullptr) return;
@@ -97,11 +98,12 @@ void ProcesosTarea::agregarSubTarea () {
 }
 
 void ProcesosTarea::ActualizarTarea () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea", 0, tc->getUltimoId ());
+    if (tc->getUltimoId() == 0) { std::cout << "No hay tareas registradas.\n"; return; }
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea", 1, tc->getUltimoId ());
 
     Tarea* tareaBuscada = tc->buscarTareaPorHacer (idTarea);
     if (tareaBuscada == nullptr) tareaBuscada= tc->buscarTareaEnProceso (idTarea);
-    if (tareaBuscada == nullptr) { std::cout << "Id invalido, no existe tarea con ese id" << std::endl; return; }
+    if (tareaBuscada == nullptr) { std::cout << "Id invalido, no existe tarea actualizable (solo POR HACER o EN PROCESO)" << std::endl; return; }
 
     std::string nuevaDescripcion = tareaBuscada ->getDescripcionTarea ();
     std::cout << "Desea cambiar la descripcion de la tarea" << std::endl;
@@ -133,14 +135,19 @@ void ProcesosTarea::asignarResponsable () {
 
     if (usuarioResponsable != nullptr) {
         AsignarResponsableComando* nuevoResponsable = nullptr;
-
+        bool comandoCreado = false;
         try {
             nuevoResponsable = new AsignarResponsableComando (tc, ac, id);
+            comandoCreado = true;
             gestorHistorial->ejecutarComando (nuevoResponsable);
+            std::cout << "Tarea asignada correctamente al usuario " << id << ".\n";
         } catch (std::exception &e){
-            std::cout << e.what () << std::endl; delete nuevoResponsable;
+            std::cout << "Error al asignar: " << e.what () << std::endl;
+            if (!comandoCreado) delete nuevoResponsable;
+            // si comandoCreado, Gestor ya lo borro
         }
-
+    } else {
+        std::cout << "No existe un usuario con ID " << id << ".\n";
     }
 
 }
@@ -156,36 +163,51 @@ void ProcesosTarea::verificarTareaEnColaRevision () {
 
     if (validarTarea) {
         validarTareaEnRevisionComando* validar = nullptr;
+        bool creado = false;
         try {
             validar = new validarTareaEnRevisionComando (tc, ac, frente);
+            creado = true;
             gestorHistorial->ejecutarComando  (validar);
+            std::cout << "Tarea validada y movida a COMPLETADAS.\n";
         } catch (std::exception &e) {
-            delete validar;
+            std::cout << "Error al validar: " << e.what() << std::endl;
+            if (!creado) delete validar;
         }
     } else{
         RechazarTareaEnRevisionComando* rechazar = nullptr;
+        bool creado = false;
         try {
             rechazar = new RechazarTareaEnRevisionComando (tc, ac, frente);
+            creado = true;
             gestorHistorial->ejecutarComando  (rechazar);
+            std::cout << "Tarea rechazada y regresada a EN PROCESO.\n";
         } catch (std::exception &e) {
-            delete rechazar;
+            std::cout << "Error al rechazar: " << e.what() << std::endl;
+            if (!creado) delete rechazar;
         }
     }
 }
 
 void ProcesosTarea::eliminarTarea () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea a eliminar",0, tc->getUltimoId ());
+    if (tc->getUltimoId() == 0) { std::cout << "No hay tareas registradas.\n"; return; }
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea a eliminar",1, tc->getUltimoId ());
     
     Tarea* tareaAeliminar = tc->buscarTareaPorHacer (idTarea);
     if (tareaAeliminar == nullptr) tareaAeliminar = tc->buscarTareaEnProceso (idTarea);
-    if (tareaAeliminar == nullptr){ std::cout << "Tarea no encontrada" << std::endl; return; }
+    if (tareaAeliminar == nullptr) tareaAeliminar = tc->buscarTareaEnRevision (idTarea);
+    if (tareaAeliminar == nullptr) tareaAeliminar = tc->buscarTareaCompletada (idTarea);
+    if (tareaAeliminar == nullptr){ std::cout << "Tarea no encontrada (verifique ID)" << std::endl; return; }
 
     EliminarTareaComando* eliminar = nullptr;
+    bool creado = false;
     try {
         eliminar = new EliminarTareaComando (tc, ac, idTarea);
+        creado = true;
         gestorHistorial->ejecutarComando (eliminar);
+        std::cout << "Tarea " << idTarea << " eliminada correctamente.\n";
     } catch (std::exception &e) {
-        delete eliminar;
+        std::cout << "Error al eliminar: " << e.what() << std::endl;
+        if (!creado) delete eliminar;
     }
    
 }
@@ -214,8 +236,8 @@ void ProcesosTarea::mostrarTableroKanban () {
         std::cout << "\nNo hay tareas por hacer.\n";
 
     } else {
-        for (Tarea* tarea : listaUrgente) { mostrarInformacionTarea (tarea, false, 1); }
-        for (Tarea* tarea : listaRegulares) { mostrarInformacionTarea (tarea, false, 1); }
+        for (Tarea* tarea : listaUrgente) { mostrarInformacionTarea (tarea, true, 1); }
+        for (Tarea* tarea : listaRegulares) { mostrarInformacionTarea (tarea, true, 1); }
 
     }
     std::cout << "\n=================== EN PROCESO ====================\n";
@@ -223,27 +245,28 @@ void ProcesosTarea::mostrarTableroKanban () {
     if (enProceso.empty()) {
         std::cout << "\nNo hay tareas en proceso.\n";
     } else {
-        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea, false, 1);  }
+        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea, true, 1);  }
     }
 
      std::cout << "\n=================== EN REVISION ===================\n";
     if (enRevision.empty()) {  
         std::cout << "\nNo hay tareas en revision.\n";
     } else {
-        for (Tarea* tarea : enRevision) { mostrarInformacionTarea  (tarea, false, 1);    }
+        for (Tarea* tarea : enRevision) { mostrarInformacionTarea  (tarea, true, 1);    }
     }
     
     std::cout << "\n=================== COMPLETADAS ===================\n";
     if (completadas.empty()) {
         std::cout << "\nNo hay tareas completadas.\n";
     } else {
-        for (Tarea* tarea : completadas) { mostrarInformacionTarea  (tarea, false, 1);    }
+        for (Tarea* tarea : completadas) { mostrarInformacionTarea  (tarea, true, 1);    }
     }
     std::cout << "\n====================================================\n";
 }
 
 void ProcesosTarea::mostrarTareaPorId () {
-    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea", 0 , tc->getUltimoId () );
+    if (tc->getUltimoId() == 0) { std::cout << "No hay tareas registradas.\n"; return; }
+    int idTarea = ValidarEntrada::validarEntradaRango ("Ingrese el id de la tarea", 1 , tc->getUltimoId () );
 
     Tarea* tarea = tc->buscarTareaPorHacer (idTarea);
     if (tarea == nullptr) tarea = tc->buscarTareaEnProceso (idTarea);

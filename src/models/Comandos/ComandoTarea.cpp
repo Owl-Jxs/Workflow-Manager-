@@ -42,22 +42,34 @@ int AgregarTareaComando::getIdTareaAuditoria() const {
 // ==========================================
 
 AsignarResponsableComando::AsignarResponsableComando (TareaController* controller,AsignacionController* ac, int usuaarioId)
-    : controller(controller), controllerAsignacion (ac), idUsuario (usuaarioId) {}
+    : controller(controller), controllerAsignacion (ac), idUsuario (usuaarioId), ejecutado(false) {}
 
 void AsignarResponsableComando::ejecutar() {
+    if (ejecutado) return;
     idsTarea = controller->delegarTarea ();
-    for (int i : idsTarea) {
-        controllerAsignacion->agregarAsignacion (i, idUsuario);
+    try {
+        for (int i : idsTarea) {
+            controllerAsignacion->agregarAsignacion (i, idUsuario);
+        }
+        ejecutado = true;
+    } catch (...) {
+        // rollback parcial
+        for (int i : idsTarea) {
+            try { controllerAsignacion->eliminarAsignacion(i, idUsuario); } catch(...) {}
+        }
+        try { controller->deshacerDelegacion(idsTarea[0]); } catch(...) {}
+        idsTarea.clear();
+        throw;
     }
 }
 
 void AsignarResponsableComando::deshacer() {
-    if (!idsTarea.empty()) {
-        controller->deshacerDelegacion (idsTarea[0]);
-        for (int i : idsTarea) {
-            controllerAsignacion->eliminarAsignacion (i, idUsuario);
-        }
+    if (!ejecutado || idsTarea.empty()) return;
+    controller->deshacerDelegacion (idsTarea[0]);
+    for (int i : idsTarea) {
+        try { controllerAsignacion->eliminarAsignacion (i, idUsuario); } catch(...) {}
     }
+    ejecutado = false;
 }
 
 std::string AsignarResponsableComando::getAccionAuditoria() const {
@@ -248,19 +260,15 @@ MandarARevisionComando::MandarARevisionComando(TareaController* controller, int 
     : controller(controller), idTarea(idTarea), ejecutado(false) {}
 
 void MandarARevisionComando::ejecutar() {
-    if (!ejecutado) {
-        controller->mandar_A_Revision(idTarea);
-        ejecutado = true;
-    } else {
-        std::cout << "La tarea ya fue enviada a revision" << std::endl;
-    }
+    if (ejecutado) return;
+    controller->mandar_A_Revision(idTarea);
+    ejecutado = true;
 }
 
 void MandarARevisionComando::deshacer() {
-    if (ejecutado) {
-        controller->anularRechazo(idTarea);
-        ejecutado = false;
-    }
+    if (!ejecutado) return;
+    controller->deshacerMandarARevision(idTarea);
+    ejecutado = false;
 }
 
 std::string MandarARevisionComando::getAccionAuditoria() const {

@@ -1,9 +1,11 @@
 #include "UsuarioDataBase.h"
 #include <iostream>
+#include <direct.h>
 #include "../../structures/ListaDoble/ListaDoble.h"
 #include "../../structures/ListaDoble/nodoUsuario.h"
 
 const std::string UsuarioDataBase::FILENAME_USUARIOS = "data/usuarios.csv"; // Nombre del archivo para almacenar los usuarios
+namespace { void asegurarDirectorioData(){ _mkdir("data"); _mkdir("bin/data"); } }
 // Formato de guardado ----> idUsuario,"nombreUsuario",rolUsuario,hashContrasena
 
 //                                  === === ===     CONSTRUCTOR Y DESTRUCTOR    === === ===
@@ -99,7 +101,7 @@ std::string UsuarioDataBase::formularLinea(Usuario* usuario) { // formula la lin
 
 void UsuarioDataBase::guardarUsuariosEnArchivo(ListaDoble* lista) { // guarda todos los usuarios de la lista en el archivo
 	if (lista == nullptr) throw std::invalid_argument("La lista de usuarios es nula");
-
+	asegurarDirectorioData();
 	std::ofstream archivoTemporal("data/temporalUsuarios.csv");
 	if (!archivoTemporal.is_open()) throw std::runtime_error("Error al abrir el archivo temporal de usuarios.");
 
@@ -154,7 +156,7 @@ ListaDoble* UsuarioDataBase::cargarUsuariosDesdeArchivo() { // carga los usuario
 void UsuarioDataBase::agregarUsuario(Usuario* usuario) { // agrega un usuario nuevo al archivo (append)
 	if (usuario == nullptr) throw std::invalid_argument("No se puede agregar un usuario nulo");
 	if (existeUsuarioConId(usuario->getId())) throw std::invalid_argument("Ya existe un usuario con el id proporcionado");
-
+	asegurarDirectorioData();
 	std::ofstream archivoUsuarios(FILENAME_USUARIOS, std::ios::app);
 	if (!archivoUsuarios.is_open()) throw std::runtime_error("Error al abrir el archivo de usuarios.");
 	archivoUsuarios << formularLinea(usuario) << std::endl;
@@ -163,7 +165,7 @@ void UsuarioDataBase::agregarUsuario(Usuario* usuario) { // agrega un usuario nu
 
 void UsuarioDataBase::eliminarUsuario(int idUsuario) { // elimina un usuario del archivo por id
 	if (idUsuario < 0) throw std::invalid_argument("Error: El id del usuario no puede ser negativo.");
-
+	asegurarDirectorioData();
 	std::ifstream archivoUsuarios(FILENAME_USUARIOS);
 	if (!archivoUsuarios.is_open()) throw std::runtime_error("Error al abrir el archivo de usuarios.");
 
