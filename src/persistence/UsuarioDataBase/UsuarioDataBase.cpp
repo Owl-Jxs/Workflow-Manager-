@@ -124,6 +124,8 @@ ListaDoble* UsuarioDataBase::cargarUsuariosDesdeArchivo() { // carga los usuario
 	std::string linea;
 
 	while (std::getline(archivoUsuarios, linea)) {
+		Usuario* nuevoUsuario = nullptr;
+		bool agregado = false;
 		try {
 			std::vector<std::string> campos = dividirCamposCSV(linea);
 			if (campos.size() < 4) {
@@ -135,11 +137,13 @@ ListaDoble* UsuarioDataBase::cargarUsuariosDesdeArchivo() { // carga los usuario
 			Usuario::Rol rol = textoARol(campos[2]);
 			size_t hashContrasena = std::stoull(campos[3]);
 
-			Usuario* nuevoUsuario = new Usuario(id, campos[1], rol);
+			nuevoUsuario = new Usuario(id, campos[1], rol);
 			nuevoUsuario->setHashDirecto(hashContrasena);
 			nuevaLista->agregarUsuario(nuevoUsuario); // se agrega directo, no hay dependencia de orden
+			agregado = true;
 		}
 		catch (const std::exception& e) {
+			if (nuevoUsuario != nullptr && !agregado) delete nuevoUsuario;
 			std::cerr << "Advertencia: error al procesar linea de usuarios.csv: " << e.what() << std::endl;
 		}
 	}

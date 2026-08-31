@@ -59,14 +59,17 @@ AsignacionController* _ac, Usuario* _uA, GestorHistorial* _gH) {
 
 void ProcesosTarea::agregarTarea () {
     Tarea* nuevaTarea = leerNuevaTarea ();
-    AgregarTareaComando* agregar = nullptr; 
-
+    if (nuevaTarea == nullptr) return;
+    AgregarTareaComando* agregar = nullptr;
+    bool comandoCreado = false;
     try {
         agregar = new AgregarTareaComando (tc,nuevaTarea);
+        comandoCreado = true;
         gestorHistorial->ejecutarComando (agregar);
-        
     } catch (const std::exception& e) {
-        std::cout << "\nError al crear la tarea: " << e.what() << std::endl; delete nuevaTarea;
+        std::cout << "\nError al crear la tarea: " << e.what() << std::endl;
+        if (!comandoCreado) delete nuevaTarea; // new failed, we still own
+        // if comandoCreado, GestorHistorial already deleted the comando (and its Tarea if not ejecutado)
     }
 }
 
@@ -78,14 +81,17 @@ void ProcesosTarea::agregarSubTarea () {
     if (tareaBuscada == nullptr) { std::cout << "Id inexistente" << std::endl; return; }
 
     Tarea* nuevaTarea = leerNuevaTarea ();
+    if (nuevaTarea == nullptr) return;
     nuevaTarea->setIdPadre(idTarea);
-    AgregarTareaComando* agregar = nullptr; 
+    AgregarTareaComando* agregar = nullptr;
+    bool comandoCreado = false;
     try {
         agregar = new AgregarTareaComando (tc,nuevaTarea);
+        comandoCreado = true;
         gestorHistorial->ejecutarComando (agregar);
-        
     } catch (const std::exception& e) {
-        std::cout << "\nError al crear la subtarea: " << e.what() << std::endl; delete nuevaTarea;
+        std::cout << "\nError al crear la subtarea: " << e.what() << std::endl;
+        if (!comandoCreado) delete nuevaTarea;
     }
 
 }

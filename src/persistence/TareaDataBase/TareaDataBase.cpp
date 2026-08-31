@@ -90,7 +90,7 @@ void TareaDataBase::guardarLista (Cola* lista, std::ofstream& archivo) { //guard
 
 void TareaDataBase::guardarVector (const std::vector<Tarea*>& enProceso, std::ofstream& archivo){
     for (Tarea* t : enProceso) {
-        archivo << formularLinea (t) << std::endl;
+        guardarArbol(t, archivo);
     }
 }
 
@@ -166,16 +166,13 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
             int idTarea = std::stoi (camposPorLinea[0]);
             int idPadre = std::stoi (camposPorLinea[4]);
 
-            if (idPadre >= idMax && idPadre >= idTarea) {
-                idMax = idPadre;
-            } else if (idTarea >= idMax && idTarea >= idPadre) {
-                idMax = idTarea;
-            }
-
+            if (idTarea > idMax) idMax = idTarea;
+            if (idPadre != Tarea::sinPadre && idPadre > idMax) idMax = idPadre;
 
             bool urgente = ((ENUM_PRIORIDAD_TAREA[0] == camposPorLinea[2]) ? true : false);
 
             Tarea* nuevaTarea = new Tarea (idTarea, camposPorLinea[1], urgente, camposPorLinea[3]); //creamos la tarea
+            nuevaTarea->setIdPadre(idPadre);
             if (camposPorLinea.size() >= 7) nuevaTarea->setCiclosEspera(std::stoi(camposPorLinea[6]));
             
             indiceTareas [idTarea] = nuevaTarea;

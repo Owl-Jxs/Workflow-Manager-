@@ -12,13 +12,15 @@ bool ValidarEntrada::contieneSoloCaracteres (std::string entrada, int cantidadEs
 }
 
 bool ValidarEntrada::contieneSoloDigitos (std::string entrada, bool permitirNegativos) {
-    bool primeraLetra = true;
-    for (unsigned char uc : entrada) {
+    if (entrada.empty()) return false;
+    if (entrada == "-") return false;
+    for (size_t i = 0; i < entrada.size(); ++i) {
+        unsigned char uc = static_cast<unsigned char>(entrada[i]);
         char c = static_cast<char>(uc);
-        if (permitirNegativos && primeraLetra && c == '-') {
-            primeraLetra = false;   continue; 
+        if (permitirNegativos && i == 0 && c == '-') {
+            continue;
         }
-        if (!isdigit (uc) ) return false;
+        if (!isdigit (uc)) return false;
     }
     return true;
 }
