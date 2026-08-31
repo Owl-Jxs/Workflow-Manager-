@@ -1,6 +1,38 @@
 # WorkflowManager — Proyecto 1 de Estructuras de Datos
+
+# analisis de algoritmos de ordenamiento:
+
+1. MergeSort:
+   a. Relación en el tiempo de ejecucion :
+      Si se tiene un vector de tamaño n, el tiempo de ejecución se define según esta formula:
+               { O(1) si n <= 1           }
+         T(n) ={ 2T (n/2) + O(n) si n > 1 }
+   
+   b. Desglose de la formula utilizada:
+      Esta formula es de tipo "Vence y venceras" por lo que cuando se tiene una cantidad > 1 el algoritmo consta de dos         partes, la recursiva y la no recursiva. Las partes que la formula que este algoritmo usa son:
+      T(n) = a*T (n\b) + F(n),    donde :
+      a = cantidad de llamadas recursivas por nivel
+      b = tamano en el que se dividira el algoritmo en la siguiente sub-llamada
+      f(n) = el trabajo que se realizara en el nivel actual, esta es la parte independiente (no recursiva) de la formula.
+
+   c. Explicacion en este caso concreto:
+      Para explicar este algoritmo en concreto se define que cuando n > 1 se define lo siguiente
+      T(n) ={ 2T (n/2) + O(n) si n > 1 },    donde:
+      a = 2
+      b = 2
+      f(n) = O(n)
+      de aquí podemos concluir que el algoritmo define su parte recursiva a la mitad (O sea, por cada llamada recursiva         su tamaño es la mitad del actual). También se observa que se llama 2 veces recursivamente, ademas de que cada nivel       Tiene un nivel de complejidad de O(n).
+
+   d. Tabla de casos:
+   | Escenario     | Complejidad Temporal | Complejidad Espacial | Explicación Breve | 
+   | Mejor Caso    | O (n*log(n) )        | O(n)                 | el arreglo se divide aunque ya este ordenado
+   | Caso Promedio | O (n*log(n) )        | O(n)                 | las mitades y fusiones son proporciones constantes
+   | Peor Caso     | O (n*log(n) )        | O(n)                 | la profundidad de maxima siempre es log(n) 
+
+   
 # Bitácora de Inteligencia Artificial:
-Isabella Cubillo
+
+# Isabella Cubillo
 1. Implementación de la estructura ListaDoble:
    
    Estructura:
