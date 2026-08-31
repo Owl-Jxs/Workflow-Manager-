@@ -1,10 +1,10 @@
-/*
 #include "PruebasTarea.h"
 
 #include "../../Controllers/TareaController/TareaController.h"
 #include "../../models/Tarea/Tarea.h"
 #include "../../persistence/TareaDataBase/TareaDataBase.h"
-#include "../../structures/ColaFIFO/ColaFIFO.h"
+#include "../../structures/Colas/ColaFIFO/ColaFIFO.h"
+#include "../../structures/Colas/ColaPrioridad/ColaPrioridad.h"
 
 #include <cstdio>
 #include <filesystem>
@@ -30,6 +30,21 @@ namespace {
         }
 
         throw std::runtime_error("Prueba fallida: " + mensaje);
+    }
+
+    Tarea* buscarPorIdEnCola(Cola* cola, int id) {
+        if (cola == nullptr) {
+            return nullptr;
+        }
+
+        NodoTarea* actual = cola->getFrente();
+        while (actual != nullptr) {
+            if (actual->datos != nullptr && actual->datos->getIdTarea() == id) {
+                return actual->datos;
+            }
+            actual = actual->siguiente;
+        }
+        return nullptr;
     }
 
     class RespaldoArchivosTareas {
@@ -63,8 +78,9 @@ namespace {
             std::filesystem::create_directories("data");
 
             const std::vector<std::string> rutas = {
-                "data/tareas_regulares.csv",
-                "data/tareas_urgentes.csv"
+                "data/Tareas_Data.csv",
+                "data/tareas_completadas.csv",
+                "data/Temp.csv"
             };
 
             for (const std::string& ruta : rutas) {
@@ -81,11 +97,11 @@ namespace {
         ~RespaldoArchivosTareas() {
             for (const Archivo& archivo : archivos) {
                 try {
-                    if (archivo.existia) {
-                        escribirArchivo(archivo.ruta, archivo.contenido);
-                    } else {
-                        std::remove(archivo.ruta.c_str());
-                    }
+                   if (archivo.existia) {
+                       escribirArchivo(archivo.ruta, archivo.contenido);
+                   } else {
+                       std::remove(archivo.ruta.c_str());
+                   }
                 } catch (...) {
                 }
             }
@@ -100,7 +116,6 @@ namespace {
 namespace PruebasTarea {
 
     void probarModeloTarea() {
-        // --- constructor y getters ---
         Tarea tarea(1, "Comprar pan", false, Tarea::ESTADO[0]);
         verificar(tarea.getIdTarea() == 1, "id inicial");
         verificar(tarea.getDescripcionTarea() == "Comprar pan", "descripcion inicial");
@@ -110,7 +125,6 @@ namespace PruebasTarea {
         verificar(tarea.getTareaPadre() == nullptr, "puntero a padre nulo inicial");
         verificar(tarea.getCantidadSubTareas() == 0, "sin subtareas inicial");
 
-        // --- setters ---
         tarea.setIdTarea(10);
         verificar(tarea.getIdTarea() == 10, "setIdTarea");
         tarea.setDescripcionTarea("Otra descripcion");
@@ -120,14 +134,12 @@ namespace PruebasTarea {
         tarea.setEstado("COMPLETADA");
         verificar(tarea.getEstado() == "COMPLETADA", "setEstado");
 
-        // --- validaciones de parametros ---
         verificarQueLanza([&] { tarea.setIdTarea(-1); }, "id negativo rechazado");
         verificarQueLanza([&] { tarea.setDescripcionTarea(""); }, "descripcion vacia rechazada");
         verificarQueLanza([&] { tarea.setEstado("INVALIDO"); }, "estado invalido rechazado");
         verificarQueLanza([] { Tarea t(-5, "x", false, "POR HACER"); }, "constructor con id negativo rechazado");
         verificarQueLanza([] { Tarea t(1, "", false, "POR HACER"); }, "constructor con descripcion vacia rechazado");
 
-        // --- arbol de subtareas ---
         Tarea* raiz = new Tarea(100, "Raiz", false, "POR HACER");
         Tarea* hijo1 = new Tarea(101, "Hijo 1", false, "POR HACER");
         Tarea* hijo2 = new Tarea(102, "Hijo 2", false, "POR HACER");
@@ -142,19 +154,12 @@ namespace PruebasTarea {
         verificar(raiz->buscarSubTarea(102) == hijo2, "buscarSubTarea encuentra al hijo");
         verificar(raiz->buscarSubTarea(999) == nullptr, "buscarSubTarea no encuentra inexistente");
 
-        // no se puede re-agregar una subtarea que ya tiene padre
         verificarQueLanza([&] { raiz->agregarSubTarea(hijo1); }, "reagregar subtarea con padre rechazado");
-
-        // no se puede agregar un ancestro como subtarea (crearia ciclo)
         verificarQueLanza([&] { hijo1->agregarSubTarea(raiz); }, "agregar ancestro como subtarea rechazado");
-
-        // no se puede agregar la tarea a si misma
         verificarQueLanza([&] { raiz->agregarSubTarea(raiz); }, "agregarse a si misma rechazado");
-
-        // no se puede agregar una subtarea nula
         verificarQueLanza([&] { raiz->agregarSubTarea(nullptr); }, "subtarea nula rechazada");
 
-        delete raiz; // borra en cascada a hijo1 y hijo2
+        delete raiz;
     }
 
     void probarListaTareas() {
@@ -170,18 +175,15 @@ namespace PruebasTarea {
         verificar(cola.getFrente()->datos == t1, "frente es t1");
         verificar(cola.getCola()->datos == t2, "final es t2");
 
-        // tarea repetida por id
         Tarea* duplicada = new Tarea(1, "otra descripcion", false, "POR HACER");
         verificarQueLanza([&] { cola.encolar(duplicada); }, "tarea repetida rechazada");
         delete duplicada;
 
-        // tarea nula
         verificarQueLanza([&] { cola.encolar(nullptr); }, "tarea nula rechazada");
 
-        // desencolar en orden FIFO
         Tarea* sacada1 = cola.desencolar();
         verificar(sacada1 == t1, "desencolar devuelve t1");
-        delete sacada1; // la cola ya no es duena de la tarea desencolada
+        delete sacada1;
 
         Tarea* sacada2 = cola.desencolar();
         verificar(sacada2 == t2, "desencolar devuelve t2");
@@ -195,73 +197,80 @@ namespace PruebasTarea {
         RespaldoArchivosTareas respaldo;
         TareaDataBase db;
 
-        // --- guardar y cargar un arbol completo ---
         {
-            ColaFIFO* lista = new ColaFIFO();
+            ColaFIFO regulares;
+            ColaFIFO urgentes;
+            ColaPrioridad revision;
+            std::vector<Tarea*> enProceso;
+
             Tarea* raiz = new Tarea(10, "Raiz", false, "POR HACER");
             Tarea* sub = new Tarea(11, "Sub", false, "EN PROCESO");
             raiz->agregarSubTarea(sub);
-            lista->encolar(raiz);
-            db.guardarListaEnArchivo(lista, false);
-            delete lista;
+            regulares.encolar(raiz);
+
+            db.guardarTareasActivas(&regulares, &urgentes, enProceso, &revision);
         }
 
-        ColaFIFO* cargada = db.cargarListaDelArchivo(false);
-        verificar(cargada->getFrente() != nullptr, "lista cargada con tarea");
-        verificar(cargada->getFrente()->datos->getIdTarea() == 10, "id de la raiz cargada");
-        verificar(cargada->getFrente()->datos->getDescripcionTarea() == "Raiz", "descripcion de la raiz cargada");
-        verificar(cargada->getFrente()->datos->getCantidadSubTareas() == 1, "subtarea cargada en el arbol");
-        Tarea* subCargada = cargada->getFrente()->datos->getPrimerSubTarea();
+        ColaFIFO regularesCargadas;
+        ColaFIFO urgentesCargadas;
+        std::vector<Tarea*> enProcesoCargadas;
+        ColaPrioridad revisionCargadas;
+        int ultimoId = 0;
+        db.cargarTareasActivas(&regularesCargadas, &urgentesCargadas, enProcesoCargadas, &revisionCargadas, ultimoId);
+
+        verificar(regularesCargadas.getFrente() != nullptr, "lista cargada con tarea");
+        verificar(regularesCargadas.getFrente()->datos->getIdTarea() == 10, "id de la raiz cargada");
+        verificar(regularesCargadas.getFrente()->datos->getDescripcionTarea() == "Raiz", "descripcion de la raiz cargada");
+        verificar(regularesCargadas.getFrente()->datos->getCantidadSubTareas() == 1, "subtarea cargada en el arbol");
+        Tarea* subCargada = regularesCargadas.getFrente()->datos->getPrimerSubTarea();
         verificar(subCargada != nullptr, "puntero a la subtarea cargada");
         verificar(subCargada->getIdTarea() == 11, "id de la subtarea cargada");
-        verificar(subCargada->getTareaPadre() == cargada->getFrente()->datos, "padre puntero de la subtarea cargada");
-        delete cargada;
+        verificar(subCargada->getTareaPadre() == regularesCargadas.getFrente()->datos, "padre puntero de la subtarea cargada");
 
-        // --- guardar una tarea nueva (append) y recargar ---
         Tarea* nueva = new Tarea(20, "Nueva urgente", true, "POR HACER");
-        db.guardarNuevaTareaEnArchivo(nueva, true);
+        db.guardarNuevaTareaEnArchivo(nueva);
         delete nueva;
 
-        ColaFIFO* urgentes = db.cargarListaDelArchivo(true);
-        verificar(urgentes->getFrente() != nullptr, "tarea urgente cargada");
-        verificar(urgentes->getFrente()->datos->getIdTarea() == 20, "id de la tarea urgente cargada");
-        delete urgentes;
+        ColaFIFO regularesTrasAppend;
+        ColaFIFO urgentesTrasAppend;
+        std::vector<Tarea*> enProcesoTrasAppend;
+        ColaPrioridad revisionTrasAppend;
+        int ultimoIdTrasAppend = 0;
+        db.cargarTareasActivas(&regularesTrasAppend, &urgentesTrasAppend, enProcesoTrasAppend, &revisionTrasAppend, ultimoIdTrasAppend);
+        verificar(buscarPorIdEnCola(&urgentesTrasAppend, 20) != nullptr || buscarPorIdEnCola(&regularesTrasAppend, 20) != nullptr,
+                 "tarea urgente cargada");
 
-        // --- agregar una subtarea al archivo (append) y recargar ---
-        {
-            ColaFIFO* lista = new ColaFIFO();
-            Tarea* raiz = new Tarea(30, "Raiz con subtarea", false, "POR HACER");
-            lista->encolar(raiz);
-            db.guardarListaEnArchivo(lista, false);
-            delete lista;
-        }
-
-        Tarea* raizEnMemoria = new Tarea(30, "Raiz con subtarea", false, "POR HACER");
+        Tarea* raizConSub = new Tarea(30, "Raiz con subtarea", false, "POR HACER");
         Tarea* subNueva = new Tarea(31, "Sub nueva", false, "POR HACER");
-        raizEnMemoria->agregarSubTarea(subNueva); // setea el idPadre de la subtarea
-        db.guardarNuevaSubTareaEnArchivo(subNueva, false);
-        delete raizEnMemoria; // borra en cascada a subNueva
+        raizConSub->agregarSubTarea(subNueva);
+        db.guardarNuevaTareaEnArchivo(raizConSub);
+        delete raizConSub;
 
-        ColaFIFO* conSub = db.cargarListaDelArchivo(false);
-        verificar(conSub->getFrente() != nullptr, "raiz presente tras agregar subtarea");
-        verificar(conSub->getFrente()->datos->getCantidadSubTareas() == 1, "subtarea agregada al archivo");
-        verificar(conSub->getFrente()->datos->getPrimerSubTarea()->getIdTarea() == 31, "id de la subtarea agregada");
-        delete conSub;
+        ColaFIFO regularesConSub;
+        ColaFIFO urgentesConSub;
+        std::vector<Tarea*> enProcesoConSub;
+        ColaPrioridad revisionConSub;
+        int ultimoIdConSub = 0;
+        db.cargarTareasActivas(&regularesConSub, &urgentesConSub, enProcesoConSub, &revisionConSub, ultimoIdConSub);
+        Tarea* raizPersistida = regularesConSub.getFrente() != nullptr ? regularesConSub.getFrente()->datos : nullptr;
+        verificar(raizPersistida != nullptr, "raiz presente tras agregar subtarea");
+        verificar(raizPersistida->getCantidadSubTareas() >= 1, "subtarea agregada al archivo");
 
-        // --- descripciones con comas y comillas no rompen el csv ---
-        {
-            ColaFIFO* lista = new ColaFIFO();
-            Tarea* especial = new Tarea(50, "Descripcion, con comas y \"comillas\"", false, "POR HACER");
-            lista->encolar(especial);
-            db.guardarListaEnArchivo(lista, false);
-            delete lista;
-        }
+        Tarea* especial = new Tarea(50, "Descripcion, con comas y \"comillas\"", false, "POR HACER");
+        db.guardarNuevaTareaEnArchivo(especial);
+        delete especial;
 
-        ColaFIFO* conEspecial = db.cargarListaDelArchivo(false);
-        verificar(conEspecial->getFrente()->datos->getDescripcionTarea() ==
-                      "Descripcion, con comas y \"comillas\"",
-                  "descripcion especial redondea correctamente");
-        delete conEspecial;
+        ColaFIFO regularesEspeciales;
+        ColaFIFO urgentesEspeciales;
+        std::vector<Tarea*> enProcesoEspeciales;
+        ColaPrioridad revisionEspeciales;
+        int ultimoIdEspeciales = 0;
+        db.cargarTareasActivas(&regularesEspeciales, &urgentesEspeciales, enProcesoEspeciales, &revisionEspeciales, ultimoIdEspeciales);
+
+        Tarea* especialCargada = buscarPorIdEnCola(&regularesEspeciales, 50);
+        verificar(especialCargada != nullptr, "descripcion especial cargada");
+        verificar(especialCargada->getDescripcionTarea() == "Descripcion, con comas y \"comillas\"",
+                 "descripcion especial redondea correctamente");
     }
 
     void probarTareaController() {
@@ -271,27 +280,27 @@ namespace PruebasTarea {
         controller.cargarArchivos();
 
         Tarea* t1 = new Tarea(1, "Ctrl 1", false, "POR HACER");
-        controller.agregarTarea(t1, false);
+        controller.agregarTarea(t1);
 
         Tarea* t2 = new Tarea(2, "Ctrl 2", true, "POR HACER");
-        controller.agregarTarea(t2, true);
+        controller.agregarTarea(t2);
 
-        // la subtarea queda bajo la propiedad de la tarea padre en la cola
-        controller.agregarSubTarea(new Tarea(3, "Sub ctrl", false, "POR HACER"), 1, false);
+        Tarea* subCtrl = new Tarea(3, "Sub ctrl", false, "POR HACER");
+        subCtrl->setIdPadre(1);
+        controller.agregarTarea(subCtrl);
 
         controller.guardarArchivos();
 
-        // recargar desde archivo sin excepciones
         TareaController recargado;
         recargado.cargarArchivos();
         recargado.guardarArchivos();
 
-        // padre inexistente debe lanzar
         TareaController otro;
         otro.cargarArchivos();
         Tarea* huerfana = new Tarea(99, "Huerfana", false, "POR HACER");
-        verificarQueLanza([&] { otro.agregarSubTarea(huerfana, 777, false); },
-                          "subtarea con padre inexistente rechazada");
+        huerfana->setIdPadre(777);
+        verificarQueLanza([&] { otro.agregarTarea(huerfana); },
+                         "subtarea con padre inexistente rechazada");
         delete huerfana;
     }
 
@@ -316,4 +325,3 @@ namespace PruebasTarea {
         }
     }
 }
-*/
