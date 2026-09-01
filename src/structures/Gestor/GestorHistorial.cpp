@@ -29,9 +29,11 @@ void GestorHistorial::ejecutarComando(IComando* comando) {
     pilaDeshacer.push(comando);
 
     //registrar la accion en la bitacora de auditoria (Aclaratoria 3, parte 2)
-    if (auditoria != nullptr) {
-        auditoria->registrar(idUsuarioSesion, comando->getAccionAuditoria(), comando->getIdTareaAuditoria());
-    }
+    try {
+        if (auditoria != nullptr) {
+            auditoria->registrar(idUsuarioSesion, comando->getAccionAuditoria(), comando->getIdTareaAuditoria());
+        }
+    } catch(...) { /* auditoria no debe romper flujo */ }
    
     //se limpia la pila de rehacer.
     while (!pilaRehacer.estaVacia()) {
@@ -50,13 +52,17 @@ void GestorHistorial::deshacer() {
         comando->deshacer();
 
     } catch (std::exception &e) {
-        delete comando; throw;
+        // No perder el comando: devolver a pilaDeshacer y propagar
+        pilaDeshacer.push(comando);
+        throw;
     }
 
     //registrar la accion en la bitacora de auditoria
-    if (auditoria != nullptr) {
-        auditoria->registrar(idUsuarioSesion, "DESHACER: " + comando->getAccionAuditoria(), comando->getIdTareaAuditoria());
-    }
+    try {
+        if (auditoria != nullptr) {
+            auditoria->registrar(idUsuarioSesion, "DESHACER: " + comando->getAccionAuditoria(), comando->getIdTareaAuditoria());
+        }
+    } catch(...) { /* auditoria no debe romper deshacer */ }
 
     //lo pasamos a la pila de rehacer
     pilaRehacer.push(comando);
@@ -72,7 +78,9 @@ void GestorHistorial::rehacer() {
         comando->ejecutar ();
 
     } catch (std::exception &e) {
-        delete comando; throw;
+        // Devolver a pilaRehacer para no perder el comando
+        pilaRehacer.push(comando);
+        throw;
     }
 
 

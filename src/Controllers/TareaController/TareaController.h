@@ -43,6 +43,7 @@ public:
     std::vector <int> delegarTarea ();// delega una tarea de Por hacer a un usuario y la transorma en En proceso
     void deshacerDelegacion (int idTarea); // devuelve una tarea de En proceso a Por hacer
     int mandar_A_Revision (int idTarea); // manda una tarea en Proceso A En revision, para que un admin la acepte o rechace
+    void deshacerMandarARevision(int idTarea); // inverso de mandar_A_Revision: En Revision -> En Proceso por id
     void revisionExitosa (); // si una tarea es revisada exitosamente la pasa a la lista de tareas completada
     void anularRevisionExitosa (int idTarea);  //devuelve una tarea completada a en proceso
     void rechazarRevision (); 

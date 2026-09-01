@@ -8,7 +8,7 @@
 class ordenarTareaPorIdAscedente: public Icondicion<Tarea*> {
 public:
     bool ordenar ( Tarea* a, Tarea* b) override {
-        return a->getIdTarea () <= b->getIdTarea ();
+        return a->getIdTarea () < b->getIdTarea ();
     }
 };
 
@@ -17,7 +17,7 @@ public:
 class ordenarTareaPorIdDescendente : public Icondicion<Tarea*> {
 public:
     bool ordenar ( Tarea* a,  Tarea* b) override {
-        return a->getIdTarea () >= b->getIdTarea ();
+        return a->getIdTarea () > b->getIdTarea ();
     }
 };
 

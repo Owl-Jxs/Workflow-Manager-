@@ -16,6 +16,8 @@ class AgregarTareaComando : public IComando {
 private:
     TareaController* controller;
     Tarea* tarea;
+    bool ejecutado;
+    int idTareaGuardado;
 public:
     AgregarTareaComando(TareaController* controller, Tarea* tarea);
     ~AgregarTareaComando() override;
@@ -54,6 +56,7 @@ private:
     AsignacionController* controllerAsignacion;
     std::vector <int> idsTarea;
     int idUsuario;
+    bool ejecutado;
 public:
     AsignarResponsableComando (TareaController* controller, AsignacionController* ac, int idUsuario);
     void ejecutar() override;
@@ -91,7 +94,8 @@ private:
     TareaController* controller;
     AsignacionController* asignacionController;
     std::vector<std::pair <int, int>> Asignaciones_Tarea_Usuario;
-    Tarea* tareaGuardada;
+    Tarea* tareaGuardada; // non-owning pointer, owned by controller
+    int idTareaGuardada;
     bool ejecutado;
 public:
     validarTareaEnRevisionComando (TareaController* controller, AsignacionController* ac, Tarea* tarea);
@@ -110,9 +114,9 @@ class RechazarTareaEnRevisionComando : public IComando {
 private:
     TareaController* controller;
     AsignacionController* asignacionController;
-    Tarea* tareaGuardada;
+    Tarea* tareaGuardada; // non-owning pointer
+    int idTareaGuardada;
     bool ejecutado;
-    int numDeshacer;
 public:
     RechazarTareaEnRevisionComando (TareaController* controller, AsignacionController* ac, Tarea* tareaGuardada);
     ~RechazarTareaEnRevisionComando() override;

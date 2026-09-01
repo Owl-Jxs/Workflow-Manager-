@@ -1,4 +1,6 @@
 #include "ProcesosTareaNormal.h"
+#include <unordered_set>
+#include <functional>
 
 ProcesosTareaNormal::ProcesosTareaNormal(TareaController* _tc, AsignacionController* _ac, Usuario* _usuario, GestorHistorial* _gH) {
     this->tc = _tc;
@@ -37,16 +39,33 @@ void ProcesosTareaNormal::verMisTareasAsignadas() {
 
     std::cout << "\n========== MIS TAREAS ASIGNADAS ==========\n";
 
+    // Evitar mostrar subtareas duplicadas cuando el padre ya fue mostrado
+    std::unordered_set<int> idsYaMostrados;
     for (std::pair<int, int> par : asignaciones) {
         int idTarea = par.first;
+        if (idsYaMostrados.count(idTarea)) continue;
         Tarea* tarea = tc->buscarTareaPorHacer(idTarea);
         if (tarea == nullptr) tarea = tc->buscarTareaEnProceso(idTarea);
         if (tarea == nullptr) tarea = tc->buscarTareaEnRevision(idTarea);
         if (tarea == nullptr) tarea = tc->buscarTareaCompletada(idTarea);
 
         if (tarea != nullptr) {
-            mostrarInformacionTarea(tarea, false, 1);
+            // Si es subtarea, mostrar solo la subtarea con su subarbol; si es raiz, mostrar jerarquia
+            bool esSubtarea = (tarea->getIdPadre() != Tarea::sinPadre);
+            // Para raices mostrar hijos, para subtareas mostrar su propio subarbol
+            mostrarInformacionTarea(tarea, true, 1);
+            std::cout << " [Estado: " << tarea->getEstado() << (esSubtarea ? " - Subtarea" : "") << "]\n";
             std::cout << "--------------------------------------------------------------------------------\n";
+            // Marcar todo el subarbol como mostrado para no duplicar
+            std::vector<Tarea*> subarbol;
+            // recolectar ids del subarbol para deduplicar
+            std::function<void(Tarea*)> recolectar = [&](Tarea* t){
+                if (!t) return;
+                idsYaMostrados.insert(t->getIdTarea());
+                recolectar(t->getPrimerSubTarea());
+                recolectar(t->getSiguienteSubTarea());
+            };
+            recolectar(tarea);
         }
     }
 }
@@ -84,7 +103,7 @@ void ProcesosTareaNormal::enviarTareaARevision() {
     }
 
     std::cout << "\nTarea a enviar a revision:\n";
-    mostrarInformacionTarea(tarea, false, 1);
+    mostrarInformacionTarea(tarea, true, 1);
 
     bool confirmar = ValidarEntrada::respuestas_Si_O_No("Si, enviar", "No, cancelar");
     if (!confirmar) {
@@ -95,9 +114,12 @@ void ProcesosTareaNormal::enviarTareaARevision() {
     try {
         MandarARevisionComando* comando = new MandarARevisionComando(tc, idTarea);
         gestorHistorial->ejecutarComando(comando);
-        std::cout << "Tarea enviada a revision correctamente.\n";
+        std::cout << "Tarea " << idTarea << " enviada a revision correctamente (incluye " 
+                  << (tarea->getCantidadSubTareas() > 0 ? std::to_string(tarea->getCantidadSubTareas()) + " subtarea(s)" : "sin subtareas") 
+                  << "). Verifique el Tablero Kanban en 'EN REVISION'.\n";
     } catch (std::exception& e) {
         std::cout << "Error al enviar a revision: " << e.what() << "\n";
+        std::cout << "Si la tarea tiene subtareas, ahora se permite el envio directo. Si el error persiste, verifique asignacion.\n";
     }
 }
 
@@ -122,29 +144,29 @@ void ProcesosTareaNormal::verTableroKanban() {
     if (listaUrgente.empty() && listaRegulares.empty()) {
         std::cout << "\nNo hay tareas por hacer.\n";
     } else {
-        for (Tarea* tarea : listaUrgente) { mostrarInformacionTarea(tarea, false, 1); }
-        for (Tarea* tarea : listaRegulares) { mostrarInformacionTarea(tarea, false, 1); }
+        for (Tarea* tarea : listaUrgente) { mostrarInformacionTarea(tarea, true, 1); }
+        for (Tarea* tarea : listaRegulares) { mostrarInformacionTarea(tarea, true, 1); }
     }
 
     std::cout << "\n=================== EN PROCESO ====================\n";
     if (enProceso.empty()) {
         std::cout << "\nNo hay tareas en proceso.\n";
     } else {
-        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea, false, 1); }
+        for (Tarea* tarea : enProceso) { mostrarInformacionTarea(tarea, true, 1); }
     }
 
     std::cout << "\n=================== EN REVISION ===================\n";
     if (enRevision.empty()) {
         std::cout << "\nNo hay tareas en revision.\n";
     } else {
-        for (Tarea* tarea : enRevision) { mostrarInformacionTarea(tarea, false, 1); }
+        for (Tarea* tarea : enRevision) { mostrarInformacionTarea(tarea, true, 1); }
     }
 
     std::cout << "\n=================== COMPLETADAS ===================\n";
     if (completadas.empty()) {
         std::cout << "\nNo hay tareas completadas.\n";
     } else {
-        for (Tarea* tarea : completadas) { mostrarInformacionTarea(tarea, false, 1); }
+        for (Tarea* tarea : completadas) { mostrarInformacionTarea(tarea, true, 1); }
     }
 
     std::cout << "\n====================================================\n";

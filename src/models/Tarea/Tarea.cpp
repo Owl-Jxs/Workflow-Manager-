@@ -113,8 +113,9 @@ std::string Tarea::getEstado () const {
 
 void Tarea::agregarSubTarea (Tarea* subTarea) {
     if (subTarea == nullptr || subTarea == this)    throw std::invalid_argument ("Subtarea inválida: no puede ser nula ni la misma tarea.");
-    if (subTarea->idTareaPadre != sinPadre) throw std::invalid_argument ("Subtarea inválida: ya tiene un padre asignado.");
+    if (subTarea->idTareaPadre != sinPadre && subTarea->idTareaPadre != this->idTarea) throw std::invalid_argument ("Subtarea inválida: ya tiene un padre asignado.");
     if (subTarea->siguienteSubTarea != nullptr) throw std::invalid_argument ("Subtarea inválida: ya tiene un hermano siguiente asignado.");
+    if (primerSubTarea == subTarea) throw std::invalid_argument ("Subtarea inválida: ya está agregada como subtarea.");
     esAncestro(subTarea); // Verifica si 'subTarea' es un ancestro de 'this'
 
     if (this->primerSubTarea == nullptr) {
@@ -122,11 +123,13 @@ void Tarea::agregarSubTarea (Tarea* subTarea) {
     } else {
         Tarea* actual = this->primerSubTarea;
         while (actual->siguienteSubTarea != nullptr) {
+            if (actual == subTarea) throw std::invalid_argument ("Subtarea inválida: ya está agregada como subtarea.");
             if (actual->siguienteSubTarea == subTarea) {
                 throw std::invalid_argument ("Subtarea inválida: ya está agregada como subtarea.");
             }
             actual = actual->siguienteSubTarea;
         }
+        if (actual == subTarea) throw std::invalid_argument ("Subtarea inválida: ya está agregada como subtarea.");
         actual->siguienteSubTarea = subTarea;
     }
     subTarea->idTareaPadre = this->idTarea;

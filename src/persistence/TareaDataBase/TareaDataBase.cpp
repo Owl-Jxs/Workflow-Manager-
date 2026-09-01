@@ -1,8 +1,18 @@
 #include "TareaDataBase.h"
+#include <direct.h>
+#include <sys/stat.h>
 //guias para archivos
 const std::string TareaDataBase::FILENAME_TAREAS_ACTIVAS = "data/Tareas_Data.csv";
 const std::string TareaDataBase::FILENAME_TAREAS_COMPLETADAS = "data/tareas_completadas.csv";
-const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular"}; 
+const std::string TareaDataBase::ENUM_PRIORIDAD_TAREA [2] = {"Urgente", "Regular"};
+
+namespace {
+    void asegurarDirectorioData() {
+        _mkdir("data");
+        _mkdir("bin");
+        _mkdir("bin/data");
+    }
+} 
 
 //Formato de guardado --> id, descripcion, prioridad, estado, idPadre, cantidadSubTareas, ciclosEspera
 
@@ -90,7 +100,7 @@ void TareaDataBase::guardarLista (Cola* lista, std::ofstream& archivo) { //guard
 
 void TareaDataBase::guardarVector (const std::vector<Tarea*>& enProceso, std::ofstream& archivo){
     for (Tarea* t : enProceso) {
-        archivo << formularLinea (t) << std::endl;
+        guardarArbol(t, archivo);
     }
 }
 
@@ -99,10 +109,11 @@ void TareaDataBase::guardarNuevaTarea (Tarea* tarea, std::ofstream& archivo) { /
 }
 
 void TareaDataBase::eliminarTarea (std::vector<int> idArbolTarea, std::string nombreArchivo) {
+    asegurarDirectorioData();
     std::ifstream archivo(nombreArchivo);
-    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo: " + nombreArchivo);
 
-    std::string nombreTemporal = "data/Temp.csv";
+    std::string nombreTemporal = (nombreArchivo == FILENAME_TAREAS_ACTIVAS) ? "data/Temp_TareaActiva.csv" : "data/Temp_TareaCompletada.csv";
     std::ofstream archivoTemp(nombreTemporal);
 
     if (!archivoTemp.is_open()) {
@@ -166,16 +177,13 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
             int idTarea = std::stoi (camposPorLinea[0]);
             int idPadre = std::stoi (camposPorLinea[4]);
 
-            if (idPadre >= idMax && idPadre >= idTarea) {
-                idMax = idPadre;
-            } else if (idTarea >= idMax && idTarea >= idPadre) {
-                idMax = idTarea;
-            }
-
+            if (idTarea > idMax) idMax = idTarea;
+            if (idPadre != Tarea::sinPadre && idPadre > idMax) idMax = idPadre;
 
             bool urgente = ((ENUM_PRIORIDAD_TAREA[0] == camposPorLinea[2]) ? true : false);
 
             Tarea* nuevaTarea = new Tarea (idTarea, camposPorLinea[1], urgente, camposPorLinea[3]); //creamos la tarea
+            nuevaTarea->setIdPadre(idPadre);
             if (camposPorLinea.size() >= 7) nuevaTarea->setCiclosEspera(std::stoi(camposPorLinea[6]));
             
             indiceTareas [idTarea] = nuevaTarea;
@@ -219,8 +227,9 @@ void TareaDataBase::cargarTareasActivas (Cola* regulares, Cola* urgentes, std::v
 }
 
 void TareaDataBase::guardarTareasActivas (Cola* regulares, Cola* urgentes, const std::vector<Tarea*>& enProceso, Cola* enRevision){ 
+    asegurarDirectorioData();
     std::ofstream archivo(FILENAME_TAREAS_ACTIVAS, std::ios::trunc);
-    if (!archivo.is_open()) throw std::runtime_error ("Error al abrir el archivo de guardado");
+    if (!archivo.is_open()) throw std::runtime_error ("Error al abrir el archivo de guardado: " + FILENAME_TAREAS_ACTIVAS);
 
 // Guardar las colas usando la función auxiliar private
     guardarLista (regulares, archivo);
@@ -232,8 +241,9 @@ void TareaDataBase::guardarTareasActivas (Cola* regulares, Cola* urgentes, const
 }
 
 void TareaDataBase::guardarTareasCompletadas (Cola* listaTareasCompletadas) {
+    asegurarDirectorioData();
     std::ofstream archivo (FILENAME_TAREAS_COMPLETADAS, std::ios::trunc);
-    if (!archivo.is_open()) throw std::runtime_error ("Error al abrir el archivos");
+    if (!archivo.is_open()) throw std::runtime_error ("Error al abrir el archivos: " + FILENAME_TAREAS_COMPLETADAS);
 
 // Guardar las colas usando la función auxiliar private   
     guardarLista (listaTareasCompletadas, archivo);
@@ -242,8 +252,9 @@ void TareaDataBase::guardarTareasCompletadas (Cola* listaTareasCompletadas) {
    
 void TareaDataBase::guardarNuevaTareaEnArchivo (Tarea* tarea) { //agrega una nueva tarea al sistema y a los archivos
     if (tarea == nullptr) throw std::invalid_argument ("No se puede agregar una tarea nula");
+    asegurarDirectorioData();
     std::ofstream archivo (FILENAME_TAREAS_ACTIVAS, std::ios::app);
-    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo: " + FILENAME_TAREAS_ACTIVAS);
 
     guardarNuevaTarea (tarea, archivo); //la guardamos en el archivo
     archivo.close();
@@ -253,10 +264,11 @@ void TareaDataBase::actualizarEstadoTarea (Tarea* tarea) {
     if (tarea == nullptr) throw std::invalid_argument("tarea nula");
     if (tarea->getIdTarea () < 0) throw std::invalid_argument("ID de tarea invalido");
     
+    asegurarDirectorioData();
     std::ifstream archivo(FILENAME_TAREAS_ACTIVAS);
-    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo");
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir el archivo: " + FILENAME_TAREAS_ACTIVAS);
 
-    std::string nombreTemporal = "data/Temp.csv";
+    std::string nombreTemporal = "data/Temp_Estado.csv";
     std::ofstream archivoTemp(nombreTemporal);
     if (!archivoTemp.is_open()) {
         archivo.close();
@@ -286,8 +298,9 @@ void TareaDataBase::eliminarTareaActiva (std::vector<int> idArbolTarea){
 
 void TareaDataBase::registrarTareaCompletada (Tarea* tarea) {  
     if (tarea == nullptr)   throw std::invalid_argument ("No se completar una tarea nula");
+    asegurarDirectorioData();
     std::ofstream archivoGuardado (FILENAME_TAREAS_COMPLETADAS, std::ios::app);
-    if (!archivoGuardado.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas");
+    if (!archivoGuardado.is_open ()) throw std::runtime_error ("Error al abrir el archivo de la lista de tareas: " + FILENAME_TAREAS_COMPLETADAS);
     
     guardarNuevaTarea (tarea, archivoGuardado);
     archivoGuardado.close ();

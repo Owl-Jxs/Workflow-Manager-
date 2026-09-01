@@ -154,8 +154,8 @@ void MenuPrincipal::mostrarMenuAdministrador(Usuario* /*usuario*/)
 
 MenuPrincipal::~MenuPrincipal()
 {   
-    if (tc != nullptr) tc->guardarArchivos();
-    if (ac != nullptr) ac->guardarAsignaciones();
+    try { if (tc != nullptr) tc->guardarArchivos(); } catch(...) {}
+    try { if (ac != nullptr) ac->guardarAsignaciones(); } catch(...) {}
     delete uc;
     delete tc;
     delete ac;

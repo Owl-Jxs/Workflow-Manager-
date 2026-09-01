@@ -1,18 +1,20 @@
 #include "AsignacionDataBase.h"
 #include <iostream>
+#include <direct.h>
 const std::string AsignacionDataBase::FILENAME_ASIGNACIONES = "data/asignaciones.csv"; // Nombre del archivo para almacenar las asignaciones
-const std::string AsignacionDataBase::FILENAME_ASIGNACIONES_COMPLETADAS = "data/asignacionesCompletadas.csv"; 
+const std::string AsignacionDataBase::FILENAME_ASIGNACIONES_COMPLETADAS = "data/asignacionesCompletadas.csv";
+namespace { void asegurarDirectorioData(){ _mkdir("data"); _mkdir("bin/data"); } } 
 // Formato de guardado ----> idTarea, idUsuario
 
 void AsignacionDataBase::eliminarAsignacionesDeArchivo (std::vector <std::pair <int, int>> listaAsignacionesRehacer, std::string nombreArchivo){
     if (listaAsignacionesRehacer.empty()) return;
-
+    asegurarDirectorioData();
     std::ifstream archivo(nombreArchivo);
-    if (!archivo.is_open()) return;
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir archivo de asignaciones: " + nombreArchivo);
 
-    std::string temp = "data/Temp.csv";
+    std::string temp = (nombreArchivo == FILENAME_ASIGNACIONES) ? "data/Temp_Asignaciones.csv" : "data/Temp_AsignacionesCompletadas.csv";
     std::ofstream archivoTemp (temp);
-    if (!archivoTemp.is_open()) return;
+    if (!archivoTemp.is_open()) throw std::runtime_error("Error al crear archivo temporal de asignaciones");
 
     std::string linea; 
     while (std::getline (archivo, linea)) {
@@ -43,9 +45,9 @@ void AsignacionDataBase::eliminarAsignacionesDeArchivo (std::vector <std::pair <
 
 void AsignacionDataBase::agregarAsignacionesDeArchivo (std::vector <std::pair <int, int>> listaAsignacionesRehacer, std::string nombreArchivo) {
     if (listaAsignacionesRehacer.empty()) return;
-
+    asegurarDirectorioData();
     std::ofstream archivo(nombreArchivo, std::ios::app);
-    if (!archivo.is_open()) return;
+    if (!archivo.is_open()) throw std::runtime_error("Error al abrir archivo de asignaciones: " + nombreArchivo);
 
     // Escribir cada pareja (idTarea,idUsuario)
     for (const auto& par : listaAsignacionesRehacer) {
@@ -60,7 +62,7 @@ AsignacionDataBase::~AsignacionDataBase() { }
 
 void AsignacionDataBase::guardarAsignacionesEnArchivo(ListaAsignaciones* lista) { //guarda todas las asignaciones de la lista en el archivo
     if (lista == nullptr) throw std::invalid_argument("La lista de asignaciones es nula");
-
+    asegurarDirectorioData();
     std::ofstream archivoTemporalAsignaciones("data/asignaciones_temporal.csv");
     if (!archivoTemporalAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo temporal de asignaciones.");
 
@@ -121,7 +123,7 @@ void AsignacionDataBase::deshacerAsignacionesCompletadas (std::vector <std::pair
 
 
 void AsignacionDataBase::agregarAsignacion(int idTarea, int idUsuario) { //agrega una asignación a la lista y al archivo
-
+    asegurarDirectorioData();
 // Guardar la asignación en el archivo
     std::ofstream archivoAsignaciones(FILENAME_ASIGNACIONES, std::ios::app);
     if (!archivoAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo de asignaciones.");
@@ -130,7 +132,7 @@ void AsignacionDataBase::agregarAsignacion(int idTarea, int idUsuario) { //agreg
 } 
 
 void AsignacionDataBase::eliminarAsignacion(int idTarea, int idUsuario) { //elimina una asignación de la lista y del archivo
-    
+    asegurarDirectorioData();
     std::ifstream archivoAsignaciones(FILENAME_ASIGNACIONES); //archivo para leer las asignaciones hasta encontrar la que se desea eliminar
     if (!archivoAsignaciones.is_open()) throw std::runtime_error("Error al abrir el archivo de asignaciones.");
 

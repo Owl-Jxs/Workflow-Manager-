@@ -12,13 +12,15 @@ bool ValidarEntrada::contieneSoloCaracteres (std::string entrada, int cantidadEs
 }
 
 bool ValidarEntrada::contieneSoloDigitos (std::string entrada, bool permitirNegativos) {
-    bool primeraLetra = true;
-    for (unsigned char uc : entrada) {
+    if (entrada.empty()) return false;
+    if (entrada == "-") return false;
+    for (size_t i = 0; i < entrada.size(); ++i) {
+        unsigned char uc = static_cast<unsigned char>(entrada[i]);
         char c = static_cast<char>(uc);
-        if (permitirNegativos && primeraLetra && c == '-') {
-            primeraLetra = false;   continue; 
+        if (permitirNegativos && i == 0 && c == '-') {
+            continue;
         }
-        if (!isdigit (uc) ) return false;
+        if (!isdigit (uc)) return false;
     }
     return true;
 }
@@ -31,7 +33,11 @@ int ValidarEntrada::leerEntradaNumerica (const std::string& entrada, bool permit
     if (!contieneSoloDigitos (entrada, permitirNegativos)) { 
         throw std::invalid_argument  ("--- La entrada debe contener solo digitos ---");    
     }   
-    return std::stoi (entrada);
+    try {
+        return std::stoi (entrada);
+    } catch (const std::out_of_range&) {
+        throw std::invalid_argument("--- Numero fuera de rango ---");
+    }
 }
 
 void ValidarEntrada::leerEntradaTextual (const std::string& entrada,int cantidadEspacios) {
@@ -48,19 +54,24 @@ int ValidarEntrada::validarEntradaRango (const std::string& mensaje,int inicio, 
 
     while (true) {
     //leemos la entrada
-        std::cout << mensaje << std::endl;    std::getline (std::cin,  entradaTemporal);
+        std::cout << mensaje << " [" << inicio << "-" << fin << "]" << std::endl;    std::getline (std::cin,  entradaTemporal);
+        if (std::cin.eof()) throw std::runtime_error("Entrada terminada");
 
     //la procesamos
         int entradaConvertida; //la entrada pasada de string a int
         try {
             entradaConvertida = leerEntradaNumerica (entradaTemporal, ( (inicio < 0) ? true : false) );
-        } catch (std::exception&) {
+        } catch (std::exception& e) {
+            std::cout << e.what() << std::endl;
+            std::cout << "Presione Enter para continuar..."; std::string _p; std::getline(std::cin, _p);
             std::system ("cls");    continue;
         }
 
     //validamos que este en el rango correcto
         if (entradaConvertida < inicio || entradaConvertida > fin) { 
-            std::cout << "\n--- Ingrese una entrada dentro del rango ---" << std::endl;     std::system ("cls");    continue;
+            std::cout << "\n--- Ingrese una entrada dentro del rango [" << inicio << "-" << fin << "] ---" << std::endl;
+            std::cout << "Presione Enter para continuar..."; std::string _p; std::getline(std::cin, _p);
+            std::system ("cls");    continue;
         }
 
     //devolvemos la entrada ya validada
@@ -73,19 +84,26 @@ int ValidarEntrada::validarCodigoNumerico (const std::string& mensaje, int canti
 
     while (true) {
     //leemos la entrada
-        std::cout << mensaje << std::endl;    std::getline (std::cin,  entradaTemporal);
+        std::cout << mensaje << " [" << cantidadDigitos << " digitos]" << std::endl;    std::getline (std::cin,  entradaTemporal);
+        if (std::cin.eof()) throw std::runtime_error("Entrada terminada");
+        if (entradaTemporal.empty()) {
+            std::cout << "Entrada vacia. Presione Enter para continuar..."; std::string _p; std::getline(std::cin, _p);
+            continue;
+        }
 
     //verificamos la cantidad de digitos
-       if (entradaTemporal.size () != cantidadDigitos) { 
-        std::cout << "Ingrese la cantidad de digitos correctos [" << cantidadDigitos << "]" <<std::endl;
+       if ((int)entradaTemporal.size () != cantidadDigitos) { 
+        std::cout << "Ingrese la cantidad de digitos correctos [" << cantidadDigitos << "] (actual: " << entradaTemporal.size() << ")" <<std::endl;
+        std::cout << "Presione Enter para continuar..."; std::string _p; std::getline(std::cin, _p);
         continue;
        } 
 
     //la procesamos
         try {
             return leerEntradaNumerica (entradaTemporal, false);
-        } catch (std::exception&) {
-            std::cout << "La entrada debe contener solo digitos." << std::endl;
+        } catch (std::exception& e) {
+            std::cout << e.what() << std::endl;
+            std::cout << "Presione Enter para continuar..."; std::string _p; std::getline(std::cin, _p);
             continue;
         }
     }

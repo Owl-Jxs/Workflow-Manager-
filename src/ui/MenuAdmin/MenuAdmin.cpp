@@ -110,7 +110,7 @@ void MenuAdmin::mostrarMenuGestionUsuarios (){
             default:
                 std::cout << "Error: opcion no valida.\n"; break;
         }
-        std::system ("cls");
+        std::system ("pause"); std::system ("cls");
     } while (opcion != 0);   
 }
 
@@ -175,7 +175,7 @@ void MenuAdmin::mostrarMenuGestionTareas (){
                 procesosTareas->mostrarTareaPorId (); break;
             }
             case 0:
-                std::cout << "Saliendo del menu de usuarios...\n"; break;
+                std::cout << "Saliendo del menu de tareas...\n"; break;
 
             default:
                 std::cout << "Error: opcion no valida.\n"; break;
