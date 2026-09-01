@@ -265,3 +265,84 @@ Prompts ingresados:
 Revision y ajuste humano aplicado:
    - Por cada error/bug encontrado fui buscando su origen y ajustando el programa para corregirlo personalmente según lo mas conveniente para el proyecto. 
 
+## Erving Sequeira
+
+## Entrada 1. Organización general del proyecto
+
+* **Función o estructura:** Organización general de carpetas del proyecto y estructura base del repositorio.
+* **Herramienta utilizada:** Claude Sonnet 5.
+* **Prompt utilizado:**
+
+  > "Estoy armando un proyecto en C++ de Estructuras de Datos que necesita manejar usuarios, tareas, colas, pilas y árboles, con persistencia en CSV y una interfaz de consola. ¿Cómo debería organizar las carpetas del proyecto?"
+* **Respuesta de la IA:** Se sugirió separar los archivos de datos y código fuente mediante las carpetas `data/` y `src/`. Dentro de `src/` se propusieron subcarpetas como `algorithms/`, `models/`, `persistence/`, `structures/`, `ui/` y el archivo `main.cpp`. También se explicó el uso de archivos `.gitkeep` para mantener carpetas vacías dentro del repositorio de GitHub.
+* **Revisión humana:** El equipo adaptó la propuesta a las necesidades reales del proyecto. Se agregó la carpeta `controllers/` para seguir un patrón MVC, `utilities/` para centralizar validaciones y captura de entradas del usuario, y `tests/` como carpeta independiente para las pruebas unitarias. En las pruebas se concentró el uso de IA en dos archivos relacionados con usuarios y tareas.
+
+## Entrada 2. Modelo `Usuario`
+
+* **Función o estructura:** Clase `Usuario`, incluyendo sus atributos y métodos principales.
+* **Herramienta utilizada:** Gemini 3.6 flash.
+* **Prompt utilizado:**
+
+  > "Ya tengo una base básica del modelo Usuario, ¿qué opinas de la estructura? ¿Está bien planteada?"
+* **Respuesta de la IA:** Se recomendó utilizar un `enum class Rol { ADMINISTRADOR, USUARIO_NORMAL }` en lugar de almacenar el rol como `string`, con el objetivo de reducir errores de escritura y representar los valores permitidos de forma más controlada. También se recomendó almacenar un hash de la contraseña en lugar de la contraseña directamente y agregar validaciones en los métodos setter del modelo.
+* **Revisión humana:** Durante la implementación se detectó un problema con el método `setHashContrasena`. Este método funcionaba correctamente al crear un usuario nuevo, pero al cargar usuarios desde un archivo CSV el hash ya estaba calculado. Aplicar nuevamente el proceso de hash provocaba que las credenciales dejaran de coincidir durante el inicio de sesión. Para solucionar esto se creó `setHashDirecto`, utilizado exclusivamente cuando el valor cargado desde el archivo ya corresponde a un hash.
+
+## Entrada 3. `NodoUsuario` y estructuras enlazadas
+
+* **Función o estructura:** `NodoUsuario` y criterio utilizado para los nodos de listas doblemente enlazadas, colas y pilas.
+* **Herramienta utilizada:** Claude Sonnet 5.
+* **Prompt utilizado:**
+
+  > "Los nodos normalmente usan punteros, ¿debería usar puntero incluso para los datos que son el usuario?"
+* **Respuesta de la IA:** Se recomendó utilizar punteros tanto para el dato almacenado por el nodo como para sus enlaces. Para el dato, la razón principal fue evitar copiar objetos completos innecesariamente. Para los enlaces, se explicó que los punteros son necesarios para construir correctamente las estructuras dinámicas enlazadas y evitar una composición recursiva directa de nodos.
+* **Revisión humana:** El equipo adoptó este criterio de forma consistente en las diferentes estructuras dinámicas del proyecto. El mismo enfoque se utilizó en las listas doblemente enlazadas, colas estándar, colas de prioridad y pilas.
+
+## Entrada 4. `UsuarioDataBase`
+
+* **Función o estructura:** Persistencia de usuarios mediante archivos CSV.
+* **Herramienta utilizada:** Claude Sonnet 5.
+* **Prompt utilizado:**
+
+  > "Nunca he trabajado con archivos CSV, solo conozco un poco de lectura y escritura de archivos para persistencia. ¿Cómo debería estructurar la clase para guardar y cargar usuarios desde CSV?"
+* **Respuesta de la IA:** Se propuso dividir las responsabilidades de la clase mediante métodos privados de apoyo, como `formularLinea`, `rolATexto` y `existeUsuarioConID`. Los métodos públicos de guardado y carga utilizarían estas funciones auxiliares para organizar el procesamiento del archivo CSV.
+* **Revisión humana:** Se adaptaron las rutas para que los archivos de persistencia fueran almacenados dentro de la carpeta `data/` del proyecto. También se identificó y corrigió el problema relacionado con el hash de las contraseñas al cargar usuarios. Para evitar que el hash almacenado en el CSV fuera procesado nuevamente, se utilizó `setHashDirecto`.
+
+## Entrada 5. Comandos y auditoría
+
+* **Función o estructura:** Clases `ComandoAsignacion`, `ComandoTarea`, `ComandoUsuario` e integración con `Gestor` para implementar auditoría.
+* **Herramienta utilizada:** Claude Sonnet 5.
+* **Prompt utilizado:**
+
+  > "Debo crear los comandos tomando en cuenta que esta semana se agregó la petición de que debe haber una auditoría según 'Aclaratoria 3' que guarde logs sobre comandos, justo va bien porque ya teníamos planeados los comandos, pero creo debo modificar GestorHistorial para que reciba la auditoría y tras cada ejecutar, deshacer, rehacer y todos los comandos de usuario o tarea queden guardados en logs."
+* **Respuesta de la IA:** Se propuso implementar los comandos mediante una interfaz `IComando` y modificar `GestorHistorial` para registrar automáticamente las operaciones realizadas. De esta forma, las acciones de ejecutar, deshacer y rehacer podrían quedar registradas en el sistema de auditoría.
+* **Revisión humana:** En lugar de crear un archivo independiente para cada comando, se decidió agrupar los comandos en tres clases generales: `ComandoAsignacion`, `ComandoTarea` y `ComandoUsuario`. Además, se agregaron los métodos `getAccionAuditoria` y `getIdTareaAuditoria` para proporcionar a `GestorHistorial` la información necesaria de manera uniforme.
+
+## Entrada 6. Menú de tareas para usuario normal
+
+* **Función o estructura:** Procesos correspondientes al menú de tareas del usuario normal mediante `procesosTareaNormal`.
+* **Herramienta utilizada:** Claude Sonnet 5.
+* **Prompt utilizado:**
+
+  > "Supongo lo mejor será crear, como se hizo para el menú de admin, los procesosTareaNormal."
+* **Respuesta de la IA:** Se recomendó mantener una estructura similar a la utilizada en el menú de administrador, pero adaptando las opciones disponibles a los permisos correspondientes al usuario normal.
+* **Revisión humana:** Durante la implementación se corrigió la lógica relacionada con la visualización de subtareas. Cuando la tarea seleccionada corresponde a una subtarea, se debe mostrar su propio subárbol. Cuando corresponde a una tarea raíz, se deben mostrar las tareas hijas correspondientes.
+
+## Entrada 7. Depuración general del proyecto
+
+* **Función o estructura:** Revisión general del proyecto, incluyendo memoria dinámica, estructuras de datos, persistencia e interfaz de usuario.
+
+* **Herramienta utilizada:** Open Code MiMo 2.5.
+
+* **Prompt utilizado:**
+
+  > "¿Puedes revisar el proyecto en busca de errores de sintaxis y lógica?"
+
+* **Respuesta de la IA:** La revisión se realizó en varias rondas. Entre las sugerencias y correcciones realizadas se encontraron:
+
+  1. Corrección de problemas relacionados con `use after free`, `return` después de `delete`, un índice inalcanzable, un error en `eliminarAsignacionPorIdUsuario` y diferentes posibles desreferencias de punteros nulos.
+  2. Liberación de las colas originales en antes de crear nuevas estructuras y liberación de las tareas almacenadas en `listaTareasEnProceso` dentro del destructor.
+  3. Corrección de impresiones en consola que no mostraban la información esperada.
+  4. Corrección de problemas relacionados con la búsqueda y eliminación de subárboles de tareas en `TareaController` y en la interfaz.
+  5. Corrección de mensajes que no eran visibles debido a la ausencia de una pausa después de utilizar `system("cls")`, además de otros ajustes menores.
+
+* **Revisión humana:** Las sugerencias fueron revisadas manualmente antes de incorporarse al proyecto. Algunas correcciones no eran aplicables al código existente o se basaban en interpretaciones incorrectas del proyecto. En esos casos, los cambios fueron descartados o modificados por el equipo. Posteriormente se realizaron nuevos commits con las correcciones consideradas apropiadas.
