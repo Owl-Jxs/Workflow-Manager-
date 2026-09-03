@@ -1,5 +1,5 @@
 # ===== Carpetas de compilación / CMake =====
-build/
+# build/              <-- COMENTA O ELIMINA ESTA LÍNEA
 out/
 bin/
 cmake-build-*/
@@ -29,6 +29,8 @@ CMakeSettings.json
 .vscode/
 !.vscode/settings.json
 !.vscode/c_cpp_properties.json
+!.vscode/tasks.json   
+#<-- AGREGA ESTA LÍNEA
 
 # ===== Archivos compilados / binarios =====
 *.o
